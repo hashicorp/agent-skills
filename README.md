@@ -28,43 +28,18 @@ This repository hosts pre-built instruction sets that teach AI agents HashiCorp 
 └──────────┘ └─────────┘ └─────────┘ └────────────┘
 ```
 
-## Platform Integration Guide
+## Platform Instruction Matrix
 
-### How Each Platform Uses Instructions
+| Platform | Primary Files | Auto-Loaded? | Invocation |
+|----------|---------------|--------------|------------|
+| **GitHub Copilot** | `.github/copilot-instructions.md`<br>`.github/prompts/*.md` | YES (repository)<br>NO (on-demand) | `@workspace`<br>`#file:path/to/skill`<br>`#prompt-name` |
+| **Claude** | `*/skills/*/SKILL.md` | YES (progressive disclosure) | `"Using X skill..."`<br>Auto-discovery |
+| **Cursor** | `AGENTS.md`<br>`.cursorrules` | YES (on startup) | Automatic<br>`@Apply` |
+| **Amazon Kiro** | `.kiro/hooks/`<br>`.kiro/specs/`<br>`.kiro/steering/` | YES (per file) | Click hook/spec in Kiro tab |
+| **Amazon Q CLI** | `~/.aws/amazonq/agent/` | YES (global) | `/agent switch terraform-action-agent` |
+| **Codex/Jules/Generic** | `AGENTS.md`<br>`CLAUDE.md`<br>`GEMINI.md` | YES (on startup) | Automatic<br>Reference in prompt |
 
-```text
-┌───────────────────────────────────────────────────────────────────────┐
-│                    PLATFORM INSTRUCTION MATRIX                        │
-├─────────────┬──────────────────┬────────────────┬─────────────────────┤
-│  Platform   │  Primary Files   │  Auto-Loaded?  │  Invocation         │
-├─────────────┼──────────────────┼────────────────┼─────────────────────┤
-│ GitHub      │ .github/         │      YES       │ @workspace          │
-│ Copilot     │   copilot-       │   Repository   │ #file:path/to/skill │
-│             │   instructions   │     Always     │                     │
-│             │ .github/         │       NO       │ #prompt-name        │
-│             │   prompts/*.md   │  On-demand     │                     │
-├─────────────┼──────────────────┼────────────────┼─────────────────────┤
-│ Claude      │ */skills/*/      │      YES       │ "Using X skill..."  │
-│             │   SKILL.md       │  Progressive   │ Auto-discovery      │
-│             │                  │  disclosure    │                     │
-├─────────────┼──────────────────┼────────────────┼─────────────────────┤
-│ Cursor      │ AGENTS.md        │      YES       │ Automatic           │
-│             │ .cursorrules     │   On startup   │ @Apply              │
-├─────────────┼──────────────────┼────────────────┼─────────────────────┤
-│ Amazon Kiro │ .kiro/           │      YES       │ Click hook/spec     │
-│             │   hooks/         │   Per file     │ in Kiro tab         │
-│             │   specs/         │                │                     │
-│             │   steering/      │                │                     │
-├─────────────┼──────────────────┼────────────────┼─────────────────────┤
-│ Amazon Q    │ ~/.aws/amazonq/  │      YES       │ /agent switch       │
-│ CLI         │   agent/         │   Global       │ terraform-action-   │
-│             │                  │                │ agent               │
-├─────────────┼──────────────────┼────────────────┼─────────────────────┤
-│ Codex/      │ AGENTS.md        │      YES       │ Automatic           │
-│ Jules/      │ CLAUDE.md        │   On startup   │ Reference in prompt │
-│ Generic     │ GEMINI.md        │                │                     │
-└─────────────┴──────────────────┴────────────────┴─────────────────────┘
-```
+## How Each Platform Uses Instructions
 
 ### GitHub Copilot: File-Based Loading
 
@@ -199,6 +174,10 @@ Agent switched to: terraform-action-agent
 
 ### Universal Setup (Any AI Agent)
 
+Think of AGENTS.md as a README for agents: a dedicated, predictable place to provide the context and instructions to help AI coding agents work on your project.
+
+Works with: Cursor, GitHub CoPilot, gemini-cli, Amp, Devin, Warp, Zed, Cursor, opencode, codex and other AI coding assistants
+
 ```text
 ┌────────────────────────────────────────────────────────────┐
 │              Universal AGENTS.md Strategy                  │
@@ -207,18 +186,12 @@ Agent switched to: terraform-action-agent
 │  Step 1: Create AGENTS.md in project root                  │
 │          ├─ List all available skills                      │
 │          ├─ List workflows                                 │
-│          └─ Reference this library                         │
+│          └─ Use custom instructions                        │
 │                                                            │
-│  Step 2: Reference in prompts                              │
-│          "Read terraform/skills/generate-hcl/SKILL.md..."  │
-│                                                            │
-│  Step 3: (Optional) Create platform-specific files         │
-│          ├─ .cursorrules → Cursor rules                    │
-│          └─ CLAUDE.md → Claude project context             │
+│  Step 2: Coding Agent automatically picks up instructions  │
 │                                                            │
 └────────────────────────────────────────────────────────────┘
 
-Works with: Cursor, GitHub CoPilot, gemini-cli, Amp, Devin, Warp, Zed, Cursor, opencode, codex and other AI coding assistants
 ```
 
 ## Instruction File Types
