@@ -19,13 +19,13 @@ This repository hosts pre-built instruction sets that teach AI agents HashiCorp 
 │  └─ Workflows     └─ Workflows   └─ Workflows     └─ ...     │
 │  └─ Prompts       └─ Prompts     └─ Prompts                  │
 │                                                              │
-└───┬─────────────┬─────────────┬─────────────┬────────────────┘
-    │             │             │             │
-    ▼             ▼             ▼             ▼
-┌──────────┐ ┌─────────┐ ┌─────────┐ ┌────────────┐
-│ Copilot  │ │ Claude  │ │ Cursor  │ │ Amazon     │
-│ .github/ │ │~/.claude│ │AGENTS.md│ │ Kiro/Q CLI │
-└──────────┘ └─────────┘ └─────────┘ └────────────┘
+└───┬─────────────┬─────────────┬─────────────┬──────────┬─────┘
+    │             │             │             │          │
+    ▼             ▼             ▼             ▼          ▼
+┌──────────┐ ┌─────────┐ ┌─────────┐ ┌────────────┐ ┌────────────┐
+│ Copilot  │ │ Claude  │ │ Cursor  │ │ Amazon     │ │  Gemini    │
+│ .github/ │ │~/.claude│ │AGENTS.md│ │ Kiro/Q CLI │ │ Gemini CLI │
+└──────────┘ └─────────┘ └─────────┘ └────────────┘ └────────────┘
 ```
 
 ## Platform Instruction Matrix
