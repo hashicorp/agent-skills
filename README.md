@@ -30,14 +30,51 @@ This repository hosts pre-built instruction sets that teach AI agents HashiCorp 
 
 ## Platform Instruction Matrix
 
-| Platform | Primary Files | Auto-Loaded? | Invocation |
-|----------|---------------|--------------|------------|
-| **GitHub Copilot** | `.github/copilot-instructions.md`<br>`.github/prompts/*.md` | YES (repository)<br>NO (on-demand) | `@workspace`<br>`#file:path/to/skill`<br>`#prompt-name` |
-| **Claude** | `*/skills/*/SKILL.md` | YES (progressive disclosure) | `"Using X skill..."`<br>Auto-discovery |
-| **Cursor** | `AGENTS.md`<br>`.cursorrules` | YES (on startup) | Automatic<br>`@Apply` |
-| **Amazon Kiro** | `.kiro/hooks/`<br>`.kiro/specs/`<br>`.kiro/steering/` | YES (per file) | Click hook/spec in Kiro tab |
-| **Amazon Q CLI** | `~/.aws/amazonq/agent/` | YES (global) | `/agent switch terraform-action-agent` |
-| **Codex/Jules/Generic** | `AGENTS.md`<br>`CLAUDE.md`<br>`GEMINI.md` | YES (on startup) | Automatic<br>Reference in prompt |
+| Platform | Primary Files | Auto-Loaded? | Invocation | Notes |
+|----------|---------------|--------------|------------|-------|
+| **GitHub Copilot** | `.github/copilot-instructions.md`<br>`.github/prompts/*.md` | YES | VS Code, JetBrains, Visual Studio - Auto-loaded repository context |(repository)<br>NO (on-demand) | `@workspace`<br>`#file:path/to/skill`<br>`#prompt-name` |
+| **Claude** | `*/skills/*/SKILL.md` | YES (progressive disclosure) | `"Using X skill..."`<br>Auto-discovery | Native SKILL.md support - Progressive disclosure |
+| **Cursor** | `AGENTS.md`<br>`.cursorrules` | YES (on startup) | Automatic<br>`@Apply` | MCP servers, auto-loaded on startup |
+| **Amazon Kiro** | `.kiro/hooks/`<br>`.kiro/specs/`<br>`.kiro/steering/` | YES (per file) | Click hook/spec in Kiro tab | Hook-based context injection per file |
+| **Amazon Q CLI** | `~/.aws/amazonq/agent/` | YES (global) | `/agent switch terraform-action-agent` | Agent-based global configuration |
+| **Codex/Jules/Generic** | `AGENTS.md`<br>`CLAUDE.md`<br>`GEMINI.md` | YES (on startup) | Automatic<br>Reference in prompt | VS Code/JetBrains extension |
+
+## Quick Start Examples
+
+### Example 1: Generate Terraform Infrastructure (GitHub Copilot)
+
+```
+@workspace Using terraform/skills/generate-hcl/, create:
+- VPC with public/private subnets
+- RDS PostgreSQL in private subnet
+- Application load balancer
+
+Environment: production, Region: us-east-1
+```
+
+**What happens:** Copilot loads `.github/copilot-instructions.md` → References generate-hcl skill → Generates secure, well-structured HCL
+
+### Example 2: Create Vault Policy (Claude)
+
+```
+Using the generate-policy skill, create a policy for:
+- Service: web-application
+- Access: read secret/data/app/web/prod/*
+- Deny: all other paths
+```
+
+**What happens:** Claude discovers `vault/skills/generate-policy/SKILL.md` → Loads skill → Generates least-privilege policy
+
+### Example 3: Remediate Secrets (Any Agent with AGENTS.md)
+
+```
+Follow vault-radar/workflows/triage-and-remediate.md:
+1. Analyze last scan (47 findings)
+2. Prioritize by severity
+3. Generate remediation plan
+```
+
+**What happens:** Agent reads AGENTS.md → Finds workflow → Executes multi-step process
 
 ## How Each Platform Uses Instructions
 
@@ -235,55 +272,6 @@ Step 6: Verify  ←  Step 5: Apply  ←  ─────┘    └→ Stop
 **Examples:** Summarize Terraform plan, Analyze scan results, Review for security  
 **Location:** `product/prompts/prompt-name.md`  
 **Usage:** `#prompt-name` (Copilot) or reference explicitly
-
-
-## Platform Compatibility
-
-| Platform | Custom Instructions | Workflows | Prompts | Notes |
-|----------|---------------------|-----------|---------|-------|
-| **GitHub Copilot** | ✅ `.github/copilot-instructions.md` | ✅ Reference in prompts | ✅ `.github/prompts/*.md` | VS Code, JetBrains, Visual Studio - Auto-loaded repository context |
-| **Claude Desktop** | ✅ **SKILL.md** (native) | ✅ Reference in prompts | ✅ Reference in prompts | **Only platform with native SKILL.md support** - Progressive disclosure |
-| **Cursor** | ✅ `.cursorrules` / `AGENTS.md` | ✅ Rules & memories | ✅ Custom commands | MCP servers, auto-loaded on startup |
-| **Amazon Kiro** | ✅ `.kiro/steering/` | ✅ `.kiro/specs/` | ❌ | Hook-based context injection per file |
-| **Amazon Q CLI** | ✅ `~/.aws/amazonq/agent/` | ❌ | ❌ | Agent-based global configuration |
-| **Continue** | ✅ `config.json` | ✅ Reference in prompts | ✅ Slash commands | VS Code/JetBrains extension |
-
-## Quick Start Examples
-
-### Example 1: Generate Terraform Infrastructure (GitHub Copilot)
-
-```
-@workspace Using terraform/skills/generate-hcl/, create:
-- VPC with public/private subnets
-- RDS PostgreSQL in private subnet
-- Application load balancer
-
-Environment: production, Region: us-east-1
-```
-
-**What happens:** Copilot loads `.github/copilot-instructions.md` → References generate-hcl skill → Generates secure, well-structured HCL
-
-### Example 2: Create Vault Policy (Claude)
-
-```
-Using the generate-policy skill, create a policy for:
-- Service: web-application
-- Access: read secret/data/app/web/prod/*
-- Deny: all other paths
-```
-
-**What happens:** Claude discovers `vault/skills/generate-policy/SKILL.md` → Loads skill → Generates least-privilege policy
-
-### Example 3: Remediate Secrets (Any Agent with AGENTS.md)
-
-```
-Follow vault-radar/workflows/triage-and-remediate.md:
-1. Analyze last scan (47 findings)
-2. Prioritize by severity
-3. Generate remediation plan
-```
-
-**What happens:** Agent reads AGENTS.md → Finds workflow → Executes multi-step process
 
 ## Learn More
 
