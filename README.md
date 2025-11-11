@@ -37,7 +37,8 @@ This repository hosts pre-built instruction sets that teach AI agents HashiCorp 
 | **Cursor** | `AGENTS.md`<br>`.cursorrules` | YES (on startup) | Automatic<br>`@Apply` | MCP servers, auto-loaded on startup |
 | **Amazon Kiro** | `.kiro/hooks/`<br>`.kiro/specs/`<br>`.kiro/steering/` | YES (per file) | Click hook/spec in Kiro tab | Hook-based context injection per file |
 | **Amazon Q CLI** | `~/.aws/amazonq/agent/` | YES (global) | `/agent switch terraform-action-agent` | Agent-based global configuration |
-| **Codex/Jules/Generic** | `AGENTS.md`<br>`CLAUDE.md`<br>`GEMINI.md` | YES (on startup) | Automatic<br>Reference in prompt | VS Code/JetBrains extension |
+| **Gemini** | `GEMINI.md`<br>`gemini-extension.json` | YES (on startup) | Automatic<br>Reference in prompt | Gemini CLI |
+| **Codex/Jules/Generic** | `AGENTS.md` | YES (on startup) | Automatic<br>Reference in prompt | VS Code/JetBrains extension |
 
 ## Quick Start Examples
 
