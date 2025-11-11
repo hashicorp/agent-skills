@@ -5,16 +5,21 @@ All notable changes to the Agent Instructions Library.
 ## 2025-11-10
 
 ### Added
+- **Amazon Kiro support**: Added `.kiro/` directory structure with hooks, specs, and steering files
+- **Amazon Q CLI support**: Added `.aws/amazonq/` agent configuration for Terraform
 - Comprehensive platform integration guide in README.md
-- Visual diagrams for GitHub Copilot, Claude, Cursor, and universal setup
-- USAGE_GUIDE.md with detailed platform-specific instructions
+- Visual diagrams for GitHub Copilot, Claude, Cursor, Kiro, Q CLI, and universal setup
+- USAGE_GUIDE.md with detailed platform-specific instructions for all 6 platforms
 - VISUAL_GUIDE.md with extensive flowcharts and diagrams
-- Platform decision tree and comparison matrix
+- Platform decision tree and comparison matrix including new Amazon tools
 
 ### Changed
+- Updated platform comparison matrix to include Amazon Kiro and Amazon Q CLI
+- Expanded README.md to document hook-based (Kiro) and agent-based (Q CLI) workflows
 - Streamlined README.md from ~600 to ~360 lines (40% reduction)
 - Reorganized content to focus on platform-specific usage
 - Enhanced visual diagrams throughout documentation
+- Removed "production-ready" marketing claims across all documentation
 
 ## 2025-11-07
 

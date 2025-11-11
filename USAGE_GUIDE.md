@@ -406,6 +406,121 @@ When creating Vault policies:
 - Setup: vault/workflows/new-kv-engine-setup.md
 ```
 
+### Amazon Kiro
+
+#### Hook-Based Context Injection
+
+**Files:** `.kiro/hooks/`, `.kiro/specs/`, `.kiro/steering/`
+
+Kiro uses three types of context files:
+- **Hooks**: Pre/post file operation context
+- **Specs**: File generation specifications
+- **Steering**: Agent behavior guidelines
+
+**Setup:**
+```bash
+# Copy Kiro files to your project root
+cp -r terraform/.kiro/ .kiro/
+
+# Directory structure
+.kiro/
+├── hooks/          # Context for file operations
+│   └── *.md
+├── specs/          # Generation templates
+│   └── *.md
+└── steering/       # Agent instructions
+    └── *.md
+```
+
+**Usage:**
+1. Open Kiro tab in your editor
+2. Click on a hook, spec, or steering file to activate it
+3. Files automatically apply when editing matching paths
+
+**Example - Terraform Hook:**
+```markdown
+# Hook: Terraform Security Defaults
+
+Apply these patterns when generating Terraform:
+- Always enable encryption at rest (KMS)
+- Use private subnets by default
+- Enable VPC Flow Logs
+- Add required tags: Environment, Owner, Project
+```
+
+**Benefits:**
+- Per-file context injection
+- Path-based automatic activation
+- Visual file selector in IDE
+
+### Amazon Q CLI
+
+#### Agent-Based Workflow
+
+**Files:** `~/.aws/amazonq/agent/`
+
+Amazon Q CLI supports custom agents that are globally available across all projects.
+
+**Setup:**
+```bash
+# Copy agent files to your home directory
+cp -r terraform/.aws/amazonq ~/.aws/
+
+# Directory structure
+~/.aws/amazonq/
+└── agent/
+    └── terraform-action-agent/
+        ├── agent-config.md
+        ├── skills.md
+        └── workflows.md
+```
+
+**Usage:**
+```bash
+# Start Q CLI
+$ q
+
+# Switch to Terraform agent
+> /agent switch terraform-action-agent
+Agent switched to: terraform-action-agent
+
+# Now all prompts use Terraform context
+> Create a secure VPC module with 3 AZs
+[Agent generates HCL with security defaults...]
+
+# List available agents
+> /agent list
+
+# Switch back to default
+> /agent switch default
+```
+
+**Example - Agent Configuration:**
+```markdown
+# Terraform Action Agent
+
+## Identity
+Expert in generating secure, well-architected Terraform code
+
+## Capabilities
+- Generate HCL following best practices
+- Apply security defaults automatically
+- Query Terraform Registry for latest versions
+- Validate and format code
+
+## Default Behaviors
+- Always enable encryption
+- Use private networking
+- Add comprehensive tags
+- Include variable validation
+```
+
+**Benefits:**
+- Global agent availability
+- Persistent context across sessions
+- Easy agent switching
+- CLI-first workflow
+
 ### OpenAI Codex / Jules / Gemini CLI
 
 #### AGENTS.md (Universal)
