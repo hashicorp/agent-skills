@@ -2,7 +2,7 @@
 
 This directory contains AI agent instructions for generating secure Terraform infrastructure code.
 
-## 📁 Directory Structure
+## Directory Structure
 
 ```
 terraform/
@@ -20,7 +20,7 @@ terraform/
 
 ---
 
-## 🎯 What's Inside
+## What's Inside
 
 ### Skills
 
@@ -39,7 +39,7 @@ terraform/
 **Why this works**: Claude Desktop natively supports Anthropic's SKILL.md format with progressive disclosure. It automatically finds and loads relevant skills.
 
 
-#### 📝 [generate-hcl](skills/generate-hcl/)
+#### [generate-hcl](skills/generate-hcl/)
 **Purpose**: Create secure, compliant Terraform HCL code following best practices
 
 **Use when**:
@@ -69,7 +69,7 @@ Requirements:
 
 ---
 
-#### 🔄 [refactor-module](skills/refactor-module/)
+#### [refactor-module](skills/refactor-module/)
 **Purpose**: Extract reusable Terraform modules from existing code
 
 **Use when**:
@@ -102,7 +102,7 @@ Include:
 
 **Workflows** are multi-step processes that combine multiple skills and tools.
 
-#### 🚀 [plan-and-apply-with-approval](workflows/plan-and-apply-with-approval.md)
+#### [plan-and-apply-with-approval](workflows/plan-and-apply-with-approval.md)
 **Purpose**: Structured deployment process with human approval gates
 
 **Phases**:
@@ -122,7 +122,7 @@ Include:
 
 ---
 
-#### 🔒 [security-scan-workflow](workflows/security-scan-workflow.md)
+#### [security-scan-workflow](workflows/security-scan-workflow.md)
 **Purpose**: Comprehensive security validation before deployment
 
 **Scans performed**:
@@ -145,7 +145,7 @@ Include:
 
 **Prompts** are specialized instructions for specific AI agent scenarios.
 
-#### 🤖 [system-prompt-tf](prompts/system-prompt-tf.md)
+#### [system-prompt-tf](prompts/system-prompt-tf.md)
 **Purpose**: Define AI agent behavior for Terraform work
 
 **Use when**:
@@ -161,7 +161,7 @@ Include:
 
 ---
 
-#### 📊 [summarize-plan](prompts/summarize-plan.md)
+#### [summarize-plan](prompts/summarize-plan.md)
 **Purpose**: Convert Terraform plan output to human-readable summary
 
 **Use when**:
@@ -178,7 +178,7 @@ Include:
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### For GitHub Copilot Users
 
@@ -271,28 +271,6 @@ checkov -d . --framework terraform
 
 ---
 
-## 🎓 Learning Path
-
-### Beginners
-1. Start with **generate-hcl** skill
-2. Study `resources/hcl-best-practices.md`
-3. Review `resources/examples/` directory
-4. Try generating simple resources (S3, EC2)
-
-### Intermediate
-1. Use **security-scan-workflow** in development
-2. Practice **plan-and-apply-with-approval** workflow
-3. Study variable validation patterns
-4. Learn module composition
-
-### Advanced
-1. Master **refactor-module** for code consolidation
-2. Create organization-specific skill variants
-3. Integrate with CI/CD pipelines
-4. Build custom validation rules
-
----
-
 ## 🔧 Common Use Cases
 
 ### Use Case 1: Create Secure Database
@@ -347,34 +325,7 @@ Include:
   - Compliance impact
 ```
 
----
-
-## 🛡️ Security Principles
-
-All Terraform skills follow these security-first principles:
-
-✅ **Always**:
-- Encrypt data at rest (KMS, server-side encryption)
-- Encrypt data in transit (SSL/TLS, HTTPS only)
-- Use private networking by default
-- Implement least-privilege IAM
-- Enable audit logging (CloudTrail, VPC Flow Logs)
-- Tag all resources (Environment, Owner, CostCenter)
-- Validate all variables with validation blocks
-- Run security scans before deployment
-
-❌ **Never**:
-- Hardcode credentials or secrets
-- Use default encryption keys
-- Allow public database access without justification
-- Use overly permissive security groups (0.0.0.0/0)
-- Skip security scanning
-- Commit state files
-- Deploy without review in production
-
----
-
-## 🔗 Integration Examples
+## Integration Examples
 
 ### GitHub Actions
 
@@ -425,30 +376,30 @@ echo "Running Terraform validation..."
 # Format check
 terraform fmt -check -recursive
 if [ $? -ne 0 ]; then
-  echo "❌ Terraform format check failed. Run: terraform fmt -recursive"
+  echo "Terraform format check failed. Run: terraform fmt -recursive"
   exit 1
 fi
 
 # Validate
 terraform validate
 if [ $? -ne 0 ]; then
-  echo "❌ Terraform validation failed"
+  echo "Terraform validation failed"
   exit 1
 fi
 
 # Security scan
 tfsec . --minimum-severity HIGH
 if [ $? -ne 0 ]; then
-  echo "❌ Security scan failed. See: terraform/workflows/security-scan-workflow.md"
+  echo "Security scan failed. See: terraform/workflows/security-scan-workflow.md"
   exit 1
 fi
 
-echo "✅ All pre-commit checks passed"
+echo "All pre-commit checks passed"
 ```
 
 ---
 
-## 📚 Additional Resources
+## Additional Resources
 
 ### Within This Repository
 - [HCL Best Practices](skills/generate-hcl/resources/hcl-best-practices.md)
@@ -468,19 +419,7 @@ echo "✅ All pre-commit checks passed"
 
 ---
 
-## 🤝 Contributing
-
-When adding new Terraform skills or workflows:
-
-1. **Follow existing structure**: SKILL.md with YAML frontmatter
-2. **Include examples**: Show good and bad patterns
-3. **Add security considerations**: Document risks and mitigations
-4. **Provide tests**: Include validation procedures
-5. **Update this README**: Add your skill/workflow to relevant sections
-
----
-
-## 💡 Tips for AI Agents
+## Tips for AI Agents
 
 When using these instructions:
 
@@ -497,8 +436,3 @@ When using these instructions:
 6. **Add lifecycle blocks** for stateful resources
 7. **Generate comprehensive outputs** for all modules
 
----
-
-**Remember**: Infrastructure code is permanent. Always prioritize security, compliance, and maintainability over convenience.
-
-**🔐 Security First | 📝 Documentation Always | ✅ Validate Everything**

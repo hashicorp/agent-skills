@@ -2,7 +2,7 @@
 
 This directory contains AI agent instructions for secure secrets management, policy creation, and zero-trust security patterns using HashiCorp Vault.
 
-## 📁 Directory Structure
+## Directory Structure
 
 ```
 vault/
@@ -18,25 +18,26 @@ vault/
 
 ---
 
-## 🎯 What's Inside
+## What's Inside
 
 ### Skills
 
 **Skills** are discrete, reusable capabilities that teach AI agents specific Vault tasks.
 
-### For Claude Desktop (Native SKILL.md Support)
-```bash
-# No setup needed! Claude auto-discovers SKILL.md files
-# Just use natural language:
+*** For Claude Desktop (Native SKILL.md Support) ***
 
-"Using the generate-policy skill, create a policy for my web application"
+  ```bash
+  # No setup needed! Claude auto-discovers SKILL.md files
+  # Just use natural language:
 
-"Using the read-secret-securely skill, show me how to retrieve database credentials"
-```
+  "Using the generate-policy skill, create a policy for my web application"
+
+  "Using the read-secret-securely skill, show me how to retrieve database credentials"
+  ```
 
 **Why this works**: Claude Desktop natively supports Anthropic's SKILL.md format with progressive disclosure. It automatically finds and loads relevant skills.
 
-#### 🔐 [generate-policy](skills/generate-policy/)
+#### [generate-policy](skills/generate-policy/)
 **Purpose**: Create least-privilege Vault ACL policies with explicit deny rules
 
 **Use when**:
@@ -67,7 +68,7 @@ Compliance: SOC2, least-privilege
 
 ---
 
-#### 🔑 [read-secret-securely](skills/read-secret-securely/)
+#### [read-secret-securely](skills/read-secret-securely/)
 **Purpose**: Retrieve secrets from Vault following security best practices
 
 **Use when**:
@@ -103,7 +104,7 @@ Security:
 
 **Workflows** are multi-step processes that combine multiple skills and tools.
 
-#### 🆕 [new-kv-engine-setup](workflows/new-kv-engine-setup.md)
+#### [new-kv-engine-setup](workflows/new-kv-engine-setup.md)
 **Purpose**: Initialize and configure new Key-Value secrets engine
 
 **Phases**:
@@ -128,7 +129,7 @@ Security:
 
 **Prompts** are specialized instructions for specific AI agent scenarios.
 
-#### 🤖 [system-prompt-vault](prompts/system-prompt-vault.md)
+#### [system-prompt-vault](prompts/system-prompt-vault.md)
 **Purpose**: Define AI agent behavior for Vault security work
 
 **Use when**:
@@ -146,7 +147,7 @@ Security:
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### For GitHub Copilot Users
 
@@ -241,7 +242,7 @@ Never:
 
 ---
 
-## 🎓 Learning Path
+## Learning Path
 
 ### Beginners
 1. Start with **generate-policy** skill
@@ -263,7 +264,7 @@ Never:
 
 ---
 
-## 🔧 Common Use Cases
+## Common Use Cases
 
 ### Use Case 1: Create Application Policy
 ```
@@ -463,11 +464,11 @@ Secrets:
 
 ---
 
-## 🛡️ Security Principles
+## Security Principles
 
 All Vault skills follow zero-trust security principles:
 
-✅ **Always**:
+**Always**:
 - Apply principle of least privilege
 - Use explicit deny rules for sensitive paths
 - Authenticate with short-lived tokens
@@ -479,7 +480,7 @@ All Vault skills follow zero-trust security principles:
 - Implement break-glass procedures
 - Document access rationale
 
-❌ **Never**:
+**Never**:
 - Use root token in production
 - Store secrets in environment variables (fetch at runtime)
 - Log secret values to stdout/stderr/files
@@ -492,7 +493,7 @@ All Vault skills follow zero-trust security principles:
 
 ---
 
-## 🔗 Integration Examples
+## Integration Examples
 
 ### GitHub Actions with Vault
 
@@ -634,7 +635,7 @@ resource "vault_approle_auth_backend_role" "web_app" {
 
 ---
 
-## 📚 Additional Resources
+## Additional Resources
 
 ### Within This Repository
 - [Policy Examples](skills/generate-policy/resources/policy-examples.hcl)
@@ -653,20 +654,7 @@ resource "vault_approle_auth_backend_role" "web_app" {
 
 ---
 
-## 🤝 Contributing
-
-When adding new Vault skills or workflows:
-
-1. **Follow zero-trust model**: Least privilege by default
-2. **Include explicit deny rules**: For all sensitive paths
-3. **Document compliance**: Note SOC2, HIPAA, PCI DSS considerations
-4. **Provide examples**: Show good and bad patterns
-5. **Add authentication context**: AppRole, Kubernetes, JWT, etc.
-6. **Update this README**: Add your skill/workflow to relevant sections
-
----
-
-## 💡 Tips for AI Agents
+## Tips for AI Agents
 
 When using these instructions:
 
@@ -678,9 +666,3 @@ When using these instructions:
 6. **Include audit context**: Document why access is needed
 7. **Test policies**: Verify with `vault policy read` before apply
 8. **Rotate credentials**: After any potential exposure
-
----
-
-**Remember**: Secrets are the keys to your kingdom. Protect them with zero-trust principles.
-
-**🔐 Zero Trust Always | 🔑 Least Privilege Default | 📝 Audit Everything**

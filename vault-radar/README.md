@@ -2,7 +2,7 @@
 
 This directory contains AI agent instructions for detecting, triaging, and remediating secrets exposure using HashiCorp Vault Radar with Model Context Protocol (MCP) integration.
 
-## 📁 Directory Structure
+## Directory Structure
 
 ```
 vault-radar/
@@ -19,25 +19,26 @@ vault-radar/
 
 ---
 
-## 🎯 What's Inside
+## What's Inside
 
 ### Skills
 
-### For Claude Desktop (Native SKILL.md Support)
-```bash
-# No setup needed! Claude auto-discovers SKILL.md files
-# Just use natural language:
+**Skills** are discrete, reusable capabilities that teach AI agents specific Vault Radar tasks.
 
-"Using the scan-for-secrets skill, analyze my repository for exposed credentials"
+*** For Claude Desktop (Native SKILL.md Support) ***
 
-"Using the integrate-mcp-server skill, set up Vault Radar MCP integration"
-```
+  ```bash
+  # No setup needed! Claude auto-discovers SKILL.md files
+  # Just use natural language:
+
+  "Using the scan-for-secrets skill, analyze my repository for exposed credentials"
+
+  "Using the integrate-mcp-server skill, set up Vault Radar MCP integration"
+  ```
 
 **Why this works**: Claude Desktop natively supports Anthropic's SKILL.md format with progressive disclosure. It automatically finds and loads relevant skills.
 
-**Skills** are discrete, reusable capabilities that teach AI agents specific Vault Radar tasks.
-
-#### 🔍 [scan-for-secrets](skills/scan-for-secrets/)
+#### [scan-for-secrets](skills/scan-for-secrets/)
 **Purpose**: Detect hardcoded secrets, API keys, credentials in code repositories and platforms
 
 **Use when**:
@@ -57,18 +58,9 @@ Depth: Full history + uncommitted changes
 Severity: HIGH and CRITICAL only
 Output: JSON for MCP analysis
 ```
-
-**Key Features**:
-- **Online scanning**: GitHub, GitLab, Confluence, Jira, Slack
-- **Offline scanning**: Local git repos, file systems, CI/CD artifacts
-- **Severity levels**: CRITICAL (< 1hr), HIGH (< 24hr), MEDIUM (< 7d), LOW (backlog)
-- **Pattern detection**: AWS keys, API tokens, private keys, database URLs, certificates
-- **Git history**: Full commit history scanning
-- **False positive filtering**: Context-aware analysis
-
 ---
 
-#### 🤖 [integrate-mcp-server](skills/integrate-mcp-server/)
+#### [integrate-mcp-server](skills/integrate-mcp-server/)
 **Purpose**: Connect Vault Radar with AI agents via Model Context Protocol for intelligent analysis
 
 **Use when**:
@@ -90,21 +82,13 @@ Actions needed:
   - Identify rotation requirements
   - Suggest Vault migration paths
 ```
-
-**Key Features**:
-- **Progressive disclosure**: Reveal secret details only when explicitly requested
-- **Severity-based prioritization**: CRITICAL → HIGH → MEDIUM → LOW
-- **Remediation automation**: Generate rotation scripts, migration plans
-- **Integration with Vault**: Suggest appropriate secret engines
-- **Compliance mapping**: Link findings to SOC2, HIPAA, PCI DSS requirements
-
 ---
 
 ### Workflows
 
 **Workflows** are multi-step processes that combine multiple skills and tools.
 
-#### 🚨 [triage-and-remediate](workflows/triage-and-remediate.md)
+#### [triage-and-remediate](workflows/triage-and-remediate.md)
 **Purpose**: Complete 6-phase process from detection to prevention
 
 **Phases**:
@@ -122,19 +106,13 @@ Actions needed:
 - Migrating to Vault from hardcoded secrets
 - Implementing secrets management strategy
 
-**Time to Resolution**:
-- CRITICAL: < 1 hour
-- HIGH: < 24 hours
-- MEDIUM: < 7 days
-- LOW: Next sprint
-
 ---
 
 ### Prompts
 
 **Prompts** are specialized instructions for specific AI agent scenarios.
 
-#### 🤖 [system-prompt-vault-radar](prompts/system-prompt-vault-radar.md)
+#### [system-prompt-vault-radar](prompts/system-prompt-vault-radar.md)
 **Purpose**: Define AI agent behavior for Vault Radar security work
 
 **Use when**:
@@ -152,7 +130,7 @@ Actions needed:
 
 ---
 
-#### 📊 [analyze-scan-results](prompts/analyze-scan-results.md)
+#### [analyze-scan-results](prompts/analyze-scan-results.md)
 **Purpose**: Interpret Vault Radar scan output and generate action plans
 
 **Use when**:
@@ -171,7 +149,7 @@ Actions needed:
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### For GitHub Copilot Users
 
@@ -208,20 +186,22 @@ Never commit API keys, tokens, or credentials.
 
 **Install Vault Radar MCP Server**:
 ```bash
-# Install via npm
-npm install -g @hashicorp/vault-radar-mcp
-
 # Configure in Claude Desktop config.json
 {
-  "mcpServers": {
-    "vault-radar": {
-      "command": "vault-radar-mcp",
-      "args": ["--token", "${VAULT_RADAR_TOKEN}"],
-      "env": {
-        "VAULT_RADAR_TOKEN": "your-token-here"
-      }
+    "mcpServers": {
+        "vault-radar": {
+            "command": "docker",
+            "args": [
+                    "run",
+                    "--rm",
+                    "-i",
+                    "-e", "HCP_PROJECT_ID=<HCP Project ID>",
+                    "-e", "HCP_CLIENT_ID=<HCP Service Principal Client ID>",
+                    "-e", "HCP_CLIENT_SECRET=<HCP Service Principal Client Secret>",
+                    "hashicorp/vault-radar-mcp-server:<tag>",
+            ]
+        }
     }
-  }
 }
 ```
 
@@ -283,29 +263,7 @@ Scan targets:
 
 ---
 
-## 🎓 Learning Path
-
-### Beginners
-1. Start with **scan-for-secrets** skill (offline mode)
-2. Understand severity levels and response times
-3. Learn common secret patterns (AWS keys, tokens)
-4. Practice with test repositories
-
-### Intermediate
-1. Use **integrate-mcp-server** for AI-powered analysis
-2. Practice **triage-and-remediate** workflow
-3. Implement pre-commit hooks
-4. Set up CI/CD scanning
-
-### Advanced
-1. Build custom detection patterns
-2. Integrate with SIEM/SOAR platforms
-3. Automate complete remediation pipeline
-4. Implement organization-wide scanning strategy
-
----
-
-## 🔧 Common Use Cases
+## Common Use Cases
 
 ### Use Case 1: Pre-Commit Secret Scan
 ```
@@ -323,7 +281,7 @@ Output: Terminal (human-readable)
 #!/bin/bash
 # .git/hooks/pre-commit
 
-echo "🔍 Scanning for secrets..."
+echo "Scanning for secrets..."
 
 # Scan staged files
 vault-radar scan \
@@ -336,7 +294,7 @@ CRITICAL_COUNT=$(jq '[.results[] | select(.severity == "CRITICAL")] | length' sc
 HIGH_COUNT=$(jq '[.results[] | select(.severity == "HIGH")] | length' scan-results.json)
 
 if [ "$CRITICAL_COUNT" -gt 0 ] || [ "$HIGH_COUNT" -gt 0 ]; then
-  echo "❌ BLOCKED: Secrets detected in commit"
+  echo "BLOCKED: Secrets detected in commit"
   echo "  CRITICAL: $CRITICAL_COUNT"
   echo "  HIGH: $HIGH_COUNT"
   echo ""
@@ -344,86 +302,13 @@ if [ "$CRITICAL_COUNT" -gt 0 ] || [ "$HIGH_COUNT" -gt 0 ]; then
   exit 1
 fi
 
-echo "✅ No secrets detected"
+echo "No secrets detected"
 exit 0
 ```
 
 ---
 
-### Use Case 2: CI/CD Pipeline Scan
-```
-@workspace Using vault-radar/skills/scan-for-secrets/:
-
-Scan: Changed files in PR + 10 lines context
-Mode: Offline (CI runner)
-Severity: CRITICAL and HIGH fail build
-Output: SARIF for GitHub Code Scanning
-Integration: Post results to PR comment
-```
-
-**GitHub Actions Workflow**:
-```yaml
-name: Vault Radar Secrets Scan
-
-on:
-  pull_request:
-    branches: [main, develop]
-
-jobs:
-  scan:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-      security-events: write
-    
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Full history for context
-      
-      - name: Install Vault Radar
-        run: |
-          curl -fsSL https://releases.hashicorp.com/vault-radar/0.5.0/vault-radar_0.5.0_linux_amd64.zip -o vr.zip
-          unzip vr.zip
-          chmod +x vault-radar
-          sudo mv vault-radar /usr/local/bin/
-      
-      - name: Scan for Secrets
-        env:
-          VAULT_RADAR_TOKEN: ${{ secrets.VAULT_RADAR_TOKEN }}
-        run: |
-          vault-radar scan \
-            --target . \
-            --format sarif \
-            --output results.sarif
-      
-      - name: Upload SARIF to GitHub
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: results.sarif
-      
-      - name: Check for CRITICAL/HIGH
-        run: |
-          CRITICAL=$(jq '.runs[0].results | map(select(.level == "error")) | length' results.sarif)
-          HIGH=$(jq '.runs[0].results | map(select(.level == "warning")) | length' results.sarif)
-          
-          if [ "$CRITICAL" -gt 0 ]; then
-            echo "❌ $CRITICAL CRITICAL secrets detected"
-            exit 1
-          fi
-          
-          if [ "$HIGH" -gt 0 ]; then
-            echo "⚠️  $HIGH HIGH severity secrets detected"
-            exit 1
-          fi
-          
-          echo "✅ No CRITICAL or HIGH secrets detected"
-```
-
----
-
-### Use Case 3: Full Repository Audit with MCP
+### Use Case 2: Full Repository Audit with MCP
 ```
 @workspace Using vault-radar/skills/integrate-mcp-server/:
 
@@ -477,68 +362,7 @@ Would you like me to generate rotation scripts?
 
 ---
 
-### Use Case 4: Incident Response - Secret Exposed in Public Repo
-```
-@workspace Apply vault-radar/workflows/triage-and-remediate.md:
-
-Incident: AWS keys committed to public GitHub repo
-Discovered: 30 minutes ago
-Exposure: Public for 2 hours
-Repository: company/web-app (public)
-Severity: CRITICAL
-
-Execute 6-phase workflow:
-1. Scan - Confirm exposure
-2. Triage - CRITICAL (public repo)
-3. Contain - Rotate AWS keys IMMEDIATELY
-4. Remediate - Remove from code + scrub git history
-5. Migrate - Move to Vault dynamic AWS secrets
-6. Prevent - Pre-commit hooks + CI/CD gates
-```
-
-**Incident Response Timeline**:
-```
-T+0 min:  Secret detected in public repo
-T+5 min:  CRITICAL triage confirmed
-T+10 min: AWS keys rotated (emergency procedure)
-T+15 min: Verify old keys are revoked
-T+30 min: Git history scrubbed (BFG Repo-Cleaner)
-T+45 min: New keys in Vault (dynamic AWS engine)
-T+60 min: Pre-commit hook deployed
-T+90 min: Incident report completed
-```
-
----
-
-## 🛡️ Security Principles
-
-All Vault Radar skills follow these security-first principles:
-
-✅ **Always**:
-- Scan before commit (pre-commit hooks)
-- Scan in CI/CD (block on CRITICAL/HIGH)
-- Rotate immediately on detection (don't just delete)
-- Scrub git history (secrets persist in commits)
-- Migrate to Vault (centralized secrets management)
-- Implement prevention (layered security)
-- Audit all secret access (compliance trail)
-- Use progressive disclosure (AI agents)
-- Prioritize by severity (CRITICAL < 1hr)
-- Document all findings and remediation
-
-❌ **Never**:
-- Delete secrets without rotation (still valid!)
-- Skip git history scrubbing (commits are permanent)
-- Ignore LOW severity (technical debt compounds)
-- Rely on rotation alone (prevention > detection)
-- Log secret values during scanning
-- Share scan results publicly (contain exposure)
-- Skip verification after remediation
-- Treat all findings equally (severity matters)
-
----
-
-## 🔗 Integration Examples
+## Integration Examples
 
 ### Pre-commit Hook (Advanced)
 
@@ -549,7 +373,7 @@ All Vault Radar skills follow these security-first principles:
 
 set -e
 
-echo "🔍 Vault Radar: Scanning staged files..."
+echo "Vault Radar: Scanning staged files..."
 
 # Create temp file for results
 RESULTS_FILE=$(mktemp)
@@ -571,7 +395,7 @@ rm -f "$RESULTS_FILE"
 
 # Decision logic
 if [ "$CRITICAL" -gt 0 ]; then
-  echo "❌ BLOCKED: $CRITICAL CRITICAL secrets detected"
+  echo "BLOCKED: $CRITICAL CRITICAL secrets detected"
   echo ""
   echo "CRITICAL findings must be resolved before commit."
   echo "Run: vault-radar scan --target git-staged"
@@ -579,7 +403,7 @@ if [ "$CRITICAL" -gt 0 ]; then
 fi
 
 if [ "$HIGH" -gt 0 ]; then
-  echo "⚠️  WARNING: $HIGH HIGH severity secrets detected"
+  echo " WARNING: $HIGH HIGH severity secrets detected"
   echo ""
   echo "HIGH findings should be resolved before commit."
   echo "Run: vault-radar scan --target git-staged"
@@ -591,133 +415,47 @@ if [ "$HIGH" -gt 0 ]; then
 fi
 
 if [ "$MEDIUM" -gt 0 ]; then
-  echo "ℹ️  INFO: $MEDIUM MEDIUM severity findings (not blocking)"
+  echo "INFO: $MEDIUM MEDIUM severity findings (not blocking)"
 fi
 
-echo "✅ Vault Radar: Scan complete"
+echo "Vault Radar: Scan complete"
 exit 0
 ```
-
 ---
 
-### GitLab CI/CD Integration
-
-```yaml
-# .gitlab-ci.yml
-
-stages:
-  - security
-  - build
-  - deploy
-
-vault-radar-scan:
-  stage: security
-  image: hashicorp/vault-radar:latest
-  script:
-    - vault-radar scan --target . --format json --output scan-results.json
-    
-    # Parse results
-    - CRITICAL=$(jq '[.results[] | select(.severity == "CRITICAL")] | length' scan-results.json)
-    - HIGH=$(jq '[.results[] | select(.severity == "HIGH")] | length' scan-results.json)
-    
-    # Fail on CRITICAL or HIGH
-    - |
-      if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
-        echo "❌ Secrets detected - blocking pipeline"
-        echo "  CRITICAL: $CRITICAL"
-        echo "  HIGH: $HIGH"
-        exit 1
-      fi
-  
-  artifacts:
-    reports:
-      sast: scan-results.json
-    paths:
-      - scan-results.json
-    expire_in: 30 days
-  
-  only:
-    - merge_requests
-    - main
-```
-
----
-
-### MCP Server Configuration (Claude Desktop)
-
+### MCP Server Configuration (VS Code)
 ```json
 {
-  "mcpServers": {
-    "vault-radar": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@hashicorp/vault-radar-mcp"
-      ],
-      "env": {
-        "VAULT_RADAR_TOKEN": "${VAULT_RADAR_TOKEN}",
-        "VAULT_RADAR_ORG": "your-org-name"
-      }
+    "mcp": {
+        "servers": {
+            "vault-radar": {
+                "command": "docker",
+                "args": [
+                    "run",
+                    "--rm",
+                    "-i",
+                    "-e", "HCP_PROJECT_ID=<HCP Project ID>",
+                    "-e", "HCP_CLIENT_ID=<HCP Service Principal Client ID>",
+                    "-e", "HCP_CLIENT_SECRET=<HCP Service Principal Client Secret>",
+                    "hashicorp/vault-radar-mcp-server:<tag>",
+                ]
+            }
+        }
     }
-  }
 }
+
 ```
 
 **Available MCP Tools**:
-- `scan-repo`: Scan GitHub/GitLab repository
-- `scan-offline`: Scan local directory
-- `get-finding`: Retrieve finding details (progressive disclosure)
-- `triage-severity`: Categorize by impact
-- `generate-remediation`: Create fix scripts
+- `query_vault_radar_data_sources`: Queries all data sources available in the Vault Radar project.
+- `query_vault_radar_resources`: Queries all resources in your HCP Vault Radar project.
+- `query_vault_radar_events`: Queries all the events in your HCP Vault Radar project.
+- `list_vault_radar_secret_types`: Lists the detected secret types in your HCP Vault Radar project.
 
 ---
 
-## 📚 Additional Resources
-
-### Within This Repository
-- [Main README](../README.md) - Platform integration guides
-
-### Official Documentation
+## Documentation
 - [Vault Radar Documentation](https://developer.hashicorp.com/vault/docs/radar)
-- [Vault Radar MCP Server](https://github.com/hashicorp/vault-radar-mcp)
+- [Vault Radar MCP Server](https://developer.hashicorp.com/hcp/docs/vault-radar/mcp-server/overview)
 - [Model Context Protocol Spec](https://spec.modelcontextprotocol.io/)
-- [HCP Vault Radar](https://portal.cloud.hashicorp.com/services/vault-radar)
-
-### Security Resources
-- [OWASP Secrets Management](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html)
-- [CIS Critical Security Controls](https://www.cisecurity.org/controls)
-- [NIST Cybersecurity Framework](https://www.nist.gov/cyberframework)
-
----
-
-## 🤝 Contributing
-
-When adding new Vault Radar skills or workflows:
-
-1. **Follow progressive disclosure**: Don't expose secrets unnecessarily
-2. **Include severity guidance**: CRITICAL, HIGH, MEDIUM, LOW
-3. **Provide remediation steps**: Not just detection
-4. **Add prevention measures**: Pre-commit, CI/CD integration
-5. **Document MCP integration**: For AI agent automation
-6. **Update this README**: Add your skill/workflow to relevant sections
-
----
-
-## 💡 Tips for AI Agents
-
-When using these instructions:
-
-1. **Always use progressive disclosure**: Don't reveal secret values unless explicitly requested
-2. **Prioritize by severity**: CRITICAL → HIGH → MEDIUM → LOW
-3. **Rotate, don't just delete**: Secrets remain valid after removal
-4. **Scrub git history**: Commits are permanent without BFG/git-filter-repo
-5. **Implement layered prevention**: Pre-commit + CI/CD + runtime monitoring
-6. **Migrate to Vault**: Dynamic secrets preferred over static
-7. **Verify remediation**: Rescan after fixes applied
-8. **Document everything**: Audit trail for compliance
-
----
-
-**Remember**: Exposed secrets are compromised secrets. Complete remediation means rotation + removal + migration + prevention.
-
-**🔒 Detect Fast | 🚨 Rotate Immediately | 🛡️ Prevent Always**
+- [HCP Vault Radar](https://developer.hashicorp.com/hcp/docs/vault-radar)

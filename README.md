@@ -5,9 +5,9 @@
 [![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://github.com/hashicorp/agent-instructions-library)
 [![License](https://img.shields.io/badge/license-MPL%202.0-green.svg)](LICENSE)
 
-## What This Is
+## What's the purpose of this repository?
 
-Pre-built instruction sets that teach AI agents HashiCorp best practices, security patterns, and workflows. Copy files → Reference in prompts → Get quality code.
+This repository hosts pre-built instruction sets that teach AI agents HashiCorp best practices, security patterns, and workflows. Copy files → Reference in prompts → Get quality code. Edit them as needed.
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
@@ -28,44 +28,12 @@ Pre-built instruction sets that teach AI agents HashiCorp best practices, securi
 └──────────┘ └─────────┘ └─────────┘ └────────────┘
 ```
 
-
-## Repository Structure
-
-```
-agent-instructions-library/
-│
-├── .github/copilot-instructions.md ◄─ GitHub Copilot (auto-loaded)
-│
-├── terraform/                       ◄─ Terraform Instructions
-│   ├── skills/generate-hcl/         • Generate production HCL
-│   ├── skills/refactor-module/      • Extract reusable modules
-│   ├── workflows/plan-and-apply-*.md
-│   └── prompts/system-prompt-tf.md
-│
-├── vault/                           ◄─ Vault Instructions
-│   ├── skills/generate-policy/      • Create ACL policies
-│   ├── skills/read-secret-securely/ • Secure secret handling
-│   └── workflows/new-kv-engine-setup.md
-│
-├── vault-radar/                     ◄─ Vault Radar Instructions
-│   ├── skills/scan-for-secrets/     • Detect exposed secrets
-│   ├── skills/integrate-mcp-server/ • MCP integration
-│   └── workflows/triage-and-remediate.md
-│
-└── consul/                          ◄─ Consul Instructions
-    └── skills/configure-service-mesh/
-
- Detailed guides: terraform/README.md, vault/README.md, etc.
-```
-
-
-
 ## Platform Integration Guide
 
 ### How Each Platform Uses Instructions
 
 ```text
-┌──────────────────────────────────────────────────────────────────────┐
+┌───────────────────────────────────────────────────────────────────────┐
 │                    PLATFORM INSTRUCTION MATRIX                        │
 ├─────────────┬──────────────────┬────────────────┬─────────────────────┤
 │  Platform   │  Primary Files   │  Auto-Loaded?  │  Invocation         │
@@ -250,45 +218,8 @@ Agent switched to: terraform-action-agent
 │                                                            │
 └────────────────────────────────────────────────────────────┘
 
-Works with: Cursor, Aider, Continue, Cody, and other AI coding assistants
+Works with: Cursor, GitHub CoPilot, gemini-cli, Amp, Devin, Warp, Zed, Cursor, opencode, codex and other AI coding assistants
 ```
-
-### Platform Decision Tree
-
-```text
-                      Which AI assistant?
-                             │
-        ┌────────────────────┼────────────────────┐
-        │                    │                    │
-        ▼                    ▼                    ▼
-    VS Code/JetBrains  Claude Desktop      Cursor/Other IDEs
-        │                    │                    │
-        ▼                    ▼                    ▼
-┌──────────────┐  ┌───────────────┐  ┌───────────────────┐
-│ GitHub       │  │ Skills auto-  │  │ Create AGENTS.md  │
-│ Copilot      │  │ discovered    │  │ or .cursorrules   │
-├──────────────┤  ├───────────────┤  ├───────────────────┤
-│ Copy to:     │  │ No setup!     │  │ List skills &     │
-│ .github/     │  │               │  │ workflows in file │
-│ copilot-     │  │ Just use:     │  │                   │
-│ instructions │  │ "Using the    │  │ Reference in      │
-│ .md          │  │  X skill..."  │  │ prompts           │
-└──────────────┘  └───────────────┘  └───────────────────┘
-        │                    │                    │
-        └────────────────────┴────────────────────┘
-                             │
-                             ▼
-                    ┌─────────────────┐
-                    │ Amazon Tools    │
-                    ├─────────────────┤
-                    │ Kiro: .kiro/ in │
-                    │  project root   │
-                    │ Q CLI: ~/.aws/  │
-                    │  amazonq/       │
-                    └─────────────────┘
-```
-
-
 
 ## Instruction File Types
 
@@ -344,7 +275,7 @@ Step 6: Verify  ←  Step 5: Apply  ←  ─────┘    └→ Stop
 | **Amazon Q CLI** | ✅ `~/.aws/amazonq/agent/` | ❌ | ❌ | Agent-based global configuration |
 | **Continue** | ✅ `config.json` | ✅ Reference in prompts | ✅ Slash commands | VS Code/JetBrains extension |
 
-## ⚡ Quick Start Examples
+## Quick Start Examples
 
 ### Example 1: Generate Terraform Infrastructure (GitHub Copilot)
 
@@ -394,10 +325,6 @@ Follow vault-radar/workflows/triage-and-remediate.md:
 - [Claude Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview)
 - [AGENTS.md Specification](https://agents.md)
 - [Anthropic Skills Engineering Blog](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills)
-
-### Advanced Guides
-- **[USAGE_GUIDE.md](USAGE_GUIDE.md)** - Detailed platform-specific setup and real-world examples
-- **[VISUAL_GUIDE.md](VISUAL_GUIDE.md)** - Comprehensive diagrams and flowcharts
 
 ---
 
