@@ -23,6 +23,18 @@ vault-radar/
 
 ### Skills
 
+### For Claude Desktop (Native SKILL.md Support)
+```bash
+# No setup needed! Claude auto-discovers SKILL.md files
+# Just use natural language:
+
+"Using the scan-for-secrets skill, analyze my repository for exposed credentials"
+
+"Using the integrate-mcp-server skill, set up Vault Radar MCP integration"
+```
+
+**Why this works**: Claude Desktop natively supports Anthropic's SKILL.md format with progressive disclosure. It automatically finds and loads relevant skills.
+
 **Skills** are discrete, reusable capabilities that teach AI agents specific Vault Radar tasks.
 
 #### 🔍 [scan-for-secrets](skills/scan-for-secrets/)

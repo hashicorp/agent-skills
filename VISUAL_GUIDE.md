@@ -2,7 +2,7 @@
 
 > **See how instruction files work with diagrams, flowcharts, and examples**
 
-## 📖 Table of Contents
+## Table of Contents
 
 - [How Instructions Flow](#how-instructions-flow)
 - [Skill Invocation Lifecycle](#skill-invocation-lifecycle)
@@ -11,7 +11,7 @@
 - [File Structure Visualizations](#file-structure-visualizations)
 - [Usage Patterns](#usage-patterns)
 
-## 🔄 How Instructions Flow
+## How Instructions Flow
 
 ### Overall Architecture
 
@@ -89,7 +89,7 @@ User Prompt
     └────────┘
 ```
 
-## 🎯 Skill Invocation Lifecycle
+## Skill Invocation Lifecycle
 
 ### Claude Skills Example
 
@@ -216,7 +216,7 @@ User Types in Editor
 └──────────────────────────────────────┘
 ```
 
-## 🔄 Workflow Execution Diagrams
+## Workflow Execution Diagrams
 
 ### Terraform: Plan and Apply Workflow
 
@@ -378,7 +378,7 @@ User Types in Editor
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-## 🔀 Platform Comparison
+## Platform Comparison
 
 ### Instruction Loading Mechanisms
 
@@ -470,7 +470,7 @@ User Types in Editor
 └────────────────┴──────────┴──────────┴──────────┴──────────┴──────────┴──────────┘
 ```
 
-## 📂 File Structure Visualizations
+## File Structure Visualizations
 
 ### Repository Layout (Visual Tree)
 
@@ -564,7 +564,7 @@ Skill File Structure (Claude)
 └─────────────────────────────────────────────────────────┘
 ```
 
-## 🎨 Usage Patterns
+## Usage Patterns
 
 ### Pattern 1: Simple Generation
 
@@ -696,7 +696,7 @@ Skill File Structure (Claude)
           └──────────────────┘
 ```
 
-## 📊 Decision Trees
+## Decision Trees
 
 ### Choosing the Right Instruction Type
 
@@ -767,7 +767,7 @@ Skill File Structure (Claude)
 
 ---
 
-## 🎓 Learning Resources
+## Learning Resources
 
 ### Quick Reference Cards
 

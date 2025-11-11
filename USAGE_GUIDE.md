@@ -2,7 +2,7 @@
 
 > **Learn how to use instruction files with different AI coding assistants**
 
-## 📚 Table of Contents
+## Table of Contents
 
 - [What This Guide Covers](#what-this-guide-covers)
 - [Understanding Instruction File Types](#understanding-instruction-file-types)
@@ -12,7 +12,7 @@
 - [Best Practices](#best-practices)
 - [Troubleshooting](#troubleshooting)
 
-## 🎯 What This Guide Covers
+## What This Guide Covers
 
 This guide explains how to effectively use the Agent Instructions Library with different AI coding assistants. You'll learn:
 
@@ -21,7 +21,7 @@ This guide explains how to effectively use the Agent Instructions Library with d
 - **When** to use different instruction types
 - **Examples** of real-world usage patterns
 
-## 📖 Understanding Instruction File Types
+## Understanding Instruction File Types
 
 ### Visual Overview
 
@@ -133,7 +133,7 @@ skills/generate-hcl/
 - Different tools need coordination
 - Error handling is critical
 
-### 3. Prompts (`*.prompt.md` or `*.md`)
+### 2. Prompts (`*.prompt.md` or `*.md`)
 
 **Format:**
 ```markdown
@@ -200,7 +200,7 @@ Using the summarize-plan prompt, analyze: [paste plan]
 @workspace Load terraform/prompts/system-prompt-tf.md as system context
 ```
 
-## 🔌 Platform-Specific Setup
+## Platform-Specific Setup
 
 ### GitHub Copilot
 
@@ -679,7 +679,7 @@ Scan: ./terraform/prod/
 Generate database module per AGENTS.md standards
 ```text
 
-## 🌟 Real-World Examples
+## Real-World Examples
 
 ### Example 1: Secure Multi-Tier Application (GitHub Copilot)
 
@@ -820,7 +820,7 @@ Timeline: Complete within 24 hours
 6. Creates pre-commit hook configuration
 7. Produces executive summary
 
-## ✅ Best Practices
+## Best Practices
 
 ### 1. Start with System Prompts
 
@@ -893,7 +893,7 @@ Add versioning, lifecycle policy for 90 days, and KMS encryption
 Also add bucket policy preventing unencrypted uploads
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Issue: Agent Ignores Instructions
 
@@ -1000,7 +1000,7 @@ Content...
 3. **Restart IDE:**
 Some platforms only load AGENTS.md on startup
 
-## 📚 Additional Resources
+## Additional Resources
 
 ### Documentation by Platform
 
@@ -1025,7 +1025,7 @@ Some platforms only load AGENTS.md on startup
 
 ---
 
-## 🎓 Next Steps
+## Next Steps
 
 1. **Choose your platform** (GitHub Copilot, Claude, Cursor, etc.)
 2. **Follow the setup guide** for your platform
@@ -1040,4 +1040,4 @@ Some platforms only load AGENTS.md on startup
 
 For questions, please open an issue on GitHub or consult the [main README](README.md).
 
-📋 **[View Changelog](CHANGELOG.md)** for version history and updates.
+**[View Changelog](CHANGELOG.md)** for version history and updates.

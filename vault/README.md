@@ -24,6 +24,18 @@ vault/
 
 **Skills** are discrete, reusable capabilities that teach AI agents specific Vault tasks.
 
+### For Claude Desktop (Native SKILL.md Support)
+```bash
+# No setup needed! Claude auto-discovers SKILL.md files
+# Just use natural language:
+
+"Using the generate-policy skill, create a policy for my web application"
+
+"Using the read-secret-securely skill, show me how to retrieve database credentials"
+```
+
+**Why this works**: Claude Desktop natively supports Anthropic's SKILL.md format with progressive disclosure. It automatically finds and loads relevant skills.
+
 #### 🔐 [generate-policy](skills/generate-policy/)
 **Purpose**: Create least-privilege Vault ACL policies with explicit deny rules
 

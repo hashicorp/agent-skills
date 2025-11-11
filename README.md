@@ -5,13 +5,13 @@
 [![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://github.com/hashicorp/agent-instructions-library)
 [![License](https://img.shields.io/badge/license-MPL%202.0-green.svg)](LICENSE)
 
-## 🎯 What This Is
+## What This Is
 
 Pre-built instruction sets that teach AI agents HashiCorp best practices, security patterns, and workflows. Copy files → Reference in prompts → Get quality code.
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│             🎯 HashiCorp Instructions Library                │
+│                HashiCorp Instructions Library                │
 ├──────────────────────────────────────────────────────────────┤
 │                                                              │
 │  Terraform        Vault          Vault Radar      Consul     │
@@ -19,7 +19,7 @@ Pre-built instruction sets that teach AI agents HashiCorp best practices, securi
 │  └─ Workflows     └─ Workflows   └─ Workflows     └─ ...     │
 │  └─ Prompts       └─ Prompts     └─ Prompts                  │
 │                                                              │
-└───┬─────────────┬─────────────┬─────────────┬───────────────┘
+└───┬─────────────┬─────────────┬─────────────┬────────────────┘
     │             │             │             │
     ▼             ▼             ▼             ▼
 ┌──────────┐ ┌─────────┐ ┌─────────┐ ┌────────────┐
@@ -29,7 +29,7 @@ Pre-built instruction sets that teach AI agents HashiCorp best practices, securi
 ```
 
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 agent-instructions-library/
@@ -55,12 +55,12 @@ agent-instructions-library/
 └── consul/                          ◄─ Consul Instructions
     └── skills/configure-service-mesh/
 
-📘 Detailed guides: terraform/README.md, vault/README.md, etc.
+ Detailed guides: terraform/README.md, vault/README.md, etc.
 ```
 
 
 
-## 🚀 Platform Integration Guide
+## Platform Integration Guide
 
 ### How Each Platform Uses Instructions
 
@@ -245,12 +245,12 @@ Agent switched to: terraform-action-agent
 │          "Read terraform/skills/generate-hcl/SKILL.md..."  │
 │                                                            │
 │  Step 3: (Optional) Create platform-specific files         │
-│          ├─ CLAUDE.md → symlink to AGENTS.md               │
-│          └─ GEMINI.md → symlink to AGENTS.md               │
+│          ├─ .cursorrules → Cursor rules                    │
+│          └─ CLAUDE.md → Claude project context             │
 │                                                            │
 └────────────────────────────────────────────────────────────┘
 
-Works with: OpenAI Codex, Google Jules, Gemini CLI, Aider, etc.
+Works with: Cursor, Aider, Continue, Cody, and other AI coding assistants
 ```
 
 ### Platform Decision Tree
@@ -261,37 +261,36 @@ Works with: OpenAI Codex, Google Jules, Gemini CLI, Aider, etc.
         ┌────────────────────┼────────────────────┐
         │                    │                    │
         ▼                    ▼                    ▼
-    VS Code            Claude App          Amazon Tools
+    VS Code/JetBrains  Claude Desktop      Cursor/Other IDEs
         │                    │                    │
         ▼                    ▼                    ▼
 ┌──────────────┐  ┌───────────────┐  ┌───────────────────┐
-│ GitHub       │  │ Skills auto-  │  │ Kiro or Q CLI?    │
-│ Copilot      │  │ discovered    │  │                   │
+│ GitHub       │  │ Skills auto-  │  │ Create AGENTS.md  │
+│ Copilot      │  │ discovered    │  │ or .cursorrules   │
 ├──────────────┤  ├───────────────┤  ├───────────────────┤
-│ Copy to:     │  │ No setup!     │  │ Kiro: .kiro/      │
-│ .github/     │  │               │  │  to project root  │
+│ Copy to:     │  │ No setup!     │  │ List skills &     │
+│ .github/     │  │               │  │ workflows in file │
 │ copilot-     │  │ Just use:     │  │                   │
-│ instructions │  │ "Using the    │  │ Q CLI: ~/.aws/    │
-│              │  │  X skill..."  │  │  amazonq/         │
+│ instructions │  │ "Using the    │  │ Reference in      │
+│ .md          │  │  X skill..."  │  │ prompts           │
 └──────────────┘  └───────────────┘  └───────────────────┘
         │                    │                    │
-        └────────────────────┼────────────────────┘
+        └────────────────────┴────────────────────┘
                              │
                              ▼
                     ┌─────────────────┐
-                    │ Other (Cursor,  │
-                    │ Codex, Jules)   │
+                    │ Amazon Tools    │
                     ├─────────────────┤
-                    │ Create          │
-                    │ AGENTS.md       │
-                    │ List skills     │
-                    │ & workflows     │
+                    │ Kiro: .kiro/ in │
+                    │  project root   │
+                    │ Q CLI: ~/.aws/  │
+                    │  amazonq/       │
                     └─────────────────┘
 ```
 
 
 
-## 📚 Instruction File Types
+## Instruction File Types
 
 ### Skills (`SKILL.md`) - Discrete Capabilities
 
@@ -334,33 +333,16 @@ Step 6: Verify  ←  Step 5: Apply  ←  ─────┘    └→ Stop
 **Usage:** `#prompt-name` (Copilot) or reference explicitly
 
 
-## 🔌 Platform Compatibility
+## Platform Compatibility
 
-| Platform | Skills | Workflows | Prompts | System Prompts | Notes |
-|----------|--------|-----------|---------|----------------|-------|
-| **GitHub Copilot** | ✅ | ✅ | ✅ | ✅ | Via `.github/copilot-instructions.md` and prompt files |
-| **Claude** | ✅ | ✅ | ✅ | ✅ | Native SKILL.md format support |
-| **Cursor** | ✅ | ✅ | ✅ | ✅ | Via AGENTS.md and .cursorrules |
-| **OpenAI Codex** | ✅ | ✅ | ✅ | ✅ | Via AGENTS.md |
-| **Google Jules** | ✅ | ✅ | ✅ | ✅ | Via AGENTS.md or GEMINI.md |
-| **VS Code Copilot** | ✅ | ✅ | ✅ | ✅ | Chat modes and prompt files |
-| **JetBrains AI** | ✅ | ✅ | ✅ | ✅ | Custom instructions support |
-
-### Cross-Platform Setup
-
-**Symlink Strategy for Maximum Compatibility:**
-
-```bash
-# Create AGENTS.md pointing to main instructions
-ln -s .github/copilot-instructions.md AGENTS.md
-
-# Create CLAUDE.md for Claude-specific usage
-ln -s .github/copilot-instructions.md CLAUDE.md
-
-# Create GEMINI.md for Google Jules
-ln -s .github/copilot-instructions.md GEMINI.md
-```
-
+| Platform | Custom Instructions | Workflows | Prompts | Notes |
+|----------|---------------------|-----------|---------|-------|
+| **GitHub Copilot** | ✅ `.github/copilot-instructions.md` | ✅ Reference in prompts | ✅ `.github/prompts/*.md` | VS Code, JetBrains, Visual Studio - Auto-loaded repository context |
+| **Claude Desktop** | ✅ **SKILL.md** (native) | ✅ Reference in prompts | ✅ Reference in prompts | **Only platform with native SKILL.md support** - Progressive disclosure |
+| **Cursor** | ✅ `.cursorrules` / `AGENTS.md` | ✅ Rules & memories | ✅ Custom commands | MCP servers, auto-loaded on startup |
+| **Amazon Kiro** | ✅ `.kiro/steering/` | ✅ `.kiro/specs/` | ❌ | Hook-based context injection per file |
+| **Amazon Q CLI** | ✅ `~/.aws/amazonq/agent/` | ❌ | ❌ | Agent-based global configuration |
+| **Continue** | ✅ `config.json` | ✅ Reference in prompts | ✅ Slash commands | VS Code/JetBrains extension |
 
 ## ⚡ Quick Start Examples
 
@@ -399,9 +381,7 @@ Follow vault-radar/workflows/triage-and-remediate.md:
 
 **What happens:** Agent reads AGENTS.md → Finds workflow → Executes multi-step process
 
-
-
-## � Learn More
+## Learn More
 
 ### Product-Specific Guides
 - **[Terraform Guide](terraform/README.md)** - Deep-dive into Terraform skills and workflows
@@ -421,4 +401,4 @@ Follow vault-radar/workflows/triage-and-remediate.md:
 
 ---
 
-💡 **Questions?** [Open an issue](https://github.com/hashicorp/agent-instructions-library/issues) | 📋 [View Changelog](CHANGELOG.md) | 📄 **License:** MPL 2.0
+**Questions?** [Open an issue](https://github.com/hashicorp/agent-instructions-library/issues) | [View Changelog](CHANGELOG.md) | **License:** MPL 2.0

@@ -2,6 +2,21 @@
 
 All notable changes to the Agent Instructions Library.
 
+## 2025-11-11
+
+### Fixed
+- **Platform Compatibility Matrix**: Corrected platform listings with accurate, currently available tools
+  - Removed: OpenAI Codex (deprecated March 2023), Google Jules (internal only), duplicate VS Code Copilot
+  - Added: Aider, Continue (open-source alternatives with actual custom instruction support)
+  - Clarified: JetBrains AI is GitHub Copilot integration, not separate platform
+- **Critical Correction**: SKILL.md format is **Claude Desktop exclusive**
+  - Only Claude natively supports Anthropic's SKILL.md format with progressive disclosure
+  - Other platforms (GitHub Copilot, Cursor, Aider, etc.) can reference SKILL.md content manually but don't auto-load it
+  - Updated documentation to clarify this distinction and prevent user confusion
+- Updated platform decision tree to reflect real-world AI coding assistant landscape
+- Removed references to discontinued/unavailable platforms (Codex, Jules, Gemini CLI)
+- Added comprehensive notes explaining platform capabilities and SKILL.md compatibility
+
 ## 2025-11-10
 
 ### Added

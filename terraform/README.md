@@ -26,6 +26,19 @@ terraform/
 
 **Skills** are discrete, reusable capabilities that teach AI agents specific Terraform tasks.
 
+### For Claude Desktop (Native SKILL.md Support)
+```bash
+# No setup needed! Claude auto-discovers SKILL.md files
+# Just use natural language:
+
+"Using the generate-hcl skill, create an AWS VPC with public and private subnets"
+
+"Using the refactor-module skill, extract this RDS configuration into a reusable module"
+```
+
+**Why this works**: Claude Desktop natively supports Anthropic's SKILL.md format with progressive disclosure. It automatically finds and loads relevant skills.
+
+
 #### 📝 [generate-hcl](skills/generate-hcl/)
 **Purpose**: Create secure, compliant Terraform HCL code following best practices
 

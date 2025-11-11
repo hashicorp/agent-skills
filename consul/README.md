@@ -13,6 +13,16 @@ consul/
 
 ---
 
+### For Claude Desktop (Native SKILL.md Support)
+```bash
+# No setup needed! Claude auto-discovers SKILL.md files
+# Just use natural language:
+
+"Using the configure-service-mesh skill, set up service mesh for my microservices"
+```
+
+**Why this works**: Claude Desktop natively supports Anthropic's SKILL.md format with progressive disclosure. It automatically finds and loads relevant skills.
+
 ## 🚧 Current Status: Foundational / Preview
 
 This directory is in **early development** with foundational examples provided. Consul integration is expanding with more skills, workflows, and prompts coming soon.
