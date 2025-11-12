@@ -2,9 +2,6 @@
 
 > **AI agent instructions for Terraform, Vault, Vault Radar, and Consul - Works with GitHub Copilot, Claude, Cursor, Amazon Kiro, Amazon Q CLI, and any AI coding assistant**
 
-[![Documentation](https://img.shields.io/badge/docs-latest-blue.svg)](https://github.com/hashicorp/agent-instructions-library)
-[![License](https://img.shields.io/badge/license-MPL%202.0-green.svg)](LICENSE)
-
 ## What's the purpose of this repository?
 
 This repository hosts pre-built instruction sets that teach AI agents HashiCorp best practices, security patterns, and workflows. Copy files → Reference in prompts → Get quality code. Edit them as needed.
@@ -255,13 +252,16 @@ Works with: Cursor, GitHub CoPilot, gemini-cli, Amp, Devin, Warp, Zed, Cursor, o
 ### Workflows (`*.md`) - Multi-Step Processes
 
 ```text
-Step 1: Init    →    Step 2: Plan    →    Step 3: Review
-                                                 │
-                                            Approved?
-                                                 │
-                                           Yes   │   No
-                                            │    │    │
-Step 6: Verify  ←  Step 5: Apply  ←  ─────┘    └→ Stop
+Step 1: Init → Step 2: Plan → Step 3: Review
+                                     │
+                                Approved?
+                                     │
+                              ┌──────┴──────┐
+                              │             │
+                             Yes            No
+                              │             │
+                              ▼             ▼
+   Step 6: Verify ← Step 5: Apply          Stop
 ```
 
 **Examples:** Plan→Approve→Apply, Scan→Triage→Remediate  
@@ -290,4 +290,4 @@ Step 6: Verify  ←  Step 5: Apply  ←  ─────┘    └→ Stop
 
 ---
 
-**Questions?** [Open an issue](https://github.com/hashicorp/agent-instructions-library/issues) | [View Changelog](CHANGELOG.md) | **License:** MPL 2.0
+**Questions?** [Open an issue](https://github.com/hashicorp/agent-instructions-library/issues) | [View Changelog](CHANGELOG.md) | **License:** [MPL 2.0](LICENSE)
