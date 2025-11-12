@@ -645,6 +645,83 @@ func validateTable(ctx context.Context, conn *dynamodb.Client, tableName string)
 },
 ```
 
+## Implementation Findings
+
+### AWS Service Requirements
+
+**Point-in-Time Recovery Prerequisite**
+
+DynamoDB tables must have point-in-time recovery (continuous backups) enabled before on-demand backups can be created. This is an AWS service requirement:
+
+- Without PITR enabled, CreateBackup API returns `ContinuousBackupsUnavailableException`
+- All test tables must include:
+  ```hcl
+  point_in_time_recovery {
+    enabled = true
+  }
+  ```
+- This requirement should be documented in user-facing documentation
+- Error message from AWS is clear: "Backups have not yet been enabled for table"
+
+### Terraform 1.14.0 Action Limitations
+
+**Supported Lifecycle Events**
+
+Terraform 1.14.0 actions support only the following lifecycle events:
+- `before_create` - Before resource creation
+- `after_create` - After resource creation
+- `before_update` - Before resource update
+- `after_update` - After resource update
+
+**Not Supported**:
+- `before_destroy` - Not available in Terraform 1.14.0
+- `after_destroy` - Not available in Terraform 1.14.0
+
+Attempting to use unsupported events results in: "Invalid event value before_destroy"
+
+### Testing Insights
+
+**Multi-Region Testing Pattern**
+
+For testing actions with explicit region parameters:
+- Use `ConfigMultipleRegionProvider(2)` to set up multiple providers
+- Use `ProtoV5FactoriesMultipleRegions(ctx, t, 2)` for provider factories
+- Create resources in alternate region using `provider = awsalternate`
+- Action can specify explicit region parameter independent of resource provider
+
+**Error Pattern Matching**
+
+Terraform wraps action errors with additional context, requiring flexible regex patterns:
+- Use `(?s)` flag for multi-line matching: `regexache.MustCompile(\`(?s)Pattern.*text\`)`
+- Match on key phrases rather than exact error text
+- Example: `(?s)Table Validation Failed.*does not exist` matches multi-line error output
+
+**Test Patterns Not Applicable**
+
+Some test patterns don't apply to lifecycle-triggered actions:
+- **Duplicate Name Tests**: Actions trigger on lifecycle events, not config reapplication
+  - Applying same config twice doesn't re-trigger the action
+  - Duplicate backup errors only occur with simultaneous operations (not testable)
+- **Before Destroy Tests**: Event not supported in Terraform 1.14.0
+
+### Performance Characteristics
+
+**Backup Creation Timing**
+
+Based on acceptance test results:
+- Basic backup creation: ~25-35 seconds for small test tables
+- Includes table creation, PITR enablement, backup creation, and polling
+- Polling interval: 5 seconds
+- Progress updates: Every 30 seconds
+- Total test suite (5 tests): ~133 seconds
+
+**Resource Cleanup**
+
+Test backups persist after tests complete:
+- Sweep function needed for cleanup
+- Backups are independent of table lifecycle
+- Must explicitly delete backups in cleanup
+
 ## Future Enhancements
 
 Potential future improvements (not in scope for initial implementation):

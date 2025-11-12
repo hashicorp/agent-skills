@@ -436,12 +436,18 @@ resource "terraform_data" "trigger" {
 ```
 
 ### Available Trigger Events
+
+**Terraform 1.14.0 Supported Events:**
 - `before_create` - Before resource creation
 - `after_create` - After resource creation
 - `before_update` - Before resource update
 - `after_update` - After resource update
-- `before_destroy` - Before resource destruction
-- `after_destroy` - After resource destruction
+
+**Not Supported in Terraform 1.14.0:**
+- `before_destroy` - Not available (will cause validation error)
+- `after_destroy` - Not available (will cause validation error)
+
+**Important**: Attempting to use `before_destroy` or `after_destroy` in Terraform 1.14.0 will result in an error: "Invalid event value before_destroy". These events may be added in future Terraform versions, but are not currently supported.
 
 ## Testing Actions
 
@@ -528,6 +534,102 @@ func init() {
         F:    sweepBackups,
     })
 }
+```
+
+### Testing Best Practices
+
+**Service-Specific Prerequisites**
+
+Always check for service-specific prerequisites that must be met before actions can succeed:
+
+- **DynamoDB Backups**: Tables must have point-in-time recovery (continuous backups) enabled
+  ```hcl
+  resource "aws_dynamodb_table" "test" {
+    # ... other configuration ...
+    
+    point_in_time_recovery {
+      enabled = true
+    }
+  }
+  ```
+- **EC2 Instances**: Must be in correct state (running/stopped) for state change actions
+- **Lambda Functions**: Must be in Active state before invocation
+- Document prerequisites in action documentation and test configurations
+
+**Multi-Region Testing**
+
+For actions that support explicit region parameters:
+
+```go
+func TestAccServiceAction_region(t *testing.T) {
+    ctx := acctest.Context(t)
+    
+    resource.Test(t, resource.TestCase{
+        PreCheck: func() {
+            acctest.PreCheck(ctx, t)
+            acctest.PreCheckMultipleRegion(t, 2)
+        },
+        ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
+        // ... rest of test
+    })
+}
+```
+
+Configuration pattern:
+```go
+func testAccActionConfig_region(rName, region string) string {
+    return acctest.ConfigCompose(
+        acctest.ConfigMultipleRegionProvider(2),
+        fmt.Sprintf(`
+resource "aws_resource" "test" {
+  provider = awsalternate
+  # ... configuration ...
+}
+
+action "aws_service_action" "test" {
+  config {
+    resource_id = aws_resource.test.id
+    region      = %[2]q
+  }
+}
+`, rName, region))
+}
+```
+
+**Error Pattern Matching**
+
+Terraform wraps action errors with additional context. Use flexible regex patterns:
+
+```go
+// Use (?s) flag for multi-line matching
+ExpectError: regexache.MustCompile(`(?s)Error Title.*key phrase`),
+
+// Examples:
+ExpectError: regexache.MustCompile(`(?s)Table Validation Failed.*does not exist`),
+ExpectError: regexache.MustCompile(`(?s)Backup Operation Failed.*in use`),
+```
+
+**Test Patterns Not Applicable to Actions**
+
+Some common test patterns don't apply to lifecycle-triggered actions:
+
+1. **Duplicate Name/Resource Tests**: Actions trigger on lifecycle events, not config reapplication
+   - Applying the same config twice doesn't re-trigger the action
+   - Duplicate resource errors only occur with simultaneous operations (not testable)
+   
+2. **Before/After Destroy Tests**: Not supported in Terraform 1.14.0
+   - Comment out these tests with explanation
+   - May be supported in future Terraform versions
+
+**Test Execution Environment**
+
+For Terraform 1.14.0 action testing:
+```bash
+# Set Terraform binary path
+export TF_ACC_TERRAFORM_PATH=/tmp/terraform
+
+# Run tests
+TF_ACC=1 go test ./internal/service/<service> -run TestAccServiceAction_ -v -timeout 30m
 ```
 
 ### Running Tests

@@ -56,6 +56,8 @@ The AWS DynamoDB Create Backup Action enables users to imperatively create on-de
 3. WHEN the table exists but is in DELETING status, THE DynamoDB_Create_Backup_Action SHALL return an error indicating the table is not in a valid state for backup
 4. WHEN the table exists and is in ACTIVE status, THE DynamoDB_Create_Backup_Action SHALL proceed with backup creation
 
+**Note**: DynamoDB tables must have point-in-time recovery (continuous backups) enabled before on-demand backups can be created. If point-in-time recovery is not enabled, the CreateBackup API will return a `ContinuousBackupsUnavailableException`. This is an AWS service requirement, not a validation performed by the action.
+
 ### Requirement 4: Timeout Configuration
 
 **User Story:** As a Terraform user, I want to configure how long the action waits for backup completion, so that I can balance between operation time and reliability based on my table size.
