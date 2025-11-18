@@ -1,0 +1,25 @@
+{
+  "name": "terraform-style-guide",
+  "description": "Comprehensive guide for Terraform code style, formatting, and best practices based on HashiCorp's official standards and Azure Verified Modules (AVM) requirements. Use when writing or reviewing Terraform configurations, formatting code, organizing files and modules, establishing team conventions, managing version control, ensuring code quality and consistency across infrastructure projects, or developing Azure Verified Modules.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Simon Lynch"
+  },
+  "license": "MIT",
+  "keywords": [
+    "terraform",
+    "style-guide",
+    "formatting",
+    "best-practices",
+    "azure",
+    "avm",
+    "hashicorp",
+    "code-quality"
+  ],
+  "skills": [
+    {
+      "name": "terraform-style-guide",
+      "path": "SKILL.md"
+    }
+  ]
+}
