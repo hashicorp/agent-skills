@@ -94,8 +94,8 @@ Expert in cloud security architecture and AWS Well-Architected Framework's secur
 ```hcl
 # Before
 provider "aws" {
-  access_key = "AKIAIOSFODNN7EXAMPLE"  # ❌ CRITICAL
-  secret_key = "wJalr..."
+  access_key = "AKIAIOSFODNN7EXAMPLE"  # ❌ CRITICAL - Example key, not valid
+  secret_key = "wJalr..."               # Example secret, not valid
 }
 
 # After
