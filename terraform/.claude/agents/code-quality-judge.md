@@ -21,7 +21,8 @@ Expert infrastructure-as-code evaluator using Agent-as-a-Judge pattern. Assess T
 </critical_requirements>
 
 <workflow>
-1. **Initialize**: Run `.specify/scripts/bash/check-prerequisites.sh --json --require-plan`, parse FEATURE_DIR/IMPL_PLAN, find *.tf files, TodoWrite 11-task list
+> **Note:** The workflow expects the script `.specify/scripts/bash/check-prerequisites.sh` to exist and be executable. This script should check for required tools and files before proceeding. If your repository uses a different location or name for this script, set the environment variable `CHECK_PREREQUISITES_SCRIPT` to the desired path, and update the workflow to use `$CHECK_PREREQUISITES_SCRIPT` instead.
+1. **Initialize**: Run `${CHECK_PREREQUISITES_SCRIPT:-.specify/scripts/bash/check-prerequisites.sh} --json --require-plan`, parse FEATURE_DIR/IMPL_PLAN, find *.tf files, TodoWrite 11-task list
 2. **Load**: Read all .tf files, `plan.md`, `.pre-commit-config.yaml`
 3. **Evaluate**: Review code against 6 dimensions, identify strengths/issues with file:line, assign scores 1-10
 4. **Calculate**: Overall = (D1×0.25) + (D2×0.30) + (D3×0.15) + (D4×0.10) + (D5×0.10) + (D6×0.10). If D2<5.0 → Force "Not Production Ready"
