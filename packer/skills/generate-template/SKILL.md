@@ -29,4 +29,4 @@ The agent will author a complete template with:
 
 ## Examples
 - AWS with `amazon-ebs`, Ubuntu base, CIS hardening provisioning
-- GCP with `googlecompute`, SBOM generation via Trivvy during build
+- GCP with `googlecompute`, SBOM generation via Trivy during build
