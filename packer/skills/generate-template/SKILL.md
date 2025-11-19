@@ -14,7 +14,7 @@ The agent will author a complete template with:
 ## Prerequisites
 - Packer ≥ 1.10 installed
 - Cloud credentials via environment or profiles (never hardcode)
-- For HCP: credentials stored securely (env or Vault), never in code
+- For HCP: credentials stored securely (env), never in code
 
 ## Execution Steps
 1. Confirm platform(s), base image, region(s), and hardening needs.
@@ -29,4 +29,4 @@ The agent will author a complete template with:
 
 ## Examples
 - AWS with `amazon-ebs`, Ubuntu base, CIS hardening provisioning
-- GCP with `googlecompute`, SBOM generation during build
+- GCP with `googlecompute`, SBOM generation via Trivvy during build
