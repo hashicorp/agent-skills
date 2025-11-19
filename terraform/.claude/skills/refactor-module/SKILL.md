@@ -368,50 +368,32 @@ See [examples/](./examples/) directory for complete usage examples.
 
 ### 6. Testing
 
-```hcl
-# tests/vpc_test.go (using Terratest)
-package test
+Use skill terraform-test
 
-import (
-  "testing"
-  "github.com/gruntwork-io/terratest/modules/terraform"
-  "github.com/stretchr/testify/assert"
-)
+**Test File**: A `.tftest.hcl` or `.tftest.json` file containing test configuration and run blocks that validate your Terraform configuration.
 
-func TestVPCModule(t *testing.T) {
-  terraformOptions := &terraform.Options{
-    TerraformDir: "../examples/basic",
-  }
-  
-  defer terraform.Destroy(t, terraformOptions)
-  terraform.InitAndApply(t, terraformOptions)
-  
-  vpcId := terraform.Output(t, terraformOptions, "vpc_id")
-  assert.NotEmpty(t, vpcId)
-}
+**Test Block**: Optional configuration block that defines test-wide settings (available since Terraform 1.6.0).
 
-# tests/validation_test.tftest.hcl (Terraform native testing)
-run "valid_cidr" {
-  command = plan
-  
-  variables {
-    cidr_block = "10.0.0.0/16"
-  }
-  
-  assert {
-    condition     = can(cidrhost(var.cidr_block, 0))
-    error_message = "CIDR validation failed"
-  }
-}
+**Run Block**: Defines a single test scenario with optional variables, provider configurations, and assertions. Each test file requires at least one run block.
 
-run "creates_vpc" {
-  command = apply
-  
-  assert {
-    condition     = aws_vpc.main.id != ""
-    error_message = "VPC not created"
-  }
-}
+**Assert Block**: Contains conditions that must evaluate to true for the test to pass. Failed assertions cause the test to fail.
+
+**Mock Provider**: Simulates provider behavior without creating real infrastructure (available since Terraform 1.7.0).
+
+**Test Modes**: Tests run in apply mode (default, creates real infrastructure) or plan mode (validates logic without creating resources).
+
+#### File Structure
+
+Terraform test files use the `.tftest.hcl` or `.tftest.json` extension and are typically organized in a `tests/` directory. Use clear naming conventions to distinguish between unit tests (plan mode) and integration tests (apply mode):
+
+```
+my-module/
+├── main.tf
+├── variables.tf
+├── outputs.tf
+└── tests/
+    ├── unit_test.tftest.hcl      # Unit test (plan mode)
+    └── integration_test.tftest.hcl  # Integration test (apply mode - creates real resources)
 ```
 
 ## Refactoring Patterns
