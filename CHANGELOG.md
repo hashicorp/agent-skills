@@ -2,6 +2,18 @@
 
 All notable changes to the Agent Instructions Library.
 
+
+## 2025-11-30
+
+### Changed
+- Major repository restructuring:
+  - All product folders (terraform, vault, packer, consul, vault-radar) now use the pattern:
+    `product/` → `use-case/` → `.vscode/`, `.kiro/`, `.aws/`, `skills/`, `README.md`
+  - Workflows have been moved from `workflows/` folders into use-case-named folders under each product
+  - Removed all prompts folders and references from documentation and READMEs
+  - Updated all product and root README files to reflect new structure and usage
+  - Added Packer README and clarified use-case-first approach for all products
+
 ## 2025-11-11
 
 ### Fixed

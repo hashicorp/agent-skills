@@ -1,153 +1,85 @@
-# Vault Radar Skills & Workflows
 
-This directory contains AI agent instructions for detecting, triaging, and remediating secrets exposure using HashiCorp Vault Radar with Model Context Protocol (MCP) integration.
+
+# Vault Radar Instructions Library
+
+This directory contains curated instruction sets, skills, and workflows for AI agents working with HashiCorp Vault Radar and Model Context Protocol (MCP) integration. The structure is organized by product, then by use case, then by AI assistant/config folders.
 
 ## Directory Structure
 
 ```
 vault-radar/
-├── README.md (this file)
-├── skills/
-│   ├── scan-for-secrets/         # Detect secrets in code/repos/platforms
-│   └── integrate-mcp-server/     # AI-powered analysis with MCP
-├── workflows/
-│   └── triage-and-remediate.md   # Complete remediation process
-└── prompts/
-    ├── system-prompt.md          # AI agent behavior for Vault Radar
-    └── analyze-scan-results.md   # Interpret scan findings
+├── secrets-detection/             # Use case: secrets detection and remediation
+│   ├── .vscode/                   # Editor/workspace settings for this use case
+│   ├── .kiro/                     # Kiro agent configs (if present)
+│   ├── .aws/                      # AWS integration configs (if present)
+│   ├── skills/                    # Discrete, reusable Vault Radar capabilities
+│   ├── workflows/                 # Multi-step Vault Radar processes
+│   └── README.md                  # Use-case specific documentation
+├── another-use-case/              # (Add more use cases as needed)
+│   └── ...                        # Same structure as above
+└── README.md                      # This file
 ```
 
 ---
 
-## What's Inside
 
-### Skills
 
-**Skills** are discrete, reusable capabilities that teach AI agents specific Vault Radar tasks.
+## Example Use Case: Secrets Detection and Remediation
 
-*** For Claude Desktop (Native SKILL.md Support) ***
+**Scenario:** Scan a repository for hardcoded secrets and remediate findings using Vault Radar and MCP.
 
-  ```bash
-  # No setup needed! Claude auto-discovers SKILL.md files
-  # Just use natural language:
+**Requirements:**
+- Scan all code and git history
+- Triage by severity (CRITICAL, HIGH)
+- Rotate exposed secrets
+- Migrate secrets to Vault
+- Implement pre-commit prevention
 
-  "Using the scan-for-secrets skill, analyze my repository for exposed credentials"
-
-  "Using the integrate-mcp-server skill, set up Vault Radar MCP integration"
-  ```
-
-**Why this works**: Claude Desktop natively supports Anthropic's SKILL.md format with progressive disclosure. It automatically finds and loads relevant skills.
-
-#### [scan-for-secrets](skills/scan-for-secrets/)
-**Purpose**: Detect hardcoded secrets, API keys, credentials in code repositories and platforms
-
-**Use when**:
-- Auditing codebase for secret leaks
-- Pre-commit validation
-- CI/CD security checks
-- Compliance audits (SOC2, PCI DSS)
-- Incident response
-
-**Example**:
+**Prompt:**
 ```
-@workspace Using vault-radar/skills/scan-for-secrets/, run:
-
-Target: ./src/
-Scan type: Offline (git repository)
-Depth: Full history + uncommitted changes
-Severity: HIGH and CRITICAL only
-Output: JSON for MCP analysis
+@workspace Using vault-radar/secrets-detection/skills/scan-for-secrets/, scan ./src/ for secrets and triage by severity.
 ```
----
-
-#### [integrate-mcp-server](skills/integrate-mcp-server/)
-**Purpose**: Connect Vault Radar with AI agents via Model Context Protocol for intelligent analysis
-
-**Use when**:
-- Need AI-powered triage of scan results
-- Automating remediation workflows
-- Generating fix recommendations
-- Prioritizing findings by business impact
-- Creating executive summaries
-
-**Example**:
-```
-@workspace Using vault-radar/skills/integrate-mcp-server/:
-
-Setup: Claude Desktop with Vault Radar MCP
-Purpose: Analyze scan results from prod-api repo
-Actions needed:
-  - Triage severity levels
-  - Generate remediation plan
-  - Identify rotation requirements
-  - Suggest Vault migration paths
-```
----
-
-### Workflows
-
-**Workflows** are multi-step processes that combine multiple skills and tools.
-
-#### [triage-and-remediate](workflows/triage-and-remediate.md)
-**Purpose**: Complete 6-phase process from detection to prevention
-
-**Phases**:
-1. **Scan**: Run Vault Radar across all targets
-2. **Triage**: Categorize by severity and impact
-3. **Contain**: Immediately rotate CRITICAL/HIGH findings
-4. **Remediate**: Remove secrets from code + git history
-5. **Migrate**: Move to Vault secrets management
-6. **Prevent**: Implement pre-commit hooks, CI/CD gates
-
-**Use when**:
-- Secrets detected in production code
-- Security incident response
-- Compliance audit preparation
-- Migrating to Vault from hardcoded secrets
-- Implementing secrets management strategy
 
 ---
 
-### Prompts
 
-**Prompts** are specialized instructions for specific AI agent scenarios.
+## Skills
 
-#### [system-prompt-vault-radar](prompts/system-prompt-vault-radar.md)
-**Purpose**: Define AI agent behavior for Vault Radar security work
+**Skills** are reusable capabilities for Vault Radar tasks.
 
-**Use when**:
-- Starting AI agent for secrets scanning
-- Need security-first context
-- Autonomous triage and remediation
-- Compliance-driven analysis
-
-**Sets expectations for**:
-- Severity-based prioritization
-- Progressive disclosure of secrets
-- Complete remediation (not just rotation)
-- Prevention-first mindset
-- Audit trail requirements
+- `scan-for-secrets/`: Detect hardcoded secrets, API keys, credentials in code repositories and platforms
+- `integrate-mcp-server/`: Connect Vault Radar with AI agents via Model Context Protocol for intelligent analysis
 
 ---
 
-#### [analyze-scan-results](prompts/analyze-scan-results.md)
-**Purpose**: Interpret Vault Radar scan output and generate action plans
+## Workflows
 
-**Use when**:
-- Processing scan JSON output
-- Creating remediation roadmaps
-- Generating executive summaries
-- Prioritizing by business impact
-- Assigning remediation tasks
-
-**Output includes**:
-- Severity breakdown (counts + examples)
-- High-impact findings highlighted
-- Remediation effort estimates
-- Risk assessment
-- Compliance implications
+- `triage-and-remediate.md`: Complete 6-phase process from detection to prevention
 
 ---
+
+## Prompts
+
+- `system-prompt-vault-radar.md`: Define AI agent behavior for Vault Radar security work
+- `analyze-scan-results.md`: Interpret Vault Radar scan output and generate action plans
+
+---
+
+
+## Integration & Config Folders
+
+- `.vscode/`: Editor/workspace settings for Vault Radar projects
+- `.kiro/`: Kiro agent configuration (if present)
+- `.aws/`: AWS integration configs (if present)
+
+---
+
+## Additional Resources
+
+- [Vault Radar Documentation](https://developer.hashicorp.com/vault/docs/radar)
+- [Vault Radar MCP Server](https://developer.hashicorp.com/hcp/docs/vault-radar/mcp-server/overview)
+- [Model Context Protocol Spec](https://spec.modelcontextprotocol.io/)
+- [HCP Vault Radar](https://developer.hashicorp.com/hcp/docs/vault-radar)
 
 ## Quick Start
 

@@ -10,16 +10,15 @@
 This repository hosts pre-built instruction sets that teach AI agents HashiCorp best practices, security patterns, and workflows. Copy files → Reference in prompts → Get quality code. Edit them as needed.
 
 ```text
-┌──────────────────────────────────────────────────────────────┐
-│                HashiCorp Instructions Library                │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  Terraform        Vault          Vault Radar      Consul     │
-│  └─ Skills        └─ Skills      └─ Skills        └─ Skills  │
-│  └─ Workflows     └─ Workflows   └─ Workflows     └─ ...     │
-│  └─ Prompts       └─ Prompts     └─ Prompts                  │
-│                                                              │
-└───┬─────────────┬─────────────┬─────────────┬──────────┬─────┘
+┌───────────────────────────────────────────────────────────────┐
+│                HashiCorp Instructions Library                 │
+├───────────────────────────────────────────────────────────────┤
+│                                                               │
+│  product/ (e.g. terraform, vault, packer, consul, vault-radar)│
+│    └─ use-case/ (e.g. provider-development, creating-images)  │
+│      └─ .vscode/ .kiro/ .aws/ skills/ README.md               │
+│                                                               │
+└───┬─────────────┬─────────────┬─────────────┬──────────┬──────┘
     │             │             │             │          │
     ▼             ▼             ▼             ▼          ▼
 ┌──────────┐ ┌─────────┐ ┌─────────┐ ┌────────────┐ ┌────────────┐
@@ -249,30 +248,22 @@ Works with: Cursor, GitHub CoPilot, gemini-cli, Amp, Devin, Warp, Zed, Cursor, o
 ```
 
 **Examples:** Generate HCL code, Create Vault policies, Scan for secrets  
-**Location:** `product/skills/skill-name/SKILL.md`  
+**Location:** `product/use-case/skills/skill-name/SKILL.md`  
 **Usage:** `"Using the generate-hcl skill, create..."`
 
 ### Workflows (`*.md`) - Multi-Step Processes
 
-```text
-Step 1: Init    →    Step 2: Plan    →    Step 3: Review
-                                                 │
-                                            Approved?
-                                                 │
-                                           Yes   │   No
-                                            │    │    │
-Step 6: Verify  ←  Step 5: Apply  ←  ─────┘    └→ Stop
-```
+Workflows are now located under use-case folders:
+`product/use-case/workflow-name.md`
 
 **Examples:** Plan→Approve→Apply, Scan→Triage→Remediate  
-**Location:** `product/workflows/workflow-name.md`  
+**Location:** `product/use-case/workflow-name.md`  
 **Usage:** `"Follow the plan-and-apply-with-approval workflow"`
 
-### Prompts (`*.md`) - Reusable Templates
 
-**Examples:** Summarize Terraform plan, Analyze scan results, Review for security  
-**Location:** `product/prompts/prompt-name.md`  
-**Usage:** `#prompt-name` (Copilot) or reference explicitly
+### Prompts
+
+Prompts folders have been removed. Use skills and workflows directly for all agent instructions.
 
 ## Learn More
 
@@ -281,6 +272,7 @@ Step 6: Verify  ←  Step 5: Apply  ←  ─────┘    └→ Stop
 - **[Vault Guide](vault/README.md)** - Vault policies and secret management
 - **[Vault Radar Guide](vault-radar/README.md)** - Secrets detection and remediation
 - **[Consul Guide](consul/README.md)** - Service mesh configuration
+- **[Packer Guide](packer/README.md)** - Image creation and registry publishing
 
 ### Platform Documentation
 - [GitHub Copilot Custom Instructions](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions)
