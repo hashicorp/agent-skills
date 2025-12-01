@@ -7,14 +7,6 @@ This directory contains curated instruction sets, skills, and workflows for AI a
 ```
 packer/
 ├── creating-images/                # Use case: building and publishing images
-│   ├── .vscode/                    # Editor/workspace settings for this use case
-│   ├── .kiro/                      # Kiro agent configs (if present)
-│   ├── .aws/                       # AWS integration configs (if present)
-│   ├── skills/                     # Discrete, reusable Packer capabilities
-│   ├── workflows/                  # Multi-step Packer processes
-│   └── README.md                   # Use-case specific documentation
-├── another-use-case/               # (Add more use cases as needed)
-│   └── ...                         # Same structure as above
 └── README.md                       # This file
 ```
 
@@ -32,31 +24,8 @@ packer/
 
 **Prompt:**
 ```
-@workspace Using packer/creating-images/skills/build-validate/, create and publish a hardened Ubuntu image to HCP Registry.
+@workspace Using packer/creating-images/, create and publish a hardened Ubuntu image to HCP Registry.
 ```
-
----
-
-## Skills
-
-- `build-validate/`: Automated image build and validation
-- `publish-to-registry/`: Publish images to HCP Packer Registry
-- `scan-image-security/`: Security scan for built images
-
----
-
-## Workflows
-
-- `build-validate-scan-publish.md`: End-to-end workflow for image creation, validation, scanning, and publishing
-- `promote-image-with-approval.md`: Promotion workflow with human approval gates
-
----
-
-## Integration & Config Folders
-
-- `.vscode/`: Editor/workspace settings for Packer projects
-- `.kiro/`: Kiro agent configuration (if present)
-- `.aws/`: AWS integration configs (if present)
 
 ---
 

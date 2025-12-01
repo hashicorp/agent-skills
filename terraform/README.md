@@ -12,9 +12,6 @@ terraform/
 ├── provider-feature-development/        # Feature-specific provider development instructions
 │   └── terraform-actions/               # Action patterns and automation for providers
 ├── terraform-code-generation/           # Skills for generating HCL and Terraform code
-├── workflows/
-│   ├── plan-and-apply-with-approval.md  # Deployment workflow with gates
-│   └── security-scan-workflow.md        # Comprehensive security scanning
 ```
 
 ---
@@ -35,17 +32,13 @@ echo "All pre-commit checks passed"
 ### Code Generation
 - `terraform-code-generation/`: Skills for generating HCL and Terraform code
 
-### Workflows
-- `workflows/plan-and-apply-with-approval.md`: Structured deployment process with human approval gates
-- `workflows/security-scan-workflow.md`: Comprehensive security validation before deployment
-
 ### Usage
 Reference specific skills or workflows in your prompts:
 ```
 @workspace Using the generate-hcl skill, create an AWS VPC module
 ```
 ```
-@workspace Apply the plan-and-apply-with-approval workflow for this change
+@workspace Apply Terraform best practices to this configuration
 ```
 
 ## Best Practices

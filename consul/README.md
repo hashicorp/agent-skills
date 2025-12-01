@@ -9,14 +9,6 @@ This directory contains curated instruction sets, skills, and workflows for AI a
 ```
 consul/
 ├── service-mesh/                 # Use case: service mesh configuration
-│   ├── .vscode/                  # Editor/workspace settings for this use case
-│   ├── .kiro/                    # Kiro agent configs (if present)
-│   ├── .aws/                     # AWS integration configs (if present)
-│   ├── skills/                   # Discrete, reusable Consul capabilities
-│   ├── workflows/                # Multi-step Consul processes
-│   └── README.md                 # Use-case specific documentation
-├── another-use-case/             # (Add more use cases as needed)
-│   └── ...                       # Same structure as above
 └── README.md                     # This file
 ```
 
@@ -34,26 +26,8 @@ consul/
 
 **Prompt:**
 ```
-@workspace Using consul/service-mesh/skills/configure-service-mesh/, setup service mesh for web-frontend, api-backend, and database with proper intentions and health checks.
+@workspace Using consul/service-mesh/, setup service mesh for web-frontend, api-backend, and database with proper intentions and health checks.
 ```
-
----
-
-
-## Skills
-
-**Skills** are reusable capabilities for Consul tasks.
-
-- `configure-service-mesh/`: Service mesh setup, registration, intentions, health checks
-
----
-
-
-## Integration & Config Folders
-
-- `.vscode/`: Editor/workspace settings for Consul projects
-- `.kiro/`: Kiro agent configuration (if present)
-- `.aws/`: AWS integration configs (if present)
 
 ---
 
@@ -62,14 +36,14 @@ consul/
 
 **Direct reference:**
 ```
-@workspace Using consul/service-mesh/skills/configure-service-mesh/, create basic service registration
+@workspace Using consul/service-mesh/, create basic service registration
 ```
 
 **Repository instructions:**
 Add to `.github/copilot-instructions.md`:
 ```
 ## Consul Standards
-Reference consul/service-mesh/skills/configure-service-mesh/ for service mesh basics.
+Reference consul/service-mesh/ for service mesh basics.
 ```
 
 ---

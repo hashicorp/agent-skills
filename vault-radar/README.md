@@ -8,15 +8,7 @@ This directory contains curated instruction sets, skills, and workflows for AI a
 
 ```
 vault-radar/
-├── secrets-detection/             # Use case: secrets detection and remediation
-│   ├── .vscode/                   # Editor/workspace settings for this use case
-│   ├── .kiro/                     # Kiro agent configs (if present)
-│   ├── .aws/                      # AWS integration configs (if present)
-│   ├── skills/                    # Discrete, reusable Vault Radar capabilities
-│   ├── workflows/                 # Multi-step Vault Radar processes
-│   └── README.md                  # Use-case specific documentation
-├── another-use-case/              # (Add more use cases as needed)
-│   └── ...                        # Same structure as above
+├── secret-scanning/               # Use case: secrets detection and remediation
 └── README.md                      # This file
 ```
 
@@ -37,40 +29,16 @@ vault-radar/
 
 **Prompt:**
 ```
-@workspace Using vault-radar/secrets-detection/skills/scan-for-secrets/, scan ./src/ for secrets and triage by severity.
+@workspace Using vault-radar/secret-scanning/, scan ./src/ for secrets and triage by severity.
 ```
 
 ---
 
 
-## Skills
+## Core Capabilities
 
-**Skills** are reusable capabilities for Vault Radar tasks.
-
-- `scan-for-secrets/`: Detect hardcoded secrets, API keys, credentials in code repositories and platforms
-- `integrate-mcp-server/`: Connect Vault Radar with AI agents via Model Context Protocol for intelligent analysis
-
----
-
-## Workflows
-
-- `triage-and-remediate.md`: Complete 6-phase process from detection to prevention
-
----
-
-## Prompts
-
-- `system-prompt-vault-radar.md`: Define AI agent behavior for Vault Radar security work
-- `analyze-scan-results.md`: Interpret Vault Radar scan output and generate action plans
-
----
-
-
-## Integration & Config Folders
-
-- `.vscode/`: Editor/workspace settings for Vault Radar projects
-- `.kiro/`: Kiro agent configuration (if present)
-- `.aws/`: AWS integration configs (if present)
+- `secret-scanning/`: Detect hardcoded secrets, API keys, credentials in code repositories and platforms
+- MCP integration support for intelligent analysis
 
 ---
 
@@ -87,7 +55,7 @@ vault-radar/
 
 **Method 1: Direct reference** (no setup)
 ```
-@workspace Using vault-radar/skills/scan-for-secrets/, scan ./backend/ for secrets
+@workspace Using vault-radar/secret-scanning/, scan ./backend/ for secrets
 ```
 
 **Method 2: Custom Agent** (specialized)
@@ -99,7 +67,7 @@ description: Secrets detection and remediation expert
 tools: ["read", "edit", "search", "terminal"]
 ---
 
-Load instructions from vault-radar/skills/scan-for-secrets/SKILL.md
+Load instructions from vault-radar/secret-scanning/SKILL.md
 Prioritize CRITICAL and HIGH severity findings...
 ```
 
@@ -107,7 +75,7 @@ Prioritize CRITICAL and HIGH severity findings...
 Add to `.github/copilot-instructions.md`:
 ```markdown
 ## Vault Radar Standards
-Run vault-radar/skills/scan-for-secrets/ before every PR merge.
+Run vault-radar/secret-scanning/ before every PR merge.
 CRITICAL findings must be resolved within 1 hour.
 Never commit API keys, tokens, or credentials.
 ```
@@ -156,7 +124,7 @@ Claude will use MCP to:
 ```markdown
 Scan repository for hardcoded secrets:
 
-1. Load: #file:../../agent-instructions-library-man/vault-radar/skills/scan-for-secrets/SKILL.md
+1. Load: #file:../../agent-instructions-library/vault-radar/secret-scanning/SKILL.md
 2. Run: vault-radar scan --format json
 3. Triage: Prioritize CRITICAL and HIGH
 4. Remediate: Follow triage-and-remediate workflow
@@ -173,7 +141,7 @@ Scan repository for hardcoded secrets:
 ## Vault Radar Security
 
 ### Secret Scanning
-Use: agent-instructions-library-man/vault-radar/skills/scan-for-secrets/
+Use: agent-instructions-library/vault-radar/secret-scanning/
 
 Scan targets:
 - Pre-commit: Staged files only
@@ -199,7 +167,7 @@ Scan targets:
 
 ### Use Case 1: Pre-Commit Secret Scan
 ```
-@workspace Using vault-radar/skills/scan-for-secrets/:
+@workspace Using vault-radar/secret-scanning/:
 
 Scan: Git staged files only
 Mode: Offline (local)
@@ -242,7 +210,7 @@ exit 0
 
 ### Use Case 2: Full Repository Audit with MCP
 ```
-@workspace Using vault-radar/skills/integrate-mcp-server/:
+@workspace Using vault-radar/secret-scanning/:
 
 Action: Complete security audit
 Target: Production API repository
@@ -301,7 +269,7 @@ Would you like me to generate rotation scripts?
 ```bash
 #!/bin/bash
 # .git/hooks/pre-commit
-# Reference: vault-radar/skills/scan-for-secrets/
+# Reference: vault-radar/secret-scanning/
 
 set -e
 

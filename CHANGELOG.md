@@ -2,6 +2,19 @@
 
 All notable changes to the Agent Instructions Library.
 
+## 2025-12-01
+
+### Changed
+- Folder structure refinement across all products:
+  - **Terraform**: Removed `workflows/` folder. Directory now contains `provider-development/`, `provider-feature-development/`, and `terraform-code-generation/`
+  - **Vault**: Simplified to single use-case folder `generate-policy/` with SKILL.md and resources
+  - **Packer**: Simplified to single use-case folder `creating-images/`
+  - **Consul**: Simplified to single use-case folder `service-mesh/`
+  - **Vault Radar**: Renamed `secrets-detection/` to `secret-scanning/` for consistency
+- Updated all product README files to reflect actual folder structure and remove references to non-existent nested config folders (`.vscode/`, `.kiro/`, `.aws/` in use-cases)
+- Corrected all path references in documentation, examples, and prompts throughout each product README
+- Updated root README with correct paths for all Quick Start examples
+- Removed example references to non-existent skills and workflows (e.g., `read-secret-securely`, `new-kv-engine-setup`)
 
 ## 2025-11-30
 

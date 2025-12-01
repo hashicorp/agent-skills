@@ -8,15 +8,9 @@ This directory contains curated instruction sets, skills, and workflows for AI a
 
 ```
 vault/
-├── application-policy/            # Use case: application policy creation
-│   ├── .vscode/                   # Editor/workspace settings for this use case
-│   ├── .kiro/                     # Kiro agent configs (if present)
-│   ├── .aws/                      # AWS integration configs (if present)
-│   ├── skills/                    # Discrete, reusable Vault capabilities
-│   ├── workflows/                 # Multi-step Vault processes
-│   └── README.md                  # Use-case specific documentation
-├── another-use-case/              # (Add more use cases as needed)
-│   └── ...                        # Same structure as above
+├── generate-policy/               # Use case: policy generation and management
+│   ├── SKILL.md                   # Policy generation skill documentation
+│   └── resources/                 # Policy examples and templates
 └── README.md                      # This file
 ```
 
@@ -37,45 +31,21 @@ vault/
 
 **Prompt:**
 ```
-@workspace Using vault/application-policy/skills/generate-policy/, create a least-privilege policy for web-app-prod.
+@workspace Using vault/generate-policy/, create a least-privilege policy for web-app-prod.
 ```
 
 ---
 
 
-## Skills
-
-**Skills** are reusable capabilities for Vault tasks.
+## Core Skills
 
 - `generate-policy/`: Create least-privilege ACL policies with explicit deny rules
-- `read-secret-securely/`: Secure secret access patterns for applications and CI/CD
-
----
-
-## Workflows
-
-- `new-kv-engine-setup.md`: Initialize and configure new Key-Value secrets engine
-
----
-
-## Prompts
-
-- `system-prompt-vault.md`: Define AI agent behavior for Vault security work
-
----
-
-
-## Integration & Config Folders
-
-- `.vscode/`: Editor/workspace settings for Vault projects
-- `.kiro/`: Kiro agent configuration (if present)
-- `.aws/`: AWS integration configs (if present)
 
 ---
 
 ## Additional Resources
 
-- [Policy Examples](skills/generate-policy/resources/policy-examples.hcl)
+- [Policy Examples](generate-policy/resources/policy-examples.hcl)
 - [Vault Documentation](https://www.vaultproject.io/docs)
 - [HCP Vault](https://developer.hashicorp.com/vault/docs/platform/hcp)
 - [Vault Policies](https://developer.hashicorp.com/vault/docs/concepts/policies)
@@ -118,7 +88,7 @@ All Vault skills follow zero-trust security principles:
 
 **Method 1: Direct reference** (no setup)
 ```
-@workspace Using vault/skills/generate-policy/, create AppRole policy for my app
+@workspace Using vault/generate-policy/, create AppRole policy for my app
 ```
 
 **Method 2: Custom Agent** (specialized)
@@ -130,7 +100,7 @@ description: Zero-trust secrets management expert
 tools: ["read", "edit", "search", "terminal"]
 ---
 
-Load instructions from vault/skills/generate-policy/SKILL.md
+Load instructions from vault/generate-policy/SKILL.md
 Always apply principle of least privilege...
 ```
 
@@ -138,7 +108,7 @@ Always apply principle of least privilege...
 Add to `.github/copilot-instructions.md`:
 ```markdown
 ## Vault Standards
-Reference vault/skills/generate-policy/ for all policy creation.
+Reference vault/generate-policy/ for all policy creation.
 Never log secret values in application code.
 Always use explicit deny rules for sensitive paths.
 ```
@@ -170,7 +140,7 @@ Claude will apply zero-trust patterns automatically.
 ```markdown
 Generate Vault policy following zero-trust principles:
 
-1. Load: #file:../../agent-instructions-library-man/vault/skills/generate-policy/SKILL.md
+1. Load: #file:../../agent-instructions-library/vault/generate-policy/SKILL.md
 2. Apply least privilege
 3. Add explicit deny rules
 4. Document access rationale
@@ -187,22 +157,13 @@ Generate Vault policy following zero-trust principles:
 ## Vault Security Standards
 
 ### Policy Generation
-Use: agent-instructions-library-man/vault/skills/generate-policy/
+Use: agent-instructions-library/vault/generate-policy/
 
 Always:
 - Apply principle of least privilege
 - Use explicit deny for sensitive paths
 - Document all capabilities granted
-- Include compliance notes (SOC2, HIPAA)
-
-### Secret Access
-Use: agent-instructions-library-man/vault/skills/read-secret-securely/
-
-Never:
-- Log secret values to stdout/stderr
-- Write secrets to disk (temp files, logs)
-- Store secrets in environment variables (prefer runtime fetch)
-- Use root token in production
+- Include compliance notes (SOC2, HIPAA, PCI-DSS)
 ```
 
 ---
@@ -216,10 +177,9 @@ Never:
 4. Practice with KV secrets engine
 
 ### Intermediate
-1. Use **read-secret-securely** in applications
-2. Practice **new-kv-engine-setup** workflow
-3. Learn dynamic secrets (databases, cloud providers)
-4. Study policy templating
+1. Learn dynamic secrets (databases, cloud providers)
+2. Study policy templating
+3. Implement multi-environment policies
 
 ### Advanced
 1. Implement multi-tenant Vault architectures
@@ -233,7 +193,7 @@ Never:
 
 ### Use Case 1: Create Application Policy
 ```
-@workspace Using vault/skills/generate-policy/, create:
+@workspace Using vault/generate-policy/, create:
 
 Application: web-api-prod
 Authentication: AppRole
@@ -288,9 +248,9 @@ path "sys/mounts/*" {
 
 ---
 
-### Use Case 2: Secure Secret Reading in App
+### Use Case 2: Best Practices for Vault Integration
 ```
-@workspace Using vault/skills/read-secret-securely/:
+@workspace Using Vault best practices:
 
 Language: Python
 Application: payment-processor
@@ -394,7 +354,7 @@ stripe_api_key = stripe_credentials['api_key']
 
 ### Use Case 3: Setup New KV Engine for Team
 ```
-@workspace Apply vault/workflows/new-kv-engine-setup.md:
+@workspace Setup a new KV engine for my team:
 
 Team: data-science
 Engine path: ds-secrets
@@ -413,7 +373,7 @@ Authentication: JWT from CI/CD
 
 ### Use Case 4: Multi-Environment Secrets Strategy
 ```
-@workspace Using vault/skills/generate-policy/:
+@workspace Using vault/generate-policy/:
 
 Setup policies for 3 environments:
   - dev: relaxed (developers can read/write)
@@ -603,7 +563,7 @@ resource "vault_approle_auth_backend_role" "web_app" {
 ## Additional Resources
 
 ### Within This Repository
-- [Policy Examples](skills/generate-policy/resources/policy-examples.hcl)
+- [Policy Examples](generate-policy/resources/policy-examples.hcl)
 - [Main README](../README.md) - Platform integration guides
 
 ### Official Documentation
