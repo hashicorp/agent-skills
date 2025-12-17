@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "terraform-mcp-server": {
+      "command": "docker",
+      "args": [
+          "run",
+          "-i",
+          "--rm",
+          "-e", "TFE_TOKEN",
+          "-e", "TFE_ADDRESS",
+          "hashicorp/terraform-mcp-server:0.3.3"
+      ],
+      "env": {
+        "TFE_TOKEN": {
+          "fromUser": {
+            "prompt": "Please enter your Terraform Enterprise API token for MCP server authentication:",
+            "secret": true
+          }
+        },
+        "TFE_ADDRESS": {
+          "fromUser": {
+            "prompt": "Please enter your Terraform address for MCP server authentication:",
+            "secret": false
+          }
+        }
+      }
+    }
+  }
+}

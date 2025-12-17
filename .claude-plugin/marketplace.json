@@ -1,0 +1,39 @@
+{
+  "name": "terraform",
+  "owner": {
+    "name": "HashiCorp, an IBM company"
+  },
+  "metadata": {
+    "description": "Official Terraform plugins for Claude Code",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    
+    {
+      "name": "terraform-provider-development",
+      "source": "./plugins/terraform-provider-development",
+      "description": "Official Terraform provider development plugin for Claude Code, enabling seamless infrastructure automation and management.",
+      "version": "1.0.0",
+      "author": {
+        "name": "HashiCorp, an IBM company"
+      },
+      "keywords": ["terraform", "infrastructure", "automation", "hashicorp", "iac", "cloud"],
+      "category": "integration",
+      "license": "MPL-2.0",
+      "strict": false
+    },
+    {
+      "name": "terraform-code-generation",
+      "source": "./plugins/terraform-code-generation",
+      "description": "Official Terraform code generation plugin for Claude Code, enabling seamless infrastructure automation and management.",
+      "version": "1.0.0",
+      "author": {
+        "name": "HashiCorp, an IBM company"
+      },
+      "keywords": ["terraform", "infrastructure", "automation", "hashicorp", "iac", "cloud"],
+      "category": "integration",
+      "license": "MPL-2.0",
+      "strict": false
+    }
+  ]
+}

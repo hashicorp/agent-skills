@@ -1,0 +1,14 @@
+{
+  "name": "terraform-code-generation",
+  "version": "1.0.0",
+  "description": "Official Terraform code generation plugin for Claude Code, enabling seamless infrastructure automation and management.",
+  "author": {
+    "name": "HashiCorp, an IBM company",
+    "url": "https://github.com/hashicorp"
+  },
+  "homepage": "https://developer.hashicorp.com/terraform/language/style",
+  "repository": "https://github.com/hashicorp/terraform-mcp-server",
+  "license": "MPL-2.0",
+  "keywords": ["terraform", "infrastructure", "automation", "hashicorp", "iac", "cloud"],
+  "mcpServers": "./.mcp.json"
+}

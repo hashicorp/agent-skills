@@ -1,0 +1,39 @@
+{
+  "name": "terraform-stacks",
+  "description": "Comprehensive guide for working with HashiCorp Terraform Stacks. Use when creating, modifying, or validating Terraform Stack configurations (.tfcomponent.hcl, .tfdeploy.hcl files), working with stack components and deployments from local modules, public registry, or private registry sources, managing multi-region or multi-environment infrastructure, or troubleshooting Terraform Stacks syntax and structure.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Simon Lynch"
+  },
+  "license": "MIT",
+  "keywords": [
+    "terraform",
+    "stacks",
+    "hcp-terraform",
+    "multi-region",
+    "multi-environment",
+    "deployments",
+    "components",
+    "terraform stacks"
+  ],
+  "skills": [
+    {
+      "name": "terraform-stacks",
+      "path": "SKILL.md"
+    }
+  ],
+  "references": [
+    {
+      "name": "component-blocks",
+      "path": "references/component-blocks.md"
+    },
+    {
+      "name": "deployment-blocks",
+      "path": "references/deployment-blocks.md"
+    },
+    {
+      "name": "examples",
+      "path": "references/examples.md"
+    }
+  ]
+}
