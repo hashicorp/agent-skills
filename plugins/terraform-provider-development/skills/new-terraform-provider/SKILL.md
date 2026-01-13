@@ -1,6 +1,10 @@
 ---
 name: new-terraform-provider
 description: Use this when scaffolding a new Terraform provider.
+license: MPL-2.0
+metadata:
+  copyright: Copyright IBM Corp. 2026
+  version: "0.0.1"
 ---
 
 To scaffold a new Terraform provider with Plugin Framework:
