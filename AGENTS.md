@@ -5,20 +5,20 @@ This repository contains agent skills and Claude Code plugins for Terraform and 
 ## Repository Structure
 
 ```
-terraform-agent-kit/
-├── skills/
-│   ├── terraform-code-generation/
+agent-skills/
+├── terraform/
+│   ├── code-generation/
 │   │   ├── .claude-plugin/plugin.json
 │   │   └── skills/
 │   │       ├── azure-verified-modules/
 │   │       ├── terraform-style-guide/
 │   │       └── terraform-test/
-│   ├── terraform-module-generation/
+│   ├── module-generation/
 │   │   ├── .claude-plugin/plugin.json
 │   │   └── skills/
 │   │       ├── refactor-module/
 │   │       └── terraform-stacks/
-│   └── terraform-provider-development/
+│   └── provider-development/
 │       ├── .claude-plugin/plugin.json
 │       └── skills/
 │           ├── new-terraform-provider/
@@ -37,13 +37,13 @@ terraform-agent-kit/
 Install plugins using Claude Code CLI. First add the marketplace, then install plugins:
 
 ```bash
-# Add the terraform-agent-kit marketplace
-claude plugin marketplace add hashicorp/terraform-agent-kit
+# Add the agent-skills marketplace
+claude plugin marketplace add hashicorp/agent-skills
 
 # Install plugins
-claude plugin install terraform-code-generation@terraform-agent-kit
-claude plugin install terraform-module-generation@terraform-agent-kit
-claude plugin install terraform-provider-development@terraform-agent-kit
+claude plugin install terraform-code-generation@hashicorp
+claude plugin install terraform-module-generation@hashicorp
+claude plugin install terraform-provider-development@hashicorp
 ```
 
 Or use the interactive interface within Claude Code:
@@ -59,16 +59,16 @@ This opens a tabbed interface where you can:
 Additional plugin management commands:
 ```bash
 # Disable a plugin
-claude plugin disable terraform-code-generation@terraform-agent-kit
+claude plugin disable terraform-code-generation@hashicorp
 
 # Re-enable a plugin
-claude plugin enable terraform-code-generation@terraform-agent-kit
+claude plugin enable terraform-code-generation@hashicorp
 
 # Uninstall a plugin
-claude plugin uninstall terraform-code-generation@terraform-agent-kit
+claude plugin uninstall terraform-code-generation@hashicorp
 
 # Update a plugin
-claude plugin update terraform-code-generation@terraform-agent-kit
+claude plugin update terraform-code-generation@hashicorp
 ```
 
 Installation scopes (use `--scope` flag):
@@ -82,22 +82,22 @@ Install individual skills using npx add-skill:
 
 ```bash
 # List all available skills
-npx add-skill hashicorp/terraform-agent-kit
+npx add-skill hashicorp/agent-skills
 
 # Code generation skills
-npx add-skill hashicorp/terraform-agent-kit/skills/terraform-code-generation/skills/terraform-style-guide
-npx add-skill hashicorp/terraform-agent-kit/skills/terraform-code-generation/skills/terraform-test
-npx add-skill hashicorp/terraform-agent-kit/skills/terraform-code-generation/skills/azure-verified-modules
+npx add-skill hashicorp/agent-skills/terraform/code-generation/skills/terraform-style-guide
+npx add-skill hashicorp/agent-skills/terraform/code-generation/skills/terraform-test
+npx add-skill hashicorp/agent-skills/terraform/code-generation/skills/azure-verified-modules
 
 # Module generation skills
-npx add-skill hashicorp/terraform-agent-kit/skills/terraform-module-generation/skills/refactor-module
-npx add-skill hashicorp/terraform-agent-kit/skills/terraform-module-generation/skills/terraform-stacks
+npx add-skill hashicorp/agent-skills/terraform/module-generation/skills/refactor-module
+npx add-skill hashicorp/agent-skills/terraform/module-generation/skills/terraform-stacks
 
 # Provider development skills
-npx add-skill hashicorp/terraform-agent-kit/skills/terraform-provider-development/skills/new-terraform-provider
-npx add-skill hashicorp/terraform-agent-kit/skills/terraform-provider-development/skills/run-acceptance-tests
-npx add-skill hashicorp/terraform-agent-kit/skills/terraform-provider-development/skills/provider-actions
-npx add-skill hashicorp/terraform-agent-kit/skills/terraform-provider-development/skills/provider-resources
+npx add-skill hashicorp/agent-skills/terraform/provider-development/skills/new-terraform-provider
+npx add-skill hashicorp/agent-skills/terraform/provider-development/skills/run-acceptance-tests
+npx add-skill hashicorp/agent-skills/terraform/provider-development/skills/provider-actions
+npx add-skill hashicorp/agent-skills/terraform/provider-development/skills/provider-resources
 ```
 
 Skills are installed to `~/.claude/skills/` or project `.claude/skills/` directory.
@@ -108,13 +108,13 @@ Copy skills directly to your Claude Code configuration:
 
 ```bash
 # Clone the repository
-git clone https://github.com/hashicorp/terraform-agent-kit.git
+git clone https://github.com/hashicorp/agent-skills.git
 
 # Copy a plugin to Claude Code plugins directory
-cp -r terraform-agent-kit/skills/terraform-code-generation ~/.claude/plugins/
+cp -r agent-skills/terraform/code-generation ~/.claude/plugins/
 
 # Or copy individual skills
-cp -r terraform-agent-kit/skills/terraform-code-generation/skills/generate-hcl ~/.claude/skills/
+cp -r agent-skills/terraform/code-generation/skills/terraform-style-guide ~/.claude/skills/
 ```
 
 ## Plugin Contents
@@ -189,7 +189,7 @@ Use when:
 
 ## MCP Server Configuration
 
-The terraform-code-generation and terraform-module-generation plugins include MCP server configuration for the Terraform MCP Server:
+All Terraform plugins include MCP server configuration for the Terraform MCP Server:
 
 ```json
 {

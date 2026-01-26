@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the Terraform Agent Kit.
+All notable changes to the HashiCorp Agent Skills.
 
 ## Unreleased
 

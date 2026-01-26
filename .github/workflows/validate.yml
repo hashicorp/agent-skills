@@ -1,0 +1,154 @@
+name: Validate Structure
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-structure:
+    name: Validate Repository Structure
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Validate structure
+        run: |
+          chmod +x ./scripts/validate-structure.sh
+          ./scripts/validate-structure.sh
+
+  validate-json:
+    name: Validate JSON Files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate all JSON files
+        run: |
+          echo "Validating all JSON files..."
+          ERRORS=0
+
+          for file in $(find . -name "*.json" -not -path "./node_modules/*" -not -path "./.git/*"); do
+            if ! jq empty "$file" 2>/dev/null; then
+              echo "ERROR: Invalid JSON in $file"
+              ERRORS=$((ERRORS + 1))
+            else
+              echo "OK: $file"
+            fi
+          done
+
+          if [[ "$ERRORS" -gt 0 ]]; then
+            echo "Found $ERRORS invalid JSON file(s)"
+            exit 1
+          fi
+
+          echo "All JSON files are valid!"
+
+  validate-skills:
+    name: Validate SKILL.md Files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check SKILL.md frontmatter
+        run: |
+          echo "Validating SKILL.md files..."
+          ERRORS=0
+
+          for skill_file in $(find . -name "SKILL.md" -not -path "./node_modules/*"); do
+            echo "Checking: $skill_file"
+
+            # Check file starts with frontmatter
+            if ! head -1 "$skill_file" | grep -q "^---"; then
+              echo "ERROR: $skill_file does not start with frontmatter (---)"
+              ERRORS=$((ERRORS + 1))
+              continue
+            fi
+
+            # Extract frontmatter
+            FRONTMATTER=$(sed -n '/^---$/,/^---$/p' "$skill_file" | sed '1d;$d')
+
+            # Check for required fields
+            if ! echo "$FRONTMATTER" | grep -q "^name:"; then
+              echo "ERROR: $skill_file missing 'name' in frontmatter"
+              ERRORS=$((ERRORS + 1))
+            fi
+
+            if ! echo "$FRONTMATTER" | grep -q "^description:"; then
+              echo "ERROR: $skill_file missing 'description' in frontmatter"
+              ERRORS=$((ERRORS + 1))
+            fi
+          done
+
+          if [[ "$ERRORS" -gt 0 ]]; then
+            echo "Found $ERRORS error(s) in SKILL.md files"
+            exit 1
+          fi
+
+          echo "All SKILL.md files are valid!"
+
+  validate-marketplace-references:
+    name: Validate Marketplace References
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check marketplace plugin references
+        run: |
+          echo "Validating marketplace.json plugin references..."
+          ERRORS=0
+
+          MARKETPLACE=".claude-plugin/marketplace.json"
+
+          if [[ ! -f "$MARKETPLACE" ]]; then
+            echo "ERROR: marketplace.json not found"
+            exit 1
+          fi
+
+          # Check each plugin source path exists
+          for source in $(jq -r '.plugins[].source' "$MARKETPLACE"); do
+            # Remove leading ./
+            path="${source#./}"
+
+            if [[ ! -d "$path" ]]; then
+              echo "ERROR: Plugin path does not exist: $path"
+              ERRORS=$((ERRORS + 1))
+            else
+              echo "OK: $path exists"
+            fi
+
+            # Check plugin.json exists in that path
+            if [[ ! -f "$path/.claude-plugin/plugin.json" ]]; then
+              echo "ERROR: plugin.json not found in $path/.claude-plugin/"
+              ERRORS=$((ERRORS + 1))
+            else
+              echo "OK: $path/.claude-plugin/plugin.json exists"
+            fi
+
+            # Check skills directory exists
+            if [[ ! -d "$path/skills" ]]; then
+              echo "ERROR: skills/ directory not found in $path"
+              ERRORS=$((ERRORS + 1))
+            else
+              echo "OK: $path/skills/ exists"
+            fi
+          done
+
+          if [[ "$ERRORS" -gt 0 ]]; then
+            echo "Found $ERRORS error(s) in marketplace references"
+            exit 1
+          fi
+
+          echo "All marketplace references are valid!"

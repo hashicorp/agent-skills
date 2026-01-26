@@ -1,15 +1,15 @@
 {
-  "name": "terraform-code-generation",
+  "name": "terraform-module-generation",
   "version": "1.0.0",
-  "description": "Terraform code generation skills for Claude Code, including HCL generation, style guides, and testing.",
+  "description": "Terraform module generation and refactoring skills for Claude Code, including module design and Terraform Stacks.",
   "author": {
     "name": "HashiCorp",
     "url": "https://github.com/hashicorp"
   },
-  "homepage": "https://developer.hashicorp.com/terraform/language",
-  "repository": "https://github.com/hashicorp/terraform-agent-kit",
+  "homepage": "https://developer.hashicorp.com/terraform/language/modules",
+  "repository": "https://github.com/hashicorp/agent-skills",
   "license": "MPL-2.0",
-  "keywords": ["terraform", "hcl", "infrastructure", "iac", "testing", "style-guide"],
+  "keywords": ["terraform", "modules", "infrastructure", "iac", "stacks", "refactoring"],
   "mcpServers": {
     "terraform": {
       "command": "docker",

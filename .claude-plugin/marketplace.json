@@ -1,16 +1,16 @@
 {
-  "name": "terraform-agent-kit",
+  "name": "hashicorp",
   "owner": {
     "name": "HashiCorp"
   },
   "metadata": {
-    "description": "Official Terraform plugins and skills for Claude Code",
+    "description": "Official HashiCorp plugins and skills for Claude Code",
     "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "terraform-code-generation",
-      "source": "./skills/terraform-code-generation",
+      "source": "./terraform/code-generation",
       "description": "Terraform code generation skills including HCL generation, style guides, and testing.",
       "version": "1.0.0",
       "author": {
@@ -23,7 +23,7 @@
     },
     {
       "name": "terraform-module-generation",
-      "source": "./skills/terraform-module-generation",
+      "source": "./terraform/module-generation",
       "description": "Terraform module generation and refactoring skills including module design and Terraform Stacks.",
       "version": "1.0.0",
       "author": {
@@ -36,7 +36,7 @@
     },
     {
       "name": "terraform-provider-development",
-      "source": "./skills/terraform-provider-development",
+      "source": "./terraform/provider-development",
       "description": "Terraform provider development skills including resources, data sources, actions, and acceptance testing.",
       "version": "1.0.0",
       "author": {
