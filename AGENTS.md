@@ -265,33 +265,6 @@ Set environment variables for HCP Terraform integration:
 - `TFE_TOKEN` - HCP Terraform API token
 - `TFE_ADDRESS` - HCP Terraform address (optional, defaults to app.terraform.io)
 
-The packer-hcp plugin includes MCP server configuration for the Packer MCP Server:
-
-```json
-{
-  "mcpServers": {
-    "packer": {
-      "command": "docker",
-      "args": ["run", "-i", "--rm", "-e", "HCP_CLIENT_ID", "-e", "HCP_CLIENT_SECRET", "-e", "HCP_ORGANIZATION_ID", "-e", "HCP_PROJECT_ID", "hashicorp/packer-mcp-server"],
-      "env": {
-        "HCP_CLIENT_ID": "${HCP_CLIENT_ID}",
-        "HCP_CLIENT_SECRET": "${HCP_CLIENT_SECRET}",
-        "HCP_ORGANIZATION_ID": "${HCP_ORGANIZATION_ID}",
-        "HCP_PROJECT_ID": "${HCP_PROJECT_ID}"
-      }
-    }
-  }
-}
-```
-
-Set environment variables for HCP Packer integration:
-- `HCP_CLIENT_ID` - HCP service principal client ID
-- `HCP_CLIENT_SECRET` - HCP service principal client secret
-- `HCP_ORGANIZATION_ID` - HCP organization ID
-- `HCP_PROJECT_ID` - HCP project ID
-
-**Note:** The `hashicorp/packer-mcp-server` Docker image would need to be implemented separately to provide MCP integration for HCP Packer APIs.
-
 ## References
 
 - [Terraform Documentation](https://developer.hashicorp.com/terraform)

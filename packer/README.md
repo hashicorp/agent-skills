@@ -45,19 +45,6 @@ npx skills add hashicorp/agent-skills/packer/builders/skills/windows-builder
 npx skills add hashicorp/agent-skills/packer/hcp/skills/push-to-registry
 ```
 
-## MCP Server
-
-The packer-hcp plugin includes the `packer-mcp-server` for HCP Packer API access. Set the following environment variables:
-
-```bash
-export HCP_CLIENT_ID="your-service-principal-client-id"
-export HCP_CLIENT_SECRET="your-service-principal-secret"
-export HCP_ORGANIZATION_ID="your-organization-id"
-export HCP_PROJECT_ID="your-project-id"
-```
-
-**Note:** The `hashicorp/packer-mcp-server` Docker image would need to be implemented separately to provide MCP integration for HCP Packer APIs.
-
 ## Structure
 
 ```
