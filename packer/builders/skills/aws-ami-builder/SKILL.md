@@ -9,6 +9,8 @@ Build Amazon Machine Images (AMIs) using Packer's `amazon-ebs` builder.
 
 **Reference:** [Amazon EBS Builder](https://developer.hashicorp.com/packer/integrations/hashicorp/amazon/latest/components/builder/ebs)
 
+> **Note:** Building AMIs incurs AWS costs (EC2 instances, EBS storage, data transfer). Builds typically take 10-30 minutes depending on provisioning complexity.
+
 ## Basic AMI Template
 
 ```hcl
@@ -24,11 +26,6 @@ packer {
 variable "region" {
   type    = string
   default = "us-west-2"
-}
-
-variable "ami_name" {
-  type    = string
-  default = "my-application"
 }
 
 locals {
@@ -50,13 +47,11 @@ source "amazon-ebs" "ubuntu" {
   }
 
   ssh_username = "ubuntu"
-  ami_name     = "${var.ami_name}-${local.timestamp}"
+  ami_name     = "my-app-${local.timestamp}"
 
   tags = {
-    Name        = var.ami_name
-    Environment = "production"
-    OS          = "Ubuntu 22.04"
-    BuildDate   = local.timestamp
+    Name      = "my-app"
+    BuildDate = local.timestamp
   }
 }
 
@@ -100,23 +95,8 @@ source_ami_filter {
 }
 ```
 
-### Red Hat Enterprise Linux 9
-```hcl
-source_ami_filter {
-  filters = {
-    name                = "RHEL-9*_HVM-*-x86_64-*"
-    root-device-type    = "ebs"
-    virtualization-type = "hvm"
-  }
-  most_recent = true
-  owners      = ["309956199498"] # Red Hat
-}
-```
-
 ## Multi-Region AMI
 
-Build and copy AMI to multiple regions:
-
 ```hcl
 source "amazon-ebs" "ubuntu" {
   region        = "us-west-2"
@@ -124,167 +104,34 @@ source "amazon-ebs" "ubuntu" {
 
   source_ami_filter {
     filters = {
-      name                = "ubuntu/images/*ubuntu-jammy-22.04-amd64-server-*"
-      root-device-type    = "ebs"
-      virtualization-type = "hvm"
+      name = "ubuntu/images/*ubuntu-jammy-22.04-amd64-server-*"
     }
     most_recent = true
     owners      = ["099720109477"]
   }
 
   ssh_username = "ubuntu"
-  ami_name     = "${var.ami_name}-${local.timestamp}"
+  ami_name     = "my-app-${local.timestamp}"
 
   # Copy to additional regions
-  ami_regions = [
-    "us-east-1",
-    "us-east-2",
-    "eu-west-1"
-  ]
-
-  tags = {
-    Name = var.ami_name
-  }
-}
-```
-
-## EBS Volume Configuration
-
-Customize root and additional volumes:
-
-```hcl
-source "amazon-ebs" "ubuntu" {
-  region        = "us-west-2"
-  instance_type = "t3.micro"
-
-  source_ami_filter {
-    filters = {
-      name                = "ubuntu/images/*ubuntu-jammy-22.04-amd64-server-*"
-      root-device-type    = "ebs"
-      virtualization-type = "hvm"
-    }
-    most_recent = true
-    owners      = ["099720109477"]
-  }
-
-  ssh_username = "ubuntu"
-  ami_name     = "${var.ami_name}-${local.timestamp}"
-
-  # Root volume configuration
-  launch_block_device_mappings {
-    device_name = "/dev/sda1"
-    volume_size = 20
-    volume_type = "gp3"
-    iops        = 3000
-    throughput  = 125
-    encrypted   = true
-    delete_on_termination = true
-  }
-
-  # Additional data volume
-  launch_block_device_mappings {
-    device_name = "/dev/sdf"
-    volume_size = 100
-    volume_type = "gp3"
-    encrypted   = true
-    delete_on_termination = true
-  }
+  ami_regions = ["us-east-1", "us-east-2", "eu-west-1"]
 }
 ```
 
 ## Authentication
 
-Packer uses standard AWS credential resolution:
+Packer uses AWS credential resolution:
 
 1. Environment variables: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
 2. AWS credentials file: `~/.aws/credentials`
 3. IAM instance profile (when running on EC2)
 
 ```bash
-# Using environment variables
 export AWS_ACCESS_KEY_ID="your-access-key"
 export AWS_SECRET_ACCESS_KEY="your-secret-key"
 export AWS_REGION="us-west-2"
 
 packer build .
-```
-
-## IAM Permissions Required
-
-Minimum IAM policy for building AMIs:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ec2:AttachVolume",
-        "ec2:AuthorizeSecurityGroupIngress",
-        "ec2:CopyImage",
-        "ec2:CreateImage",
-        "ec2:CreateKeypair",
-        "ec2:CreateSecurityGroup",
-        "ec2:CreateSnapshot",
-        "ec2:CreateTags",
-        "ec2:CreateVolume",
-        "ec2:DeleteKeyPair",
-        "ec2:DeleteSecurityGroup",
-        "ec2:DeleteSnapshot",
-        "ec2:DeleteVolume",
-        "ec2:DeregisterImage",
-        "ec2:DescribeImageAttribute",
-        "ec2:DescribeImages",
-        "ec2:DescribeInstances",
-        "ec2:DescribeInstanceStatus",
-        "ec2:DescribeRegions",
-        "ec2:DescribeSecurityGroups",
-        "ec2:DescribeSnapshots",
-        "ec2:DescribeSubnets",
-        "ec2:DescribeTags",
-        "ec2:DescribeVolumes",
-        "ec2:DetachVolume",
-        "ec2:GetPasswordData",
-        "ec2:ModifyImageAttribute",
-        "ec2:ModifyInstanceAttribute",
-        "ec2:ModifySnapshotAttribute",
-        "ec2:RegisterImage",
-        "ec2:RunInstances",
-        "ec2:StopInstances",
-        "ec2:TerminateInstances"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-```
-
-## Tagging Strategy
-
-```hcl
-source "amazon-ebs" "ubuntu" {
-  # ... other configuration ...
-
-  tags = {
-    Name        = var.ami_name
-    Environment = var.environment
-    OS          = "Ubuntu 22.04"
-    Application = "web-server"
-    Team        = "platform"
-    BuildDate   = local.timestamp
-    GitCommit   = var.git_commit
-  }
-
-  # Tags for snapshots
-  snapshot_tags = {
-    Name        = "${var.ami_name}-snapshot"
-    Environment = var.environment
-  }
-
-  # Share AMI with other accounts
-  ami_users = ["123456789012", "234567890123"]
-}
 ```
 
 ## Build Commands
@@ -300,26 +147,22 @@ packer validate .
 packer build .
 
 # Build with variables
-packer build -var "region=us-east-1" -var "ami_name=my-app" .
-
-# Debug mode
-packer build -debug .
+packer build -var "region=us-east-1" .
 ```
 
 ## Common Issues
 
 **SSH Timeout**
-- Ensure security group allows SSH (port 22) from Packer's IP
-- Verify subnet has internet access or VPC endpoint for SSM
+- Ensure security group allows SSH (port 22)
+- Verify subnet has internet access
 
 **AMI Already Exists**
 - AMI names must be unique
-- Use timestamp in name: `${var.ami_name}-${local.timestamp}`
-- Or use `force_deregister = true` to replace existing AMI
+- Use timestamp in name: `my-app-${local.timestamp}`
 
 **Volume Size Too Small**
-- Source AMI requires minimum volume size
-- Check source AMI's volume size and set `volume_size` accordingly
+- Check source AMI's volume size
+- Set `launch_block_device_mappings.volume_size` accordingly
 
 ## References
 

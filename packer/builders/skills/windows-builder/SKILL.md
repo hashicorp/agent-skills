@@ -9,11 +9,13 @@ Platform-agnostic patterns for building Windows images with Packer.
 
 **Reference:** [Windows Builders](https://developer.hashicorp.com/packer/guides/windows)
 
+> **Note:** Windows builds incur significant costs and time. Expect 45-120 minutes per build due to Windows Updates. Failed builds may leave resources running - always verify cleanup.
+
 ## WinRM Communicator Setup
 
-Windows requires WinRM for Packer communication. Use this user data script:
+Windows requires WinRM for Packer communication.
 
-### AWS Example with WinRM
+### AWS Example
 
 ```hcl
 source "amazon-ebs" "windows" {
@@ -22,9 +24,7 @@ source "amazon-ebs" "windows" {
 
   source_ami_filter {
     filters = {
-      name                = "Windows_Server-2022-English-Full-Base-*"
-      root-device-type    = "ebs"
-      virtualization-type = "hvm"
+      name = "Windows_Server-2022-English-Full-Base-*"
     }
     most_recent = true
     owners      = ["amazon"]
@@ -32,20 +32,13 @@ source "amazon-ebs" "windows" {
 
   ami_name = "windows-server-2022-${local.timestamp}"
 
-  # WinRM communicator
   communicator   = "winrm"
   winrm_username = "Administrator"
   winrm_use_ssl  = true
   winrm_insecure = true
-  winrm_timeout  = "10m"
+  winrm_timeout  = "15m"
 
-  # User data to enable WinRM
   user_data_file = "scripts/setup-winrm.ps1"
-
-  tags = {
-    Name = "Windows Server 2022"
-    OS   = "Windows"
-  }
 }
 ```
 
@@ -53,10 +46,6 @@ source "amazon-ebs" "windows" {
 
 ```powershell
 <powershell>
-# Set Administrator password
-$admin = [adsi]("WinNT://./administrator, user")
-$admin.SetPassword("${var.admin_password}")
-
 # Configure WinRM
 winrm quickconfig -q
 winrm set winrm/config '@{MaxTimeoutms="1800000"}'
@@ -67,13 +56,13 @@ winrm set winrm/config/service/auth '@{Basic="true"}'
 netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
 netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
 
-# Restart WinRM service
+# Restart WinRM
 net stop winrm
 net start winrm
 </powershell>
 ```
 
-## Azure Windows Example
+### Azure Example
 
 ```hcl
 source "azure-arm" "windows" {
@@ -82,8 +71,8 @@ source "azure-arm" "windows" {
   subscription_id = var.subscription_id
   tenant_id       = var.tenant_id
 
-  managed_image_resource_group_name = var.resource_group
-  managed_image_name                = "windows-server-2022-${local.timestamp}"
+  managed_image_resource_group_name = "images-rg"
+  managed_image_name                = "windows-${local.timestamp}"
 
   os_type         = "Windows"
   image_publisher = "MicrosoftWindowsServer"
@@ -93,11 +82,11 @@ source "azure-arm" "windows" {
   location = "East US"
   vm_size  = "Standard_D2s_v3"
 
-  # WinRM communicator (Azure handles setup automatically)
+  # Azure auto-configures WinRM
   communicator   = "winrm"
   winrm_use_ssl  = true
   winrm_insecure = true
-  winrm_timeout  = "10m"
+  winrm_timeout  = "15m"
   winrm_username = "packer"
 }
 ```
@@ -114,7 +103,6 @@ build {
   provisioner "powershell" {
     inline = [
       "Set-ExecutionPolicy Bypass -Scope Process -Force",
-      "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072",
       "iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))"
     ]
   }
@@ -124,254 +112,60 @@ build {
     inline = [
       "choco install -y googlechrome",
       "choco install -y 7zip",
-      "choco install -y git",
     ]
   }
 
   # Install IIS
   provisioner "powershell" {
     inline = [
-      "Install-WindowsFeature -Name Web-Server -IncludeManagementTools",
-      "Install-WindowsFeature -Name Web-Asp-Net45",
+      "Install-WindowsFeature -Name Web-Server -IncludeManagementTools"
     ]
   }
 }
 ```
 
-### Run External Scripts
-
-```hcl
-build {
-  sources = ["source.amazon-ebs.windows"]
-
-  provisioner "powershell" {
-    scripts = [
-      "scripts/install-dependencies.ps1",
-      "scripts/configure-iis.ps1",
-      "scripts/harden-security.ps1",
-    ]
-  }
-}
-```
-
-### Pass Variables to PowerShell
-
-```hcl
-variable "app_version" {
-  type = string
-}
-
-build {
-  sources = ["source.amazon-ebs.windows"]
-
-  provisioner "powershell" {
-    environment_vars = [
-      "APP_VERSION=${var.app_version}",
-      "ENVIRONMENT=production",
-    ]
-    inline = [
-      "Write-Host \"Installing app version: $env:APP_VERSION\"",
-      "# Download and install application",
-    ]
-  }
-}
-```
-
-## Windows Updates
-
-### Install All Updates
-
-```hcl
-build {
-  sources = ["source.amazon-ebs.windows"]
-
-  # Install PSWindowsUpdate module
-  provisioner "powershell" {
-    inline = [
-      "Install-PackageProvider -Name NuGet -Force",
-      "Install-Module -Name PSWindowsUpdate -Force",
-    ]
-  }
-
-  # Install Windows updates (can take 30+ minutes)
-  provisioner "powershell" {
-    inline = [
-      "Import-Module PSWindowsUpdate",
-      "Get-WindowsUpdate -Install -AcceptAll -AutoReboot",
-    ]
-    # Allow extra time for updates and reboots
-    timeout = "2h"
-  }
-
-  # Wait for potential reboots
-  provisioner "windows-restart" {
-    restart_timeout = "30m"
-  }
-}
-```
-
-### Install Security Updates Only
+### Windows Updates
 
 ```hcl
 provisioner "powershell" {
   inline = [
+    "Install-PackageProvider -Name NuGet -Force",
+    "Install-Module -Name PSWindowsUpdate -Force",
     "Import-Module PSWindowsUpdate",
-    "Get-WindowsUpdate -Category 'Security Updates' -Install -AcceptAll -AutoReboot",
+    "Get-WindowsUpdate -Install -AcceptAll -AutoReboot",
   ]
-  timeout = "1h"
+  timeout = "2h"
+}
+
+# Wait for reboots
+provisioner "windows-restart" {
+  restart_timeout = "30m"
 }
 ```
 
-## File Provisioner for Windows
-
-```hcl
-build {
-  sources = ["source.amazon-ebs.windows"]
-
-  # Copy files (note Windows path format)
-  provisioner "file" {
-    source      = "app/"
-    destination = "C:\\temp\\app\\"
-  }
-
-  # Move to final location with PowerShell
-  provisioner "powershell" {
-    inline = [
-      "Move-Item -Path 'C:\\temp\\app' -Destination 'C:\\Program Files\\MyApp'",
-    ]
-  }
-}
-```
-
-## Windows Restart Provisioner
-
-Use when reboots are needed (updates, driver installation):
-
-```hcl
-build {
-  sources = ["source.amazon-ebs.windows"]
-
-  provisioner "powershell" {
-    inline = ["Install-WindowsFeature -Name Web-Server"]
-  }
-
-  # Restart and wait for WinRM
-  provisioner "windows-restart" {
-    restart_timeout = "15m"
-  }
-
-  provisioner "powershell" {
-    inline = ["Write-Host 'System restarted successfully'"]
-  }
-}
-```
-
-## Sysprep and Generalization
-
-### AWS (EC2Config/EC2Launch)
-
-AWS AMIs are automatically generalized. Optionally run custom sysprep:
-
-```hcl
-build {
-  sources = ["source.amazon-ebs.windows"]
-
-  # Your provisioning here...
-
-  # Optional: Custom sysprep (AWS does this automatically)
-  provisioner "powershell" {
-    inline = [
-      "C:\\ProgramData\\Amazon\\EC2-Windows\\Launch\\Scripts\\InitializeInstance.ps1 -Schedule",
-      "C:\\ProgramData\\Amazon\\EC2-Windows\\Launch\\Scripts\\SysprepInstance.ps1 -NoShutdown",
-    ]
-  }
-}
-```
-
-### Azure (waagent/Sysprep)
-
-Azure automatically runs sysprep. No manual generalization needed.
-
-### VMware/Hyper-V (Manual Sysprep)
-
-```hcl
-provisioner "powershell" {
-  inline = [
-    "& $env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /generalize /oobe /shutdown /quiet",
-  ]
-}
-```
-
-## Common Windows Patterns
-
-### Disable Windows Defender (for performance)
-
-```hcl
-provisioner "powershell" {
-  inline = [
-    "Set-MpPreference -DisableRealtimeMonitoring $true",
-    "Set-MpPreference -DisableBehaviorMonitoring $true",
-    "Set-MpPreference -DisableIOAVProtection $true",
-  ]
-}
-```
-
-### Configure Time Zone
-
-```hcl
-provisioner "powershell" {
-  inline = [
-    "Set-TimeZone -Id 'Eastern Standard Time'",
-  ]
-}
-```
-
-### Disable IE Enhanced Security
-
-```hcl
-provisioner "powershell" {
-  inline = [
-    "$AdminKey = 'HKLM:\\SOFTWARE\\Microsoft\\Active Setup\\Installed Components\\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}'",
-    "$UserKey = 'HKLM:\\SOFTWARE\\Microsoft\\Active Setup\\Installed Components\\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}'",
-    "Set-ItemProperty -Path $AdminKey -Name 'IsInstalled' -Value 0 -Force",
-    "Set-ItemProperty -Path $UserKey -Name 'IsInstalled' -Value 0 -Force",
-  ]
-}
-```
-
-### Clean Up Before Image Creation
+## Cleanup
 
 ```hcl
 provisioner "powershell" {
   inline = [
     "# Clear temp files",
     "Remove-Item -Path 'C:\\Windows\\Temp\\*' -Recurse -Force -ErrorAction SilentlyContinue",
-    "Remove-Item -Path 'C:\\Users\\*\\AppData\\Local\\Temp\\*' -Recurse -Force -ErrorAction SilentlyContinue",
-    "",
     "# Clear Windows Update cache",
     "Stop-Service -Name wuauserv -Force",
     "Remove-Item -Path 'C:\\Windows\\SoftwareDistribution\\*' -Recurse -Force -ErrorAction SilentlyContinue",
     "Start-Service -Name wuauserv",
-    "",
-    "# Disk cleanup",
-    "cleanmgr.exe /sagerun:1",
   ]
 }
 ```
 
-## Common Issues and Solutions
+## Common Issues
 
-### WinRM Timeout
-**Problem:** Packer can't connect via WinRM
-**Solutions:**
-- Increase `winrm_timeout` to "15m" or more
-- Verify security group allows port 5985 (HTTP) or 5986 (HTTPS)
-- Check user data script completed (view instance console output)
-- Ensure Administrator password was set
+**WinRM Timeout**
+- Increase `winrm_timeout` to 15m or more
+- Verify security group allows ports 5985/5986
+- Check user data script completed successfully
 
-### PowerShell Execution Policy
-**Problem:** Scripts won't run due to execution policy
-**Solution:**
+**PowerShell Execution Policy**
 ```hcl
 provisioner "powershell" {
   inline = [
@@ -381,37 +175,13 @@ provisioner "powershell" {
 }
 ```
 
-### Long Provisioning Times
-**Problem:** Windows updates take too long
-**Solutions:**
+**Long Build Times**
+- Windows Updates can take 1-2 hours
 - Use pre-patched base images when available
-- Increase provisioner timeout: `timeout = "2h"`
-- Use `windows-restart` provisioner after updates
-- Consider separate update image in pipeline
-
-### File Copy Failures
-**Problem:** Files not copying to Windows paths
-**Solution:** Use Windows path format with escaped backslashes:
-```hcl
-destination = "C:\\temp\\app\\"  # Correct
-destination = "C:/temp/app/"     # May not work
-```
-
-### Certificate Errors
-**Problem:** SSL/TLS errors during downloads
-**Solution:**
-```hcl
-provisioner "powershell" {
-  inline = [
-    "[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12",
-    "# Your download commands",
-  ]
-}
-```
+- Set provisioner `timeout = "2h"`
 
 ## References
 
 - [Packer Windows Builders](https://developer.hashicorp.com/packer/guides/windows)
 - [WinRM Communicator](https://developer.hashicorp.com/packer/docs/communicators/winrm)
 - [PowerShell Provisioner](https://developer.hashicorp.com/packer/docs/provisioners/powershell)
-- [Windows Restart Provisioner](https://developer.hashicorp.com/packer/docs/provisioners/windows-restart)
