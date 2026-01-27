@@ -46,6 +46,32 @@
       "category": "integration",
       "license": "MPL-2.0",
       "strict": false
+    },
+    {
+      "name": "packer-builders",
+      "source": "./packer/builders",
+      "description": "Packer builder skills for AWS, Azure, and Windows image creation.",
+      "version": "1.0.0",
+      "author": {
+        "name": "HashiCorp"
+      },
+      "keywords": ["packer", "aws", "azure", "windows", "ami", "image", "builder"],
+      "category": "integration",
+      "license": "MPL-2.0",
+      "strict": false
+    },
+    {
+      "name": "packer-hcp",
+      "source": "./packer/hcp",
+      "description": "HCP Packer registry integration for tracking and managing image metadata.",
+      "version": "1.0.0",
+      "author": {
+        "name": "HashiCorp"
+      },
+      "keywords": ["packer", "hcp-packer", "registry", "metadata", "image-tracking"],
+      "category": "integration",
+      "license": "MPL-2.0",
+      "strict": false
     }
   ]
 }

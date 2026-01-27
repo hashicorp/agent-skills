@@ -1,0 +1,34 @@
+{
+  "name": "packer-hcp",
+  "version": "1.0.0",
+  "description": "HCP Packer registry integration for tracking and managing image metadata.",
+  "author": {
+    "name": "HashiCorp",
+    "url": "https://github.com/hashicorp"
+  },
+  "homepage": "https://developer.hashicorp.com/hcp/docs/packer",
+  "repository": "https://github.com/hashicorp/agent-skills",
+  "license": "MPL-2.0",
+  "keywords": ["packer", "hcp-packer", "registry", "metadata", "image-tracking"],
+  "mcpServers": {
+    "packer": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e", "HCP_CLIENT_ID",
+        "-e", "HCP_CLIENT_SECRET",
+        "-e", "HCP_ORGANIZATION_ID",
+        "-e", "HCP_PROJECT_ID",
+        "hashicorp/packer-mcp-server"
+      ],
+      "env": {
+        "HCP_CLIENT_ID": "${HCP_CLIENT_ID}",
+        "HCP_CLIENT_SECRET": "${HCP_CLIENT_SECRET}",
+        "HCP_ORGANIZATION_ID": "${HCP_ORGANIZATION_ID}",
+        "HCP_PROJECT_ID": "${HCP_PROJECT_ID}"
+      }
+    }
+  }
+}

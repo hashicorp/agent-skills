@@ -5,6 +5,7 @@ A collection of Agent skills and Claude Code plugins for HashiCorp products.
 | Product | Use cases |
 |:--------|:----------|
 | [Terraform](./terraform/) | Write HCL code, build modules, develop providers, and run tests |
+| [Packer](./packer/) | Build machine images, migrate to HCL2, implement governance and compliance |
 
 > **Legal Note:** Your use of a third party MCP Client/LLM is subject solely to the terms of use for such MCP/LLM, and IBM is not responsible for the performance of such third party tools. IBM expressly disclaims any and all warranties and liability for third party MCP Clients/LLMs, and may not be able to provide support to resolve issues which are caused by the third party tools.
 
@@ -34,6 +35,8 @@ claude plugin marketplace add hashicorp/agent-skills
 claude plugin install terraform-code-generation@hashicorp
 claude plugin install terraform-module-generation@hashicorp
 claude plugin install terraform-provider-development@hashicorp
+claude plugin install packer-builders@hashicorp
+claude plugin install packer-hcp@hashicorp
 ```
 
 Or use the interactive interface:
@@ -48,6 +51,7 @@ agent-skills/
 ├── .claude-plugin/
 │   └── marketplace.json
 ├── terraform/              # Terraform skills
+├── packer/                 # Packer skills
 ├── <product>/              # Future products (Vault, Consul, etc.)
 └── README.md
 ```
