@@ -16,10 +16,10 @@ Install Agent Skills in GitHub Copilot, Claude Code, Opencode, Cursor, and more:
 
 ```bash
 # List all skills
-npx add-skill hashicorp/agent-skills
+npx skills add hashicorp/agent-skills
 
 # Install a specific skill
-npx add-skill hashicorp/agent-skills/terraform/code-generation/skills/terraform-style-guide
+npx skills add hashicorp/agent-skills/terraform/code-generation/skills/terraform-style-guide
 ```
 
 ### Claude Code Plugin

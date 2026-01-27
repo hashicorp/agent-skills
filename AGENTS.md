@@ -78,26 +78,26 @@ Installation scopes (use `--scope` flag):
 
 ### Method 2: Individual Skill Installation
 
-Install individual skills using npx add-skill:
+Install individual skills using npx skills:
 
 ```bash
 # List all available skills
-npx add-skill hashicorp/agent-skills
+npx skills add hashicorp/agent-skills
 
 # Code generation skills
-npx add-skill hashicorp/agent-skills/terraform/code-generation/skills/terraform-style-guide
-npx add-skill hashicorp/agent-skills/terraform/code-generation/skills/terraform-test
-npx add-skill hashicorp/agent-skills/terraform/code-generation/skills/azure-verified-modules
+npx skills add hashicorp/agent-skills/terraform/code-generation/skills/terraform-style-guide
+npx skills add hashicorp/agent-skills/terraform/code-generation/skills/terraform-test
+npx skills add hashicorp/agent-skills/terraform/code-generation/skills/azure-verified-modules
 
 # Module generation skills
-npx add-skill hashicorp/agent-skills/terraform/module-generation/skills/refactor-module
-npx add-skill hashicorp/agent-skills/terraform/module-generation/skills/terraform-stacks
+npx skills add hashicorp/agent-skills/terraform/module-generation/skills/refactor-module
+npx skills add hashicorp/agent-skills/terraform/module-generation/skills/terraform-stacks
 
 # Provider development skills
-npx add-skill hashicorp/agent-skills/terraform/provider-development/skills/new-terraform-provider
-npx add-skill hashicorp/agent-skills/terraform/provider-development/skills/run-acceptance-tests
-npx add-skill hashicorp/agent-skills/terraform/provider-development/skills/provider-actions
-npx add-skill hashicorp/agent-skills/terraform/provider-development/skills/provider-resources
+npx skills add hashicorp/agent-skills/terraform/provider-development/skills/new-terraform-provider
+npx skills add hashicorp/agent-skills/terraform/provider-development/skills/run-acceptance-tests
+npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-actions
+npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-resources
 ```
 
 Skills are installed to `~/.claude/skills/` or project `.claude/skills/` directory.

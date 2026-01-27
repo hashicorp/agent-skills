@@ -50,19 +50,19 @@ claude plugin install terraform-provider-development@hashicorp
 
 ```bash
 # Code generation
-npx add-skill hashicorp/agent-skills/terraform/code-generation/skills/terraform-style-guide
-npx add-skill hashicorp/agent-skills/terraform/code-generation/skills/terraform-test
-npx add-skill hashicorp/agent-skills/terraform/code-generation/skills/azure-verified-modules
+npx skills add hashicorp/agent-skills/terraform/code-generation/skills/terraform-style-guide
+npx skills add hashicorp/agent-skills/terraform/code-generation/skills/terraform-test
+npx skills add hashicorp/agent-skills/terraform/code-generation/skills/azure-verified-modules
 
 # Module generation
-npx add-skill hashicorp/agent-skills/terraform/module-generation/skills/refactor-module
-npx add-skill hashicorp/agent-skills/terraform/module-generation/skills/terraform-stacks
+npx skills add hashicorp/agent-skills/terraform/module-generation/skills/refactor-module
+npx skills add hashicorp/agent-skills/terraform/module-generation/skills/terraform-stacks
 
 # Provider development
-npx add-skill hashicorp/agent-skills/terraform/provider-development/skills/new-terraform-provider
-npx add-skill hashicorp/agent-skills/terraform/provider-development/skills/run-acceptance-tests
-npx add-skill hashicorp/agent-skills/terraform/provider-development/skills/provider-actions
-npx add-skill hashicorp/agent-skills/terraform/provider-development/skills/provider-resources
+npx skills add hashicorp/agent-skills/terraform/provider-development/skills/new-terraform-provider
+npx skills add hashicorp/agent-skills/terraform/provider-development/skills/run-acceptance-tests
+npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-actions
+npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-resources
 ```
 
 ## MCP Server
