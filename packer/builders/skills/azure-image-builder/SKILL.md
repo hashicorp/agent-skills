@@ -37,6 +37,10 @@ variable "subscription_id" {
   type = string
 }
 
+variable "tenant_id" {
+  type = string
+}
+
 variable "resource_group" {
   type    = string
   default = "packer-images-rg"
