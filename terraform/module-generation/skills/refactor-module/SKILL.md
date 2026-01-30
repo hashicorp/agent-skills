@@ -524,8 +524,8 @@ module "vpc" {
 - [ ] No plan differences after refactoring
 
 ## Related Skills
-- [Generate HCL](../generate-hcl/SKILL.md) - Create new module code
-- [Validate Configuration](../validate-configuration/SKILL.md) - Test refactored modules
+- [Terraform code generation](../../../code-generation/skills/terraform-style-guide/SKILL.md) - Style guide for the new Terraform Module
+- [Azure Verified Modules](../../../code-generation/skills/azure-verified-modules/SKILL.md) - Recommended module specifications for Azure
 
 ## Resources
 - [Terraform Module Development](https://developer.hashicorp.com/terraform/language/modules/develop)
