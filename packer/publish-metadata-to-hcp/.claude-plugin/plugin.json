@@ -1,5 +1,5 @@
 {
-  "name": "packer-hcp",
+  "name": "packer-publish-metadata-to-hcp",
   "version": "1.0.0",
   "description": "HCP Packer registry integration for tracking and managing image metadata.",
   "author": {

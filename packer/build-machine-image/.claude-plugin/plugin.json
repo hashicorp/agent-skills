@@ -1,7 +1,7 @@
 {
-  "name": "packer-builders",
+  "name": "packer-build-machine-image",
   "version": "1.0.0",
-  "description": "Packer builder skills for AWS, Azure, and Windows image creation.",
+  "description": "Packer skills for building machine images on AWS, Azure, and Windows.",
   "author": {
     "name": "HashiCorp",
     "url": "https://github.com/hashicorp"
