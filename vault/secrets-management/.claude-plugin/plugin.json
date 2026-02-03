@@ -1,0 +1,39 @@
+{
+  "name": "vault-secrets-management",
+  "version": "0.1.0",
+  "description": "Skills for managing Vault secrets engines and Vault Agent. Covers KV, database, AWS, Transit, PKI secrets engines, and agent-based secret injection.",
+  "author": "HashiCorp",
+  "homepage": "https://developer.hashicorp.com/vault/docs/secrets",
+  "repository": "https://github.com/hashicorp/agent-skills",
+  "license": "MPL-2.0",
+  "keywords": [
+    "vault",
+    "secrets",
+    "kv",
+    "database",
+    "dynamic-credentials",
+    "transit",
+    "pki",
+    "vault-agent",
+    "hashicorp"
+  ],
+  "mcpServers": {
+    "vault": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "VAULT_ADDR",
+        "-e",
+        "VAULT_TOKEN",
+        "hashicorp/vault-mcp-server"
+      ],
+      "env": {
+        "VAULT_ADDR": "${VAULT_ADDR}",
+        "VAULT_TOKEN": "${VAULT_TOKEN}"
+      }
+    }
+  }
+}

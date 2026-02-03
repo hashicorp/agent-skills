@@ -1,0 +1,40 @@
+{
+  "name": "vault-authentication",
+  "version": "0.1.0",
+  "description": "Skills for configuring Vault authentication methods and access policies. Covers AppRole, Kubernetes, OIDC, AWS, LDAP auth, and HCL policy authoring.",
+  "author": "HashiCorp",
+  "homepage": "https://developer.hashicorp.com/vault/docs/auth",
+  "repository": "https://github.com/hashicorp/agent-skills",
+  "license": "MPL-2.0",
+  "keywords": [
+    "vault",
+    "auth",
+    "authentication",
+    "approle",
+    "kubernetes",
+    "oidc",
+    "ldap",
+    "policies",
+    "acl",
+    "hashicorp"
+  ],
+  "mcpServers": {
+    "vault": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "VAULT_ADDR",
+        "-e",
+        "VAULT_TOKEN",
+        "hashicorp/vault-mcp-server"
+      ],
+      "env": {
+        "VAULT_ADDR": "${VAULT_ADDR}",
+        "VAULT_TOKEN": "${VAULT_TOKEN}"
+      }
+    }
+  }
+}
