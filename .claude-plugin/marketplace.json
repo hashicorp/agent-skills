@@ -72,6 +72,84 @@
       "category": "integration",
       "license": "MPL-2.0",
       "strict": false
+    },
+    {
+      "name": "vault-secrets-management",
+      "source": "./vault/secrets-management",
+      "description": "Vault secrets engine skills including KV, database, AWS, Transit, PKI, and Vault Agent.",
+      "version": "0.1.0",
+      "author": {
+        "name": "HashiCorp"
+      },
+      "keywords": ["vault", "secrets", "kv", "database", "transit", "pki", "vault-agent", "dynamic-credentials"],
+      "category": "integration",
+      "license": "MPL-2.0",
+      "strict": false
+    },
+    {
+      "name": "vault-authentication",
+      "source": "./vault/authentication",
+      "description": "Vault authentication, identity, and token management including AppRole, Kubernetes, OIDC, policies, tokens, and response wrapping.",
+      "version": "0.1.0",
+      "author": {
+        "name": "HashiCorp"
+      },
+      "keywords": ["vault", "auth", "authentication", "approle", "kubernetes", "oidc", "policies", "tokens", "identity", "wrapping"],
+      "category": "integration",
+      "license": "MPL-2.0",
+      "strict": false
+    },
+    {
+      "name": "vault-operations",
+      "source": "./vault/operations",
+      "description": "Vault operational skills including Kubernetes integration, HA/DR, monitoring, and troubleshooting.",
+      "version": "0.1.0",
+      "author": {
+        "name": "HashiCorp"
+      },
+      "keywords": ["vault", "operations", "kubernetes", "vso", "ha", "dr", "monitoring", "troubleshooting"],
+      "category": "integration",
+      "license": "MPL-2.0",
+      "strict": false
+    },
+    {
+      "name": "vault-enterprise",
+      "source": "./vault/enterprise",
+      "description": "Vault Enterprise skills including namespaces, replication, Sentinel policies, MFA, and HSM integration.",
+      "version": "0.1.0",
+      "author": {
+        "name": "HashiCorp"
+      },
+      "keywords": ["vault", "enterprise", "namespaces", "replication", "sentinel", "mfa", "hsm", "control-groups"],
+      "category": "integration",
+      "license": "MPL-2.0",
+      "strict": false
+    },
+    {
+      "name": "vault-mcp-integration",
+      "source": "./vault/mcp-integration",
+      "description": "Vault MCP Server integration skills for AI-assisted secrets management workflows.",
+      "version": "0.1.0",
+      "author": {
+        "name": "HashiCorp"
+      },
+      "keywords": ["vault", "mcp", "model-context-protocol", "claude", "ai", "secrets", "automation"],
+      "category": "integration",
+      "license": "MPL-2.0",
+      "strict": false
+    },
+    {
+      "name": "vault-hashicorp-integrations",
+      "source": "./vault/hashicorp-integrations",
+      "description": "Vault secrets engines for HashiCorp products - dynamic tokens for Consul, Nomad, and Terraform Cloud.",
+      "version": "0.1.0",
+      "author": {
+        "name": "HashiCorp"
+      },
+      "keywords": ["vault", "consul", "nomad", "terraform", "dynamic-credentials", "acl-tokens", "hashicorp"],
+      "category": "integration",
+      "license": "MPL-2.0",
+      "strict": false
     }
   ]
 }
