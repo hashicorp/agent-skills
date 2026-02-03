@@ -1,0 +1,40 @@
+{
+  "name": "vault-mcp-integration",
+  "version": "0.1.0",
+  "description": "Skills for using the Vault MCP Server with Claude and other AI assistants for secrets management workflows",
+  "author": "HashiCorp",
+  "homepage": "https://github.com/hashicorp/vault-mcp-server",
+  "repository": "https://github.com/hashicorp/agent-skills",
+  "license": "MPL-2.0",
+  "keywords": [
+    "vault",
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "ai",
+    "secrets",
+    "automation"
+  ],
+  "mcpServers": {
+    "vault": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "VAULT_ADDR",
+        "-e",
+        "VAULT_TOKEN",
+        "-e",
+        "VAULT_NAMESPACE",
+        "hashicorp/vault-mcp-server"
+      ],
+      "env": {
+        "VAULT_ADDR": "${VAULT_ADDR}",
+        "VAULT_TOKEN": "${VAULT_TOKEN}",
+        "VAULT_NAMESPACE": "${VAULT_NAMESPACE}"
+      }
+    }
+  }
+}
