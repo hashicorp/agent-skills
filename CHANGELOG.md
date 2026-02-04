@@ -4,14 +4,27 @@ All notable changes to the HashiCorp Agent Skills.
 
 ## Unreleased
 
+### Changed
+- Renamed Vault plugins to job-oriented names following Terraform/Packer pattern:
+  - `vault-secrets-management` → `vault-credential-generation`
+  - `vault-authentication` → `vault-app-access`
+  - `vault-operations` → `vault-deployment`
+  - `vault-enterprise` → `vault-multi-tenancy`
+  - `vault-mcp-integration` → `vault-ai-workflows`
+  - `vault-hashicorp-secrets-engines` → was `vault-hashicorp-integrations`
+- Transformed all 16 Vault skills to include "What Are You Trying to Solve?" decision frameworks
+- Updated skill headers with problem-oriented navigation (jump links)
+- Added mental model sections explaining how each Vault component works
+- Added decision tables mapping user problems to solutions
+
 ### Added
 - Vault product with 6 plugins and 16 skills
-  - `vault-secrets-management`: secrets-engines, vault-agent
-  - `vault-authentication`: auth-methods, policies, token-management, identity-system, response-wrapping
-  - `vault-operations`: kubernetes-integration, production-operations, troubleshooting
-  - `vault-enterprise`: enterprise-features (namespaces, replication, Sentinel, MFA, HSM)
-  - `vault-mcp-integration`: vault-mcp-server, mcp-secrets-workflows
-  - `vault-hashicorp-integrations`: consul-secrets, nomad-secrets, terraform-cloud-secrets
+  - `vault-credential-generation`: secrets-engines, vault-agent
+  - `vault-app-access`: auth-methods, policies, token-management, identity-system, response-wrapping
+  - `vault-deployment`: kubernetes-integration, production-operations, troubleshooting
+  - `vault-multi-tenancy`: enterprise-features (namespaces, replication, Sentinel, MFA, HSM)
+  - `vault-ai-workflows`: vault-mcp-server, mcp-secrets-workflows
+  - `vault-hashicorp-secrets-engines`: consul-secrets, nomad-secrets, terraform-cloud-secrets
 - Token management, identity system, and response wrapping skills for authentication workflows
 - HashiCorp product integration skills for Consul, Nomad, and Terraform Cloud/Enterprise
 - Vault Enterprise skills for multi-tenancy, replication, and policy-as-code
