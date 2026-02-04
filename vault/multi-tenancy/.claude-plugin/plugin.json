@@ -1,0 +1,41 @@
+{
+  "name": "vault-multi-tenancy",
+  "version": "0.2.0",
+  "description": "Set up multi-tenant Vault with namespaces, replication, and policy-as-code. Covers Vault Enterprise features including Sentinel, MFA, HSM, and control groups.",
+  "author": "HashiCorp",
+  "homepage": "https://developer.hashicorp.com/vault/docs/enterprise",
+  "repository": "https://github.com/hashicorp/agent-skills",
+  "license": "MPL-2.0",
+  "keywords": [
+    "vault",
+    "enterprise",
+    "multi-tenancy",
+    "namespaces",
+    "replication",
+    "sentinel",
+    "mfa",
+    "hsm"
+  ],
+  "mcpServers": {
+    "vault": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "VAULT_ADDR",
+        "-e",
+        "VAULT_TOKEN",
+        "-e",
+        "VAULT_NAMESPACE",
+        "hashicorp/vault-mcp-server"
+      ],
+      "env": {
+        "VAULT_ADDR": "${VAULT_ADDR}",
+        "VAULT_TOKEN": "${VAULT_TOKEN}",
+        "VAULT_NAMESPACE": "${VAULT_NAMESPACE}"
+      }
+    }
+  }
+}
