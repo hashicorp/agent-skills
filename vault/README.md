@@ -4,62 +4,62 @@ Agent skills for HashiCorp Vault identity-based secrets and encryption managemen
 
 ## Overview
 
-Vault secures, stores, and tightly controls access to tokens, passwords, certificates, encryption keys, and other sensitive data. These skills provide AI-assisted guidance for secrets management, authentication, operational tasks, enterprise features, and HashiCorp product integrations.
+Vault secures, stores, and tightly controls access to tokens, passwords, certificates, encryption keys, and other sensitive data. These skills provide AI-assisted guidance organized around **jobs to be done**—the problems you're actually trying to solve.
 
 ## Available Plugins
 
-| Plugin | Description | Skills |
-|--------|-------------|--------|
-| [vault-secrets-management](secrets-management/) | Generate and manage static and dynamic secrets | `secrets-engines`, `vault-agent` |
-| [vault-authentication](authentication/) | Configure auth methods, policies, tokens, and identity | `auth-methods`, `policies`, `token-management`, `identity-system`, `response-wrapping` |
-| [vault-operations](operations/) | Deploy, monitor, and troubleshoot Vault | `kubernetes-integration`, `production-operations`, `troubleshooting` |
-| [vault-enterprise](enterprise/) | Vault Enterprise features | `enterprise-features` |
-| [vault-mcp-integration](mcp-integration/) | Use Vault with MCP-enabled AI assistants | `vault-mcp-server`, `mcp-secrets-workflows` |
-| [vault-hashicorp-integrations](hashicorp-integrations/) | Dynamic credentials for HashiCorp products | `consul-secrets`, `nomad-secrets`, `terraform-cloud-secrets` |
+| Plugin | Job to Be Done | Skills |
+|--------|----------------|--------|
+| [vault-credential-generation](credential-generation/) | Generate dynamic credentials for my app | `secrets-engines`, `vault-agent` |
+| [vault-app-access](app-access/) | Give my app secure access to Vault | `auth-methods`, `policies`, `token-management`, `identity-system`, `response-wrapping` |
+| [vault-deployment](deployment/) | Deploy and operate Vault | `kubernetes-integration`, `production-operations`, `troubleshooting` |
+| [vault-multi-tenancy](multi-tenancy/) | Set up multi-tenant Vault | `enterprise-features` |
+| [vault-ai-workflows](ai-workflows/) | Use AI to manage secrets | `vault-mcp-server`, `mcp-secrets-workflows` |
+| [vault-hashicorp-secrets-engines](hashicorp-secrets-engines/) | Secrets engines for Consul, Nomad, TFC | `consul-secrets`, `nomad-secrets`, `terraform-cloud-secrets` |
 
 ## Installation
 
 ### Install All Vault Plugins
 
 ```bash
-claude plugin install vault-secrets-management@hashicorp
-claude plugin install vault-authentication@hashicorp
-claude plugin install vault-operations@hashicorp
-claude plugin install vault-enterprise@hashicorp
-claude plugin install vault-mcp-integration@hashicorp
-claude plugin install vault-hashicorp-integrations@hashicorp
+claude plugin install vault-credential-generation@hashicorp
+claude plugin install vault-app-access@hashicorp
+claude plugin install vault-deployment@hashicorp
+claude plugin install vault-multi-tenancy@hashicorp
+claude plugin install vault-ai-workflows@hashicorp
+claude plugin install vault-hashicorp-secrets-engines@hashicorp
 ```
 
 ### Install Individual Skills
 
 ```bash
-# Secrets management
-npx skills add hashicorp/agent-skills/vault/secrets-management/skills/secrets-engines
-npx skills add hashicorp/agent-skills/vault/secrets-management/skills/vault-agent
+# Credential generation
+npx skills add hashicorp/agent-skills/vault/credential-generation/skills/secrets-engines
+npx skills add hashicorp/agent-skills/vault/credential-generation/skills/vault-agent
 
-# Authentication, identity, and tokens
-npx skills add hashicorp/agent-skills/vault/authentication/skills/auth-methods
-npx skills add hashicorp/agent-skills/vault/authentication/skills/policies
-npx skills add hashicorp/agent-skills/vault/authentication/skills/token-management
-npx skills add hashicorp/agent-skills/vault/authentication/skills/identity-system
-npx skills add hashicorp/agent-skills/vault/authentication/skills/response-wrapping
+# App access (authentication, identity, and tokens)
+npx skills add hashicorp/agent-skills/vault/app-access/skills/auth-methods
+npx skills add hashicorp/agent-skills/vault/app-access/skills/policies
+npx skills add hashicorp/agent-skills/vault/app-access/skills/token-management
+npx skills add hashicorp/agent-skills/vault/app-access/skills/identity-system
+npx skills add hashicorp/agent-skills/vault/app-access/skills/response-wrapping
 
-# Operations
-npx skills add hashicorp/agent-skills/vault/operations/skills/kubernetes-integration
-npx skills add hashicorp/agent-skills/vault/operations/skills/production-operations
-npx skills add hashicorp/agent-skills/vault/operations/skills/troubleshooting
+# Deployment (operations)
+npx skills add hashicorp/agent-skills/vault/deployment/skills/kubernetes-integration
+npx skills add hashicorp/agent-skills/vault/deployment/skills/production-operations
+npx skills add hashicorp/agent-skills/vault/deployment/skills/troubleshooting
 
-# Enterprise
-npx skills add hashicorp/agent-skills/vault/enterprise/skills/enterprise-features
+# Multi-tenancy (enterprise)
+npx skills add hashicorp/agent-skills/vault/multi-tenancy/skills/enterprise-features
 
-# MCP Integration
-npx skills add hashicorp/agent-skills/vault/mcp-integration/skills/vault-mcp-server
-npx skills add hashicorp/agent-skills/vault/mcp-integration/skills/mcp-secrets-workflows
+# AI workflows (MCP integration)
+npx skills add hashicorp/agent-skills/vault/ai-workflows/skills/vault-mcp-server
+npx skills add hashicorp/agent-skills/vault/ai-workflows/skills/mcp-secrets-workflows
 
-# HashiCorp Integrations
-npx skills add hashicorp/agent-skills/vault/hashicorp-integrations/skills/consul-secrets
-npx skills add hashicorp/agent-skills/vault/hashicorp-integrations/skills/nomad-secrets
-npx skills add hashicorp/agent-skills/vault/hashicorp-integrations/skills/terraform-cloud-secrets
+# HashiCorp secrets engines
+npx skills add hashicorp/agent-skills/vault/hashicorp-secrets-engines/skills/consul-secrets
+npx skills add hashicorp/agent-skills/vault/hashicorp-secrets-engines/skills/nomad-secrets
+npx skills add hashicorp/agent-skills/vault/hashicorp-secrets-engines/skills/terraform-cloud-secrets
 ```
 
 ## MCP Server Integration
@@ -77,7 +77,7 @@ The MCP server enables Claude and other AI assistants to interact directly with 
 - Read, write, and list secrets
 - Manage KV v1 and v2 secrets
 
-See [vault-mcp-integration](mcp-integration/) for setup and usage patterns.
+See [vault-ai-workflows](ai-workflows/) for setup and usage patterns.
 
 ## Plugin Overview
 
