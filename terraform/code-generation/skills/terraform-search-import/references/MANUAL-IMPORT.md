@@ -4,7 +4,8 @@ Use this workflow when your target resource type isn't supported by Terraform Se
 
 ## 1. Discover Resources Using Provider CLI
 
-### AWS Examples
+AWS CLI examples:
+
 ```bash
 # S3 buckets
 aws s3api list-buckets --query 'Buckets[].Name' --output table
@@ -17,24 +18,6 @@ aws ec2 describe-vpcs --query 'Vpcs[].VpcId'
 
 # Lambda functions
 aws lambda list-functions --query 'Functions[].FunctionName'
-```
-
-### Azure Examples
-```bash
-# Storage accounts
-az storage account list --query '[].name' --output table
-
-# Virtual machines
-az vm list --query '[].name' --output table
-```
-
-### GCP Examples
-```bash
-# Storage buckets
-gcloud storage buckets list --format="value(name)"
-
-# Compute instances
-gcloud compute instances list --format="value(name)"
 ```
 
 ## 2. Create Resource Blocks Manually
