@@ -353,18 +353,13 @@ provider "aws" {
   region = "us-west-2"
 }
 
-variable "owner_team" {
-  type    = string
-  default = "platform"
-}
-
 list "aws_instance" "team_instances" {
   provider = aws
   
   config {
     filter {
       name   = "tag:Owner"
-      values = [var.owner_team]
+      values = ["platform"]
     }
     filter {
       name   = "instance-state-name"
@@ -379,8 +374,8 @@ list "aws_instance" "team_instances" {
 ```bash
 # Execute workflow
 terraform init
-terraform query -var='owner_team=platform'
-terraform query -generate-config-out=generated.tf -var='owner_team=platform'
+terraform query
+terraform query -generate-config-out=generated.tf
 # Review and clean generated.tf
 terraform plan
 terraform apply

@@ -12,7 +12,8 @@ agent-skills/
 │   │   └── skills/
 │   │       ├── azure-verified-modules/
 │   │       ├── terraform-style-guide/
-│   │       └── terraform-test/
+│   │       ├── terraform-test/
+│   │       └── terraform-search-import/
 │   ├── module-generation/
 │   │   ├── .claude-plugin/plugin.json
 │   │   └── skills/
