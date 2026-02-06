@@ -4,7 +4,7 @@ description: Discover existing cloud resources using Terraform Search queries an
 metadata:
   copyright: Copyright IBM Corp. 2026
   version: "0.1.0"
-compatibility: Requires Terraform >= 1.12 and providers with list resource support (AWS provider >= 6.0)
+compatibility: Requires Terraform >= 1.14 and providers with list resource support (always use latest provider version)
 ---
 
 # Terraform Search and Bulk Import
@@ -325,11 +325,11 @@ This is more robust than string-based import IDs.
 ```hcl
 # main.tf - Initialize provider
 terraform {
-  required_version = ">= 1.12"
+  required_version = ">= 1.14"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 6.0"
+      version = "~> 6.0"  # Always use latest version
     }
   }
 }
