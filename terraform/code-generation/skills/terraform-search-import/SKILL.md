@@ -22,7 +22,25 @@ Discover existing cloud resources using declarative queries and generate configu
 - Migrating from manual provisioning to IaC
 - Discovering resources across multiple regions/accounts
 
-## Workflow Overview
+## IMPORTANT: Check Provider Support First
+
+**BEFORE starting, you MUST verify the target resource type is supported:**
+
+```bash
+# Check what list resources are available
+./scripts/list_resources.sh aws      # Specific provider
+./scripts/list_resources.sh          # All configured providers
+```
+
+## Decision Tree
+
+1. **Identify target resource type** (e.g., aws_s3_bucket, aws_instance)
+2. **Check if supported**: Run `./scripts/list_resources.sh <provider>`
+3. **Choose workflow**:
+   - **✅ If supported**: Use Terraform Search workflow (below)
+   - **❌ If not supported**: Use Manual Discovery workflow (see [references/MANUAL-IMPORT.md](references/MANUAL-IMPORT.md))
+
+## Terraform Search Workflow (Supported Resources Only)
 
 1. Create `.tfquery.hcl` files with `list` blocks defining search queries
 2. Run `terraform query` to discover matching resources
@@ -68,13 +86,9 @@ list "<list_type>" "<symbolic_name>" {
 }
 ```
 
-## Supported List Resources (AWS)
+## Supported List Resources
 
-| List Type | Description | Filter Support |
-|-----------|-------------|----------------|
-| `aws_instance` | EC2 instances | Yes - EC2 filters |
-| `aws_iam_role` | IAM roles | No |
-| `aws_cloudwatch_log_group` | CloudWatch log groups | No |
+Provider support for list resources varies by version. **Always check what's available for your specific provider version using the discovery script.**
 
 ## Query Examples
 
