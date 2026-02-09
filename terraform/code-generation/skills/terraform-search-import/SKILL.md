@@ -37,8 +37,9 @@ Discover existing cloud resources using declarative queries and generate configu
 1. **Identify target resource type** (e.g., aws_s3_bucket, aws_instance)
 2. **Check if supported**: Run `./scripts/list_resources.sh <provider>`
 3. **Choose workflow**:
-   - ** If supported**: Use Terraform Search workflow (below)
-   - ** If not supported**: Use Manual Discovery workflow (see [references/MANUAL-IMPORT.md](references/MANUAL-IMPORT.md))
+   - ** If supported**: Check for terraform version available.
+   - ** If terraform version is above 1.14.0** Use Terraform Search workflow (below)
+   - ** If not supported or terraform version is below 1.14.0 **: Use Manual Discovery workflow (see [references/MANUAL-IMPORT.md](references/MANUAL-IMPORT.md))
 
 ## Prerequisites
 
