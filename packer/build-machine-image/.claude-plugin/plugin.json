@@ -6,7 +6,7 @@
     "name": "HashiCorp",
     "url": "https://github.com/hashicorp"
   },
-  "homepage": "https://developer.hashicorp.com/packer",
+  "homepage": "https://developer.hashicorp.com/packer/tutorials",
   "repository": "https://github.com/hashicorp/agent-skills",
   "license": "MPL-2.0",
   "keywords": ["packer", "aws", "azure", "windows", "ami", "image", "builder"]
