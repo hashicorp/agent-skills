@@ -131,14 +131,18 @@ resource "aws_instance" "example" {
 - Use **lowercase with underscores** for all names
 - Use **descriptive nouns** excluding the resource type
 - Be specific and meaningful
+- Resource names must be singular, not plural
+- Default to `main` for resources where a specific descriptive name is redundant or unavailable, provided only one instance exists
 
 ```hcl
 # Bad
 resource "aws_instance" "webAPI-aws-instance" {}
+resource "aws_instance" "web_apis" {}
 variable "name" {}
 
 # Good
 resource "aws_instance" "web_api" {}
+resource "aws_vpc" "main" {}
 variable "application_name" {}
 ```
 
