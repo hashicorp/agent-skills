@@ -1,0 +1,290 @@
+name: Tessl Skill Review
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '**/SKILL.md'
+      - '**/skills/**'
+  workflow_dispatch:
+    inputs:
+      run_evals:
+        description: 'Run task-based evals in addition to skill review'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  TESSL_TOKEN: ${{ secrets.TESSL_API_KEY }}
+
+jobs:
+  review-skills:
+    name: Review Skills
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+
+      - name: Install Tessl CLI
+        run: npm install -g @tessl/cli
+
+      - name: Detect changed skills
+        id: detect
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            # Check for eval-scenarios changes and warn
+            EVAL_CHANGES=$(git diff --name-only --diff-filter=ACMR \
+              "origin/${{ github.base_ref }}"...HEAD -- '**/eval-scenarios/**' || true)
+            if [[ -n "$EVAL_CHANGES" ]]; then
+              echo "::warning::This PR modifies eval-scenarios/ files. These should only be changed by maintainers."
+            fi
+
+            # Find changed SKILL.md files and extract skill directories
+            CHANGED_SKILLS=$(git diff --name-only --diff-filter=ACMR \
+              "origin/${{ github.base_ref }}"...HEAD \
+              -- '**/SKILL.md' '**/skills/**' | \
+              grep 'SKILL.md$' | \
+              xargs -I {} dirname {} | \
+              sort -u)
+          else
+            # workflow_dispatch: find all skills
+            CHANGED_SKILLS=$(find . -name "SKILL.md" -not -path "./node_modules/*" -not -path "./.git/*" | \
+              xargs -I {} dirname {} | \
+              sed 's|^\./||' | \
+              sort -u)
+          fi
+
+          if [[ -z "$CHANGED_SKILLS" ]]; then
+            echo "No skill changes detected."
+            echo "skills=" >> "$GITHUB_OUTPUT"
+          else
+            echo "Skills to review:"
+            echo "$CHANGED_SKILLS"
+            # Store as newline-delimited string
+            EOF_MARKER=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+            echo "skills<<${EOF_MARKER}" >> "$GITHUB_OUTPUT"
+            echo "$CHANGED_SKILLS" >> "$GITHUB_OUTPUT"
+            echo "${EOF_MARKER}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run skill reviews
+        if: steps.detect.outputs.skills != ''
+        id: review
+        continue-on-error: true
+        run: |
+          SKILLS="${{ steps.detect.outputs.skills }}"
+          FAILED=0
+          TABLE="| Skill | Status |"
+          TABLE="${TABLE}\n|-------|--------|"
+
+          while IFS= read -r dir; do
+            [[ -z "$dir" ]] && continue
+            echo "::group::Reviewing $dir"
+            RESULT=$(tessl skill review "$dir" 2>&1) || true
+            echo "$RESULT"
+            echo "::endgroup::"
+
+            OVERALL=$(echo "$RESULT" | grep -oP 'Overall: \K(PASSED|FAILED)' || echo "ERROR")
+
+            if [[ "$OVERALL" == "PASSED" ]]; then
+              STATUS="✅ PASSED"
+            else
+              STATUS="❌ FAILED"
+              FAILED=1
+            fi
+
+            TABLE="${TABLE}\n| \`${dir}\` | ${STATUS} |"
+          done <<< "$SKILLS"
+
+          # Write results
+          COMMENT_BODY=$(printf "<!-- tessl-skill-review -->\n## Tessl Skill Review Results\n\n${TABLE}\n\nChecks: frontmatter validity, required fields, body structure, examples, line count.")
+
+          EOF_MARKER=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "comment<<${EOF_MARKER}" >> "$GITHUB_OUTPUT"
+          echo "$COMMENT_BODY" >> "$GITHUB_OUTPUT"
+          echo "${EOF_MARKER}" >> "$GITHUB_OUTPUT"
+
+          # Write step summary
+          echo "$COMMENT_BODY" >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ "$FAILED" -eq 1 ]]; then
+            echo "::error::One or more skills failed validation checks."
+            exit 1
+          fi
+
+      - name: Post or update PR comment
+        if: github.event_name == 'pull_request' && steps.detect.outputs.skills != ''
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const marker = '<!-- tessl-skill-review -->';
+            const body = `${{ steps.review.outputs.comment }}`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body,
+              });
+            }
+
+  task-evals:
+    name: Task Evals
+    runs-on: ubuntu-latest
+    if: >-
+      contains(github.event.pull_request.labels.*.name, 'run-evals') ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_evals)
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+
+      - name: Install Tessl CLI
+        run: npm install -g @tessl/cli
+
+      - name: Find skills with eval scenarios
+        id: detect
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            SKILL_DIRS=$(git diff --name-only --diff-filter=ACMR \
+              "origin/${{ github.base_ref }}"...HEAD \
+              -- '**/SKILL.md' '**/skills/**' | \
+              grep 'SKILL.md$' | \
+              xargs -I {} dirname {} | \
+              sort -u)
+          else
+            SKILL_DIRS=$(find . -name "SKILL.md" -not -path "./node_modules/*" -not -path "./.git/*" | \
+              xargs -I {} dirname {} | \
+              sed 's|^\./||' | \
+              sort -u)
+          fi
+
+          # Filter to only skills that have eval-scenarios/
+          EVAL_SKILLS=""
+          while IFS= read -r dir; do
+            [[ -z "$dir" ]] && continue
+            if [[ -d "${dir}/eval-scenarios" ]]; then
+              EVAL_SKILLS="${EVAL_SKILLS}${dir}\n"
+            fi
+          done <<< "$SKILL_DIRS"
+          EVAL_SKILLS=$(echo -e "$EVAL_SKILLS" | sed '/^$/d')
+
+          if [[ -z "$EVAL_SKILLS" ]]; then
+            echo "No skills with eval-scenarios/ found."
+            echo "skills=" >> "$GITHUB_OUTPUT"
+          else
+            echo "Skills to evaluate:"
+            echo "$EVAL_SKILLS"
+            EOF_MARKER=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+            echo "skills<<${EOF_MARKER}" >> "$GITHUB_OUTPUT"
+            echo "$EVAL_SKILLS" >> "$GITHUB_OUTPUT"
+            echo "${EOF_MARKER}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run task evals
+        if: steps.detect.outputs.skills != ''
+        id: evals
+        continue-on-error: true
+        run: |
+          SKILLS="${{ steps.detect.outputs.skills }}"
+          FAILED=0
+          TABLE="| Skill | Result |"
+          TABLE="${TABLE}\n|-------|--------|"
+
+          while IFS= read -r dir; do
+            [[ -z "$dir" ]] && continue
+            echo "::group::Evaluating $dir"
+            RESULT=$(tessl eval run "$dir" --force 2>&1) || true
+            echo "$RESULT"
+            echo "::endgroup::"
+
+            if echo "$RESULT" | grep -qi "fail"; then
+              STATUS="❌ FAILED"
+              FAILED=1
+            else
+              STATUS="✅ PASSED"
+            fi
+
+            TABLE="${TABLE}\n| \`${dir}\` | ${STATUS} |"
+          done <<< "$SKILLS"
+
+          COMMENT_BODY=$(printf "<!-- tessl-task-evals -->\n## 🧪 Tessl Task Eval Results\n\n${TABLE}")
+
+          EOF_MARKER=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "comment<<${EOF_MARKER}" >> "$GITHUB_OUTPUT"
+          echo "$COMMENT_BODY" >> "$GITHUB_OUTPUT"
+          echo "${EOF_MARKER}" >> "$GITHUB_OUTPUT"
+
+          echo "$COMMENT_BODY" >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ "$FAILED" -eq 1 ]]; then
+            echo "::error::One or more task evals failed."
+            exit 1
+          fi
+
+      - name: Post or update PR comment
+        if: github.event_name == 'pull_request' && steps.detect.outputs.skills != ''
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const marker = '<!-- tessl-task-evals -->';
+            const body = `${{ steps.evals.outputs.comment }}`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body,
+              });
+            }
