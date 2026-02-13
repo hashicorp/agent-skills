@@ -38,7 +38,7 @@ jobs:
           node-version: '20'
 
       - name: Install Tessl CLI
-        run: npm install -g @tessl/cli
+        run: npm install -g @tessl/cli@0.63.2
 
       - name: Detect changed skills
         id: detect
@@ -86,8 +86,8 @@ jobs:
         run: |
           SKILLS="${{ steps.detect.outputs.skills }}"
           FAILED=0
-          TABLE="| Skill | Status |"
-          TABLE="${TABLE}\n|-------|--------|"
+          TABLE="| Skill | Status | Review Score |"
+          TABLE="${TABLE}\n|-------|--------|--------------|"
 
           while IFS= read -r dir; do
             [[ -z "$dir" ]] && continue
@@ -97,19 +97,28 @@ jobs:
             echo "::endgroup::"
 
             OVERALL=$(echo "$RESULT" | grep -oP 'Overall: \K(PASSED|FAILED)' || echo "ERROR")
+            SCORE=$(echo "$RESULT" | grep -oP 'Average Score: \K[0-9]+' || echo "")
 
             if [[ "$OVERALL" == "PASSED" ]]; then
               STATUS="✅ PASSED"
             else
-              STATUS="❌ FAILED"
+              # Extract first validation failure line for context
+              REASON=$(echo "$RESULT" | grep -iE '(FAIL|✗|missing|invalid|error)' | grep -v 'Overall:' | grep -v 'Average Score:' | head -1 | sed 's/^[[:space:]]*//' | cut -c1-80 | tr '|' '/')
+              if [[ -n "$REASON" ]]; then
+                STATUS="❌ FAILED — ${REASON}"
+              else
+                STATUS="❌ FAILED"
+              fi
               FAILED=1
             fi
 
-            TABLE="${TABLE}\n| \`${dir}\` | ${STATUS} |"
+            SCORE_DISPLAY="${SCORE:+${SCORE}%}"
+            SCORE_DISPLAY="${SCORE_DISPLAY:----}"
+            TABLE="${TABLE}\n| \`${dir}\` | ${STATUS} | ${SCORE_DISPLAY} |"
           done <<< "$SKILLS"
 
           # Write results
-          COMMENT_BODY=$(printf "<!-- tessl-skill-review -->\n## Tessl Skill Review Results\n\n${TABLE}\n\nChecks: frontmatter validity, required fields, body structure, examples, line count.")
+          COMMENT_BODY=$(printf "<!-- tessl-skill-review -->\n## Tessl Skill Review Results\n\n${TABLE}\n\nChecks: frontmatter validity, required fields, body structure, examples, line count.\nReview Score is informational — not used for pass/fail gating.")
 
           EOF_MARKER=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "comment<<${EOF_MARKER}" >> "$GITHUB_OUTPUT"
@@ -175,7 +184,7 @@ jobs:
           node-version: '20'
 
       - name: Install Tessl CLI
-        run: npm install -g @tessl/cli
+        run: npm install -g @tessl/cli@0.63.2
 
       - name: Find skills with eval scenarios
         id: detect
