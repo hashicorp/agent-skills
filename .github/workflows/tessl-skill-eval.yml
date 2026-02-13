@@ -79,6 +79,34 @@ jobs:
             echo "${EOF_MARKER}" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Validate skill directory structure
+        if: steps.detect.outputs.skills != ''
+        run: |
+          SKILLS="${{ steps.detect.outputs.skills }}"
+          INVALID_PATHS=""
+
+          while IFS= read -r dir; do
+            [[ -z "$dir" ]] && continue
+
+            # Expected pattern: <product>/<plugin>/skills/<skill-name>
+            # Examples:
+            #   terraform/code-generation/skills/terraform-style-guide (valid)
+            #   packer/build-machine-image/skills/aws-ami-builder (valid)
+            #   terraform/SKILL.md (invalid - no plugin)
+            #   terraform/code-generation/my-skill (invalid - no skills/ subdirectory)
+
+            if [[ ! "$dir" =~ ^[^/]+/[^/]+/skills/[^/]+$ ]]; then
+              INVALID_PATHS="${INVALID_PATHS}${dir}\n"
+            fi
+          done <<< "$SKILLS"
+
+          if [[ -n "$INVALID_PATHS" ]]; then
+            echo "::error::Skills must follow <product>/<plugin>/skills/<skill-name>/ structure"
+            echo "Invalid paths:"
+            echo -e "$INVALID_PATHS"
+            exit 1
+          fi
+
       - name: Run skill reviews
         if: steps.detect.outputs.skills != ''
         id: review
@@ -100,14 +128,14 @@ jobs:
             SCORE=$(echo "$RESULT" | grep -oP 'Average Score: \K[0-9]+' || echo "")
 
             if [[ "$OVERALL" == "PASSED" ]]; then
-              STATUS="✅ PASSED"
+              STATUS="PASSED"
             else
               # Extract first validation failure line for context
-              REASON=$(echo "$RESULT" | grep -iE '(FAIL|✗|missing|invalid|error)' | grep -v 'Overall:' | grep -v 'Average Score:' | head -1 | sed 's/^[[:space:]]*//' | cut -c1-80 | tr '|' '/')
+              REASON=$(echo "$RESULT" | grep -iE '(FAIL|missing|invalid|error)' | grep -v 'Overall:' | grep -v 'Average Score:' | head -1 | sed 's/^[[:space:]]*//' | cut -c1-80 | tr '|' '/')
               if [[ -n "$REASON" ]]; then
-                STATUS="❌ FAILED — ${REASON}"
+                STATUS="FAILED — ${REASON}"
               else
-                STATUS="❌ FAILED"
+                STATUS="FAILED"
               fi
               FAILED=1
             fi
@@ -243,16 +271,16 @@ jobs:
             echo "::endgroup::"
 
             if echo "$RESULT" | grep -qi "fail"; then
-              STATUS="❌ FAILED"
+              STATUS="FAILED"
               FAILED=1
             else
-              STATUS="✅ PASSED"
+              STATUS="PASSED"
             fi
 
             TABLE="${TABLE}\n| \`${dir}\` | ${STATUS} |"
           done <<< "$SKILLS"
 
-          COMMENT_BODY=$(printf "<!-- tessl-task-evals -->\n## 🧪 Tessl Task Eval Results\n\n${TABLE}")
+          COMMENT_BODY=$(printf "<!-- tessl-task-evals -->\n## Tessl Task Eval Results\n\n${TABLE}")
 
           EOF_MARKER=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "comment<<${EOF_MARKER}" >> "$GITHUB_OUTPUT"
