@@ -283,6 +283,49 @@ identity_token "azure" {
 
 Reference tokens in deployments using `identity_token.<name>.jwt`
 
+### Store Block
+
+Access HCP Terraform variable sets within Stack deployments. You can reference variable sets by either ID or name:
+
+```hcl
+# Reference by ID
+store "varset" "aws_credentials" {
+  id       = "varset-ABC123"  # Variable set ID from HCP Terraform
+  source   = "tfc-cloud-shared"
+  category = "terraform"
+}
+
+# Or reference by name
+store "varset" "api_keys" {
+  name     = "api_keys_default_project"  # Variable set name
+  category = "terraform"
+}
+```
+
+Reference variable set values in deployments:
+
+```hcl
+deployment "production" {
+  inputs = {
+    aws_access_key = store.varset.aws_credentials.AWS_ACCESS_KEY_ID
+    aws_secret_key = store.varset.aws_credentials.AWS_SECRET_ACCESS_KEY
+    api_key        = store.varset.api_keys.API_KEY
+    # ... other inputs
+  }
+}
+```
+
+**Attributes:**
+- `id` or `name` - Reference variable set by ID or name (use one, not both)
+- `source` - Source of the variable set (e.g., `"tfc-cloud-shared"`)
+- `category` - Variable category: `"terraform"` for Terraform variables, `"env"` for environment variables
+
+**Benefits:**
+- Centralize credentials and configuration
+- Share variables across multiple Stacks
+- Manage sensitive values securely in HCP Terraform
+- Reference the same variable set from multiple deployments
+
 ### Locals Block
 
 Define local values for deployment configuration:
@@ -365,23 +408,53 @@ After applying the plan and the deployment is destroyed, remove the deployment b
 
 ### Deployment Group Block
 
-Group deployments together to configure shared settings (Premium feature). **Best Practice**: Always create deployment groups for all deployments, even single deployments, to enable future auto-approval rules and maintain consistent configuration patterns.
+Group deployments together to configure shared settings. **Important**: Custom deployment groups require **HCP Terraform Premium tier**. Organizations on free/standard tiers automatically use default deployment groups (named `{deployment-name}_default`).
+
+**Syntax**: Deployments reference groups (not the other way around):
 
 ```hcl
+# Define the deployment group
 deployment_group "canary" {
-  deployments = [
-    deployment.dev,
-    deployment.staging
-  ]
+  # Optional: Configure auto-approve rules
+  auto_approve_checks = [deployment_auto_approve.safe_changes]
 }
 
 deployment_group "production" {
-  deployments = [
-    deployment.prod_us_east,
-    deployment.prod_us_west
-  ]
+  # Groups can have auto-approve configuration
+  auto_approve_checks = [deployment_auto_approve.applyable_only]
+}
+
+# Deployments reference their group
+deployment "dev" {
+  inputs = {
+    environment = "dev"
+    # ... other inputs
+  }
+
+  deployment_group = deployment_group.canary  # Reference to group
+}
+
+deployment "staging" {
+  inputs = {
+    environment = "staging"
+    # ... other inputs
+  }
+
+  deployment_group = deployment_group.canary  # Multiple deployments can reference same group
+}
+
+deployment "prod_us_east" {
+  inputs = {
+    environment = "prod"
+    region      = "us-east-1"
+    # ... other inputs
+  }
+
+  deployment_group = deployment_group.production
 }
 ```
+
+**Note**: On free/standard tiers without custom groups, each deployment automatically gets a default group named `{deployment-name}_default`.
 
 ### Deployment Auto-Approve Block
 
@@ -413,10 +486,17 @@ deployment_auto_approve "applyable_only" {
 ```
 
 **Available Context Variables:**
-- `context.plan.applyable` - Plan succeeded without errors
-- `context.plan.changes.add` - Number of resources to add
-- `context.plan.changes.change` - Number of resources to change
-- `context.plan.changes.remove` - Number of resources to remove
+- `context.plan.applyable` - Boolean: Plan succeeded without errors
+- `context.plan.changes.add` - Number: Resources to add
+- `context.plan.changes.change` - Number: Resources to change
+- `context.plan.changes.remove` - Number: Resources to remove
+- `context.plan.changes.total` - Number: Total number of changes (add + change + remove)
+- `context.success` - Boolean: Whether the previous operation succeeded
+
+**Common patterns:**
+- Approve plans with no deletions: `context.plan.changes.remove == 0`
+- Approve only successful plans: `context.plan.applyable && context.success`
+- Approve plans with limited changes: `context.plan.changes.total <= 10`
 
 **Note:** `orchestrate` blocks are deprecated. Use `deployment_group` and `deployment_auto_approve` instead.
 
@@ -456,32 +536,105 @@ deployment "application" {
 
 ## Terraform Stacks CLI
 
+**Note**: Terraform Stacks is Generally Available (GA) as of Terraform CLI v1.13+. Stacks now count toward Resources Under Management (RUM) for HCP Terraform billing.
+
 ### Initialize and Validate
 
-Generate provider lock file:
+**Initialize Stack** - Downloads providers, modules, and generates provider lock file:
+
+```bash
+terraform stacks init
+```
+
+**Update provider lock file** - Regenerate lock file with additional platforms or updated providers:
 
 ```bash
 terraform stacks providers-lock
 ```
 
-Validate Stack configuration:
+**Validate configuration** - Check syntax and validate configuration without uploading:
 
 ```bash
 terraform stacks validate
 ```
 
-### Plan and Apply
+### Deployment Workflow
 
-Plan a specific deployment:
+**Important**: There are no `terraform stacks plan` or `terraform stacks apply` commands. The workflow is:
 
+1. **Upload configuration** - Send Stack configuration to HCP Terraform, which automatically triggers deployment runs:
 ```bash
-terraform stacks plan --deployment=production
+terraform stacks configuration upload
 ```
 
-Apply a deployment:
+2. **HCP Terraform automatically triggers** deployment runs for each deployment
 
+3. **Monitor deployments** - Track deployment progress:
 ```bash
-terraform stacks apply --deployment=production
+# Watch all deployments in a group (streams status updates)
+terraform stacks deployment-group watch -deployment-group=canary
+
+# List all deployment runs (non-interactive, shows current status)
+terraform stacks deployment-run list
+
+# Watch a specific deployment run (streams detailed progress)
+terraform stacks deployment-run watch -deployment-run-id=sdr-ABC123
+```
+
+4. **Approve deployments** - Required if auto-approve is not configured:
+```bash
+# Approve all pending plan operations in a specific deployment run
+terraform stacks deployment-run approve-all-plans -deployment-run-id=sdr-ABC123
+
+# Approve all pending plans across all runs in a deployment group
+terraform stacks deployment-group approve-all-plans -deployment-group=canary
+
+# Cancel a deployment run if needed
+terraform stacks deployment-run cancel -deployment-run-id=sdr-ABC123
+```
+
+### Configuration Management
+
+**List configurations** - Show all configuration versions for the current Stack:
+```bash
+terraform stacks configuration list
+```
+
+**Fetch configuration** - Download a specific configuration version to local directory:
+```bash
+terraform stacks configuration fetch -configuration-id=stc-ABC123
+```
+
+**Watch configuration processing** - Monitor configuration upload and validation status:
+```bash
+terraform stacks configuration watch
+```
+
+### Other Useful Commands
+
+**Create Stack** - Initialize a new Stack with scaffolding (interactive):
+```bash
+terraform stacks create
+```
+
+**Format files** - Format Stack configuration files to canonical style:
+```bash
+terraform stacks fmt
+```
+
+**List Stacks** - Show all Stacks in the current project:
+```bash
+terraform stacks list
+```
+
+**Show version** - Display Terraform CLI and Stacks version:
+```bash
+terraform stacks version
+```
+
+**Rerun deployment** - Trigger a new deployment run for a deployment group:
+```bash
+terraform stacks deployment-group rerun -deployment-group=canary
 ```
 
 ## Common Patterns
@@ -544,7 +697,11 @@ component "database" {
 ## Best Practices
 
 1. **Component Granularity**: Create components for logical infrastructure units that share a lifecycle
-2. **Module Compatibility**: Modules used with Stacks cannot include provider blocks (configure providers in Stack configuration)
+2. **Module Compatibility**:
+   - Modules used with Stacks cannot include provider blocks (configure providers in Stack configuration)
+   - **Test public registry modules** before using in production Stacks - some modules may have compatibility issues
+   - Consider using raw resources for critical infrastructure if module compatibility is uncertain
+   - Example: Some terraform-aws-modules versions have been found to have compatibility issues with Stacks (e.g., ALB and ECS modules)
 3. **State Isolation**: Each deployment has its own isolated state
 4. **Input Variables**: Use variables for values that differ across deployments; use locals for shared values
 5. **Provider Lock Files**: Always generate and commit `.terraform.lock.hcl` to version control
@@ -559,9 +716,22 @@ component "database" {
 **Issue**: Component A references Component B, and Component B references Component A
 **Solution**: Refactor to break the circular reference or use intermediate components
 
-### Deployment Limit
+### Deployment Destruction
 
-HCP Terraform supports maximum 20 deployments per Stack. For more instances, use multiple Stacks or `for_each` within components.
+**Issue**: Cannot destroy deployments from HCP Terraform UI
+**Solution**: Deployment destruction is **only available via configuration**. Set `destroy = true` in the deployment block:
+
+```hcl
+deployment "old_env" {
+  inputs = {
+    # ... existing inputs
+  }
+
+  destroy = true  # Destroys all resources in this deployment
+}
+```
+
+Then upload the configuration. HCP Terraform will create a destroy run. You cannot destroy Stack deployments from the UI.
 
 ## References
 
