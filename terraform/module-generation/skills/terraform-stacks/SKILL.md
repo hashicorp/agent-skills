@@ -52,6 +52,23 @@ my-stack/
 
 When validating Stack configurations, check component source declarations rather than assuming a local `modules/` directory must exist.
 
+**Alternative file organization pattern**: For larger Stacks, you can split configuration by purpose into separate files:
+```
+my-stack/
+├── variables.tfcomponent.hcl        # All variable declarations
+├── providers.tfcomponent.hcl        # All provider configurations
+├── components.tfcomponent.hcl       # All component definitions
+├── outputs.tfcomponent.hcl          # All output declarations
+├── deployments.tfdeploy.hcl         # All deployment definitions
+├── .terraform.lock.hcl              # Provider lock file (generated)
+└── modules/                         # Local modules (if needed)
+    ├── vpc/
+    ├── instance/
+    └── key_pair/
+```
+
+HCP Terraform processes all `.tfcomponent.hcl` and `.tfdeploy.hcl` files in dependency order, so organizing by purpose improves readability for complex Stacks.
+
 ## Component Configuration (.tfcomponent.hcl)
 
 ### Variable Block
@@ -76,6 +93,8 @@ variable "instance_count" {
   nullable = false
 }
 ```
+
+**Important**: Use `ephemeral = true` for credentials and tokens (identity tokens, API keys, passwords) to prevent them from persisting in state files. Use `stable` for longer-lived values like license keys that need to persist across runs.
 
 ### Required Providers Block
 
@@ -121,7 +140,7 @@ provider "aws" "this" {
 ```hcl
 provider "aws" "configurations" {
   for_each = var.regions
-  
+
   config {
     region = each.value
     assume_role_with_web_identity {
@@ -131,6 +150,14 @@ provider "aws" "configurations" {
   }
 }
 ```
+
+**Authentication Best Practice**: Use **workload identity** (OIDC) as the preferred authentication method for Stacks. This approach:
+- Avoids long-lived static credentials
+- Provides temporary, scoped credentials per deployment run
+- Integrates with cloud provider IAM (AWS IAM Roles, Azure Managed Identities, GCP Service Accounts)
+- Eliminates need for platform-managed environment variables
+
+Configure workload identity using `identity_token` blocks and `assume_role_with_web_identity` in provider configuration.
 
 ### Component Block
 
@@ -206,8 +233,11 @@ component "s3" {
 
 **Key Points:**
 - Reference component outputs using `component.<name>.<output>`
+- For components with `for_each`, reference specific instances: `component.<name>[each.value].<output>`
+- Example: `component.vpc["us-east-1"].vpc_id` to access VPC ID for a specific region
+- Aggregate outputs from multiple instances using `for` expressions: `[for x in component.instance : x.instance_ids]`
 - All inputs are provided as a single `inputs` object
-- Provider references are normal values: `provider.<type>.<alias>`
+- Provider references are normal values: `provider.<type>.<alias>` or `provider.<type>.<alias>[each.value]`
 - Dependencies are automatically inferred from component references
 
 ### Output Block
@@ -637,6 +667,95 @@ terraform stacks version
 terraform stacks deployment-group rerun -deployment-group=canary
 ```
 
+## Monitoring Deployments with HCP Terraform API
+
+When CLI commands are insufficient or you need programmatic monitoring (automation, CI/CD), use the HCP Terraform API. This is particularly useful for non-interactive environments like AI agents.
+
+### Authentication
+
+Extract your API token from the Terraform credentials file:
+
+```bash
+TOKEN=$(jq -r '.credentials["app.terraform.io"].token' ~/.terraform.d/credentials.tfrc.json)
+```
+
+### API Monitoring Workflow
+
+After uploading a configuration with `terraform stacks configuration upload`, follow this sequence to monitor deployment progress:
+
+#### 1. Get Configuration Status
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/vnd.api+json" \
+  "https://app.terraform.io/api/v2/stack-configurations/{configuration-id}" | jq '.'
+```
+
+Returns: Configuration status (pending/completed), components detected, sequence number
+
+#### 2. Get Deployment Group Summaries
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/vnd.api+json" \
+  "https://app.terraform.io/api/v2/stack-configurations/{configuration-id}/stack-deployment-group-summaries" | jq '.'
+```
+
+Returns: Deployment group ID, name (e.g., `dev_default`), status, status-counts (pending/succeeded/failed)
+
+#### 3. Get Deployment Runs
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/vnd.api+json" \
+  "https://app.terraform.io/api/v2/stack-deployment-groups/{group-id}/stack-deployment-runs" | jq '.'
+```
+
+Returns: Deployment run IDs, current status, timestamps
+
+#### 4. Get Deployment Steps
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/vnd.api+json" \
+  "https://app.terraform.io/api/v2/stack-deployment-runs/{run-id}/stack-deployment-steps" | jq '.'
+```
+
+Returns: Step IDs, operation-type (plan/apply), status (running/completed/failed)
+
+#### 5. Get Error Diagnostics (if deployment fails)
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/vnd.api+json" \
+  "https://app.terraform.io/api/v2/stack-deployment-steps/{step-id}/stack-diagnostics?stack_deployment_step_id={step-id}" | jq '.'
+```
+
+**Critical**: The `stack_deployment_step_id` query parameter is **required** to retrieve diagnostics. Without it, the API returns empty results.
+
+Returns: Detailed error messages with file locations, line numbers, code snippets, and error descriptions
+
+#### 6. Get Stack Outputs (after successful deployment)
+
+```bash
+# Get the final apply step ID from step 4, then:
+curl -L -s -H "Authorization: Bearer $TOKEN" \
+  "https://app.terraform.io/api/v2/stack-deployment-steps/{final-apply-step-id}/artifacts?name=apply-description" | \
+  jq -r '.outputs | to_entries | .[] | "\(.key): \(.value.change.after)"'
+```
+
+**Important**:
+- This endpoint returns HTTP 307 redirect - use `curl -L` to follow redirects
+- The artifacts endpoint is currently the only way to retrieve Stack outputs programmatically
+- This endpoint is not yet documented in public API documentation
+
+### API Notes for AI Agents and Automation
+
+- **Interactive commands don't work**: Commands like `terraform stacks deployment-run watch` stream output and block, making them unusable for automation
+- **Use API for polling**: Poll deployment run status via API for non-interactive monitoring
+- **No direct output command**: Currently no CLI command to retrieve Stack outputs (must use artifacts API)
+- **Parse JSON responses**: Use `jq` to extract relevant fields from API responses
+
 ## Common Patterns
 
 ### Multi-Region Deployment
@@ -693,6 +812,47 @@ component "database" {
   }
 }
 ```
+
+### Deferred Changes
+
+Stacks support **deferred changes** to handle dependencies where values are only known after apply (known_after_apply). This enables configurations that would fail in traditional Terraform due to circular dependencies.
+
+**How it works:**
+1. Terraform plans and applies what it can with current information
+2. Re-evaluates the configuration with newly available values
+3. Plans and applies remaining resources
+4. Repeats until all resources converge or max iterations reached
+
+**Example use case**: Creating a Kubernetes cluster and deploying helm charts in the same deployment:
+
+```hcl
+component "eks_cluster" {
+  source = "./modules/eks"
+  # ... configuration
+}
+
+component "helm_releases" {
+  source = "./modules/helm"
+
+  inputs = {
+    cluster_endpoint = component.eks_cluster.endpoint  # Known after EKS apply
+    cluster_ca       = component.eks_cluster.ca_cert
+  }
+
+  providers = {
+    helm = provider.helm.this
+    # Helm provider needs cluster info from EKS component
+  }
+}
+```
+
+Without deferred changes, this would fail because the helm provider needs values from the EKS cluster that don't exist yet. With deferred changes, Stacks:
+1. Creates the EKS cluster first
+2. Retrieves the cluster endpoint and certificate
+3. Configures the helm provider
+4. Deploys the helm releases
+
+**When to use**: Complex multi-component deployments where some resources depend on runtime values from other components (cluster endpoints, generated passwords, IP addresses, etc.)
 
 ## Best Practices
 
