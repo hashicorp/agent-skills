@@ -96,6 +96,7 @@ agent-skills/
 │   └── marketplace.json    # Claude Code marketplace
 ├── terraform/              # Terraform skills
 ├── packer/                 # Packer skills
+├── <product>/              # Future products (Vault, Consul, etc.)
 ├── BOB.md                  # Bob integration guide
 └── README.md
 ```
