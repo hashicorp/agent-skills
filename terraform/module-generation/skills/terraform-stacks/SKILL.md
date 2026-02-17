@@ -52,6 +52,23 @@ my-stack/
 
 When validating Stack configurations, check component source declarations rather than assuming a local `modules/` directory must exist.
 
+**Alternative file organization pattern**: For larger Stacks, you can split configuration by purpose into separate files:
+```
+my-stack/
+├── variables.tfcomponent.hcl        # All variable declarations
+├── providers.tfcomponent.hcl        # All provider configurations
+├── components.tfcomponent.hcl       # All component definitions
+├── outputs.tfcomponent.hcl          # All output declarations
+├── deployments.tfdeploy.hcl         # All deployment definitions
+├── .terraform.lock.hcl              # Provider lock file (generated)
+└── modules/                         # Local modules (if needed)
+    ├── vpc/
+    ├── instance/
+    └── key_pair/
+```
+
+HCP Terraform processes all `.tfcomponent.hcl` and `.tfdeploy.hcl` files in dependency order, so organizing by purpose improves readability for complex Stacks.
+
 ## Component Configuration (.tfcomponent.hcl)
 
 ### Variable Block
@@ -76,6 +93,8 @@ variable "instance_count" {
   nullable = false
 }
 ```
+
+**Important**: Use `ephemeral = true` for credentials and tokens (identity tokens, API keys, passwords) to prevent them from persisting in state files. Use `stable` for longer-lived values like license keys that need to persist across runs.
 
 ### Required Providers Block
 
@@ -121,7 +140,7 @@ provider "aws" "this" {
 ```hcl
 provider "aws" "configurations" {
   for_each = var.regions
-  
+
   config {
     region = each.value
     assume_role_with_web_identity {
@@ -131,6 +150,14 @@ provider "aws" "configurations" {
   }
 }
 ```
+
+**Authentication Best Practice**: Use **workload identity** (OIDC) as the preferred authentication method for Stacks. This approach:
+- Avoids long-lived static credentials
+- Provides temporary, scoped credentials per deployment run
+- Integrates with cloud provider IAM (AWS IAM Roles, Azure Managed Identities, GCP Service Accounts)
+- Eliminates need for platform-managed environment variables
+
+Configure workload identity using `identity_token` blocks and `assume_role_with_web_identity` in provider configuration.
 
 ### Component Block
 
@@ -206,8 +233,11 @@ component "s3" {
 
 **Key Points:**
 - Reference component outputs using `component.<name>.<output>`
+- For components with `for_each`, reference specific instances: `component.<name>[each.value].<output>`
+- Example: `component.vpc["us-east-1"].vpc_id` to access VPC ID for a specific region
+- Aggregate outputs from multiple instances using `for` expressions: `[for x in component.instance : x.instance_ids]`
 - All inputs are provided as a single `inputs` object
-- Provider references are normal values: `provider.<type>.<alias>`
+- Provider references are normal values: `provider.<type>.<alias>` or `provider.<type>.<alias>[each.value]`
 - Dependencies are automatically inferred from component references
 
 ### Output Block
@@ -282,6 +312,49 @@ identity_token "azure" {
 ```
 
 Reference tokens in deployments using `identity_token.<name>.jwt`
+
+### Store Block
+
+Access HCP Terraform variable sets within Stack deployments. You can reference variable sets by either ID or name:
+
+```hcl
+# Reference by ID
+store "varset" "aws_credentials" {
+  id       = "varset-ABC123"  # Variable set ID from HCP Terraform
+  source   = "tfc-cloud-shared"
+  category = "terraform"
+}
+
+# Or reference by name
+store "varset" "api_keys" {
+  name     = "api_keys_default_project"  # Variable set name
+  category = "terraform"
+}
+```
+
+Reference variable set values in deployments:
+
+```hcl
+deployment "production" {
+  inputs = {
+    aws_access_key = store.varset.aws_credentials.AWS_ACCESS_KEY_ID
+    aws_secret_key = store.varset.aws_credentials.AWS_SECRET_ACCESS_KEY
+    api_key        = store.varset.api_keys.API_KEY
+    # ... other inputs
+  }
+}
+```
+
+**Attributes:**
+- `id` or `name` - Reference variable set by ID or name (use one, not both)
+- `source` - Source of the variable set (e.g., `"tfc-cloud-shared"`)
+- `category` - Variable category: `"terraform"` for Terraform variables, `"env"` for environment variables
+
+**Benefits:**
+- Centralize credentials and configuration
+- Share variables across multiple Stacks
+- Manage sensitive values securely in HCP Terraform
+- Reference the same variable set from multiple deployments
 
 ### Locals Block
 
@@ -365,23 +438,53 @@ After applying the plan and the deployment is destroyed, remove the deployment b
 
 ### Deployment Group Block
 
-Group deployments together to configure shared settings (Premium feature). **Best Practice**: Always create deployment groups for all deployments, even single deployments, to enable future auto-approval rules and maintain consistent configuration patterns.
+Group deployments together to configure shared settings. **Important**: Custom deployment groups require **HCP Terraform Premium tier**. Organizations on free/standard tiers automatically use default deployment groups (named `{deployment-name}_default`).
+
+**Syntax**: Deployments reference groups (not the other way around):
 
 ```hcl
+# Define the deployment group
 deployment_group "canary" {
-  deployments = [
-    deployment.dev,
-    deployment.staging
-  ]
+  # Optional: Configure auto-approve rules
+  auto_approve_checks = [deployment_auto_approve.safe_changes]
 }
 
 deployment_group "production" {
-  deployments = [
-    deployment.prod_us_east,
-    deployment.prod_us_west
-  ]
+  # Groups can have auto-approve configuration
+  auto_approve_checks = [deployment_auto_approve.applyable_only]
+}
+
+# Deployments reference their group
+deployment "dev" {
+  inputs = {
+    environment = "dev"
+    # ... other inputs
+  }
+
+  deployment_group = deployment_group.canary  # Reference to group
+}
+
+deployment "staging" {
+  inputs = {
+    environment = "staging"
+    # ... other inputs
+  }
+
+  deployment_group = deployment_group.canary  # Multiple deployments can reference same group
+}
+
+deployment "prod_us_east" {
+  inputs = {
+    environment = "prod"
+    region      = "us-east-1"
+    # ... other inputs
+  }
+
+  deployment_group = deployment_group.production
 }
 ```
+
+**Note**: On free/standard tiers without custom groups, each deployment automatically gets a default group named `{deployment-name}_default`.
 
 ### Deployment Auto-Approve Block
 
@@ -413,10 +516,17 @@ deployment_auto_approve "applyable_only" {
 ```
 
 **Available Context Variables:**
-- `context.plan.applyable` - Plan succeeded without errors
-- `context.plan.changes.add` - Number of resources to add
-- `context.plan.changes.change` - Number of resources to change
-- `context.plan.changes.remove` - Number of resources to remove
+- `context.plan.applyable` - Boolean: Plan succeeded without errors
+- `context.plan.changes.add` - Number: Resources to add
+- `context.plan.changes.change` - Number: Resources to change
+- `context.plan.changes.remove` - Number: Resources to remove
+- `context.plan.changes.total` - Number: Total number of changes (add + change + remove)
+- `context.success` - Boolean: Whether the previous operation succeeded
+
+**Common patterns:**
+- Approve plans with no deletions: `context.plan.changes.remove == 0`
+- Approve only successful plans: `context.plan.applyable && context.success`
+- Approve plans with limited changes: `context.plan.changes.total <= 10`
 
 **Note:** `orchestrate` blocks are deprecated. Use `deployment_group` and `deployment_auto_approve` instead.
 
@@ -456,33 +566,195 @@ deployment "application" {
 
 ## Terraform Stacks CLI
 
+**Note**: Terraform Stacks is Generally Available (GA) as of Terraform CLI v1.13+. Stacks now count toward Resources Under Management (RUM) for HCP Terraform billing.
+
 ### Initialize and Validate
 
-Generate provider lock file:
+**Initialize Stack** - Downloads providers, modules, and generates provider lock file:
+
+```bash
+terraform stacks init
+```
+
+**Update provider lock file** - Regenerate lock file with additional platforms or updated providers:
 
 ```bash
 terraform stacks providers-lock
 ```
 
-Validate Stack configuration:
+**Validate configuration** - Check syntax and validate configuration without uploading:
 
 ```bash
 terraform stacks validate
 ```
 
-### Plan and Apply
+### Deployment Workflow
 
-Plan a specific deployment:
+**Important**: There are no `terraform stacks plan` or `terraform stacks apply` commands. The workflow is:
 
+1. **Upload configuration** - Send Stack configuration to HCP Terraform, which automatically triggers deployment runs:
 ```bash
-terraform stacks plan --deployment=production
+terraform stacks configuration upload
 ```
 
-Apply a deployment:
+2. **HCP Terraform automatically triggers** deployment runs for each deployment
+
+3. **Monitor deployments** - Track deployment progress:
+```bash
+# Watch all deployments in a group (streams status updates)
+terraform stacks deployment-group watch -deployment-group=canary
+
+# List all deployment runs (non-interactive, shows current status)
+terraform stacks deployment-run list
+
+# Watch a specific deployment run (streams detailed progress)
+terraform stacks deployment-run watch -deployment-run-id=sdr-ABC123
+```
+
+4. **Approve deployments** - Required if auto-approve is not configured:
+```bash
+# Approve all pending plan operations in a specific deployment run
+terraform stacks deployment-run approve-all-plans -deployment-run-id=sdr-ABC123
+
+# Approve all pending plans across all runs in a deployment group
+terraform stacks deployment-group approve-all-plans -deployment-group=canary
+
+# Cancel a deployment run if needed
+terraform stacks deployment-run cancel -deployment-run-id=sdr-ABC123
+```
+
+### Configuration Management
+
+**List configurations** - Show all configuration versions for the current Stack:
+```bash
+terraform stacks configuration list
+```
+
+**Fetch configuration** - Download a specific configuration version to local directory:
+```bash
+terraform stacks configuration fetch -configuration-id=stc-ABC123
+```
+
+**Watch configuration processing** - Monitor configuration upload and validation status:
+```bash
+terraform stacks configuration watch
+```
+
+### Other Useful Commands
+
+**Create Stack** - Initialize a new Stack with scaffolding (interactive):
+```bash
+terraform stacks create
+```
+
+**Format files** - Format Stack configuration files to canonical style:
+```bash
+terraform stacks fmt
+```
+
+**List Stacks** - Show all Stacks in the current project:
+```bash
+terraform stacks list
+```
+
+**Show version** - Display Terraform CLI and Stacks version:
+```bash
+terraform stacks version
+```
+
+**Rerun deployment** - Trigger a new deployment run for a deployment group:
+```bash
+terraform stacks deployment-group rerun -deployment-group=canary
+```
+
+## Monitoring Deployments with HCP Terraform API
+
+When CLI commands are insufficient or you need programmatic monitoring (automation, CI/CD), use the HCP Terraform API. This is particularly useful for non-interactive environments like AI agents.
+
+### Authentication
+
+Extract your API token from the Terraform credentials file:
 
 ```bash
-terraform stacks apply --deployment=production
+TOKEN=$(jq -r '.credentials["app.terraform.io"].token' ~/.terraform.d/credentials.tfrc.json)
 ```
+
+### API Monitoring Workflow
+
+After uploading a configuration with `terraform stacks configuration upload`, follow this sequence to monitor deployment progress:
+
+#### 1. Get Configuration Status
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/vnd.api+json" \
+  "https://app.terraform.io/api/v2/stack-configurations/{configuration-id}" | jq '.'
+```
+
+Returns: Configuration status (pending/completed), components detected, sequence number
+
+#### 2. Get Deployment Group Summaries
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/vnd.api+json" \
+  "https://app.terraform.io/api/v2/stack-configurations/{configuration-id}/stack-deployment-group-summaries" | jq '.'
+```
+
+Returns: Deployment group ID, name (e.g., `dev_default`), status, status-counts (pending/succeeded/failed)
+
+#### 3. Get Deployment Runs
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/vnd.api+json" \
+  "https://app.terraform.io/api/v2/stack-deployment-groups/{group-id}/stack-deployment-runs" | jq '.'
+```
+
+Returns: Deployment run IDs, current status, timestamps
+
+#### 4. Get Deployment Steps
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/vnd.api+json" \
+  "https://app.terraform.io/api/v2/stack-deployment-runs/{run-id}/stack-deployment-steps" | jq '.'
+```
+
+Returns: Step IDs, operation-type (plan/apply), status (running/completed/failed)
+
+#### 5. Get Error Diagnostics (if deployment fails)
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/vnd.api+json" \
+  "https://app.terraform.io/api/v2/stack-deployment-steps/{step-id}/stack-diagnostics?stack_deployment_step_id={step-id}" | jq '.'
+```
+
+**Critical**: The `stack_deployment_step_id` query parameter is **required** to retrieve diagnostics. Without it, the API returns empty results.
+
+Returns: Detailed error messages with file locations, line numbers, code snippets, and error descriptions
+
+#### 6. Get Stack Outputs (after successful deployment)
+
+```bash
+# Get the final apply step ID from step 4, then:
+curl -L -s -H "Authorization: Bearer $TOKEN" \
+  "https://app.terraform.io/api/v2/stack-deployment-steps/{final-apply-step-id}/artifacts?name=apply-description" | \
+  jq -r '.outputs | to_entries | .[] | "\(.key): \(.value.change.after)"'
+```
+
+**Important**:
+- This endpoint returns HTTP 307 redirect - use `curl -L` to follow redirects
+- The artifacts endpoint is currently the only way to retrieve Stack outputs programmatically
+- This endpoint is not yet documented in public API documentation
+
+### API Notes for AI Agents and Automation
+
+- **Interactive commands don't work**: Commands like `terraform stacks deployment-run watch` stream output and block, making them unusable for automation
+- **Use API for polling**: Poll deployment run status via API for non-interactive monitoring
+- **No direct output command**: Currently no CLI command to retrieve Stack outputs (must use artifacts API)
+- **Parse JSON responses**: Use `jq` to extract relevant fields from API responses
 
 ## Common Patterns
 
@@ -541,10 +813,55 @@ component "database" {
 }
 ```
 
+### Deferred Changes
+
+Stacks support **deferred changes** to handle dependencies where values are only known after apply (known_after_apply). This enables configurations that would fail in traditional Terraform due to circular dependencies.
+
+**How it works:**
+1. Terraform plans and applies what it can with current information
+2. Re-evaluates the configuration with newly available values
+3. Plans and applies remaining resources
+4. Repeats until all resources converge or max iterations reached
+
+**Example use case**: Creating a Kubernetes cluster and deploying helm charts in the same deployment:
+
+```hcl
+component "eks_cluster" {
+  source = "./modules/eks"
+  # ... configuration
+}
+
+component "helm_releases" {
+  source = "./modules/helm"
+
+  inputs = {
+    cluster_endpoint = component.eks_cluster.endpoint  # Known after EKS apply
+    cluster_ca       = component.eks_cluster.ca_cert
+  }
+
+  providers = {
+    helm = provider.helm.this
+    # Helm provider needs cluster info from EKS component
+  }
+}
+```
+
+Without deferred changes, this would fail because the helm provider needs values from the EKS cluster that don't exist yet. With deferred changes, Stacks:
+1. Creates the EKS cluster first
+2. Retrieves the cluster endpoint and certificate
+3. Configures the helm provider
+4. Deploys the helm releases
+
+**When to use**: Complex multi-component deployments where some resources depend on runtime values from other components (cluster endpoints, generated passwords, IP addresses, etc.)
+
 ## Best Practices
 
 1. **Component Granularity**: Create components for logical infrastructure units that share a lifecycle
-2. **Module Compatibility**: Modules used with Stacks cannot include provider blocks (configure providers in Stack configuration)
+2. **Module Compatibility**:
+   - Modules used with Stacks cannot include provider blocks (configure providers in Stack configuration)
+   - **Test public registry modules** before using in production Stacks - some modules may have compatibility issues
+   - Consider using raw resources for critical infrastructure if module compatibility is uncertain
+   - Example: Some terraform-aws-modules versions have been found to have compatibility issues with Stacks (e.g., ALB and ECS modules)
 3. **State Isolation**: Each deployment has its own isolated state
 4. **Input Variables**: Use variables for values that differ across deployments; use locals for shared values
 5. **Provider Lock Files**: Always generate and commit `.terraform.lock.hcl` to version control
@@ -559,9 +876,22 @@ component "database" {
 **Issue**: Component A references Component B, and Component B references Component A
 **Solution**: Refactor to break the circular reference or use intermediate components
 
-### Deployment Limit
+### Deployment Destruction
 
-HCP Terraform supports maximum 20 deployments per Stack. For more instances, use multiple Stacks or `for_each` within components.
+**Issue**: Cannot destroy deployments from HCP Terraform UI
+**Solution**: Deployment destruction is **only available via configuration**. Set `destroy = true` in the deployment block:
+
+```hcl
+deployment "old_env" {
+  inputs = {
+    # ... existing inputs
+  }
+
+  destroy = true  # Destroys all resources in this deployment
+}
+```
+
+Then upload the configuration. HCP Terraform will create a destroy run. You cannot destroy Stack deployments from the UI.
 
 ## References
 
