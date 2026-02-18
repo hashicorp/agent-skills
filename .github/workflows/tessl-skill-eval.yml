@@ -1,7 +1,7 @@
 name: Tessl Skill Review
 
 on:
-  pull_request:
+  pull_request_target:
     branches: [main]
     paths:
       - '**/SKILL.md'
@@ -30,6 +30,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -42,18 +43,21 @@ jobs:
 
       - name: Detect changed skills
         id: detect
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          if [[ "$EVENT_NAME" == "pull_request_target" ]]; then
             # Check for eval-scenarios changes and warn
             EVAL_CHANGES=$(git diff --name-only --diff-filter=ACMR \
-              "origin/${{ github.base_ref }}"...HEAD -- '**/eval-scenarios/**' || true)
+              "origin/${BASE_REF}"...HEAD -- '**/eval-scenarios/**' || true)
             if [[ -n "$EVAL_CHANGES" ]]; then
               echo "::warning::This PR modifies eval-scenarios/ files. These should only be changed by maintainers."
             fi
 
             # Find changed SKILL.md files and extract skill directories
             CHANGED_SKILLS=$(git diff --name-only --diff-filter=ACMR \
-              "origin/${{ github.base_ref }}"...HEAD \
+              "origin/${BASE_REF}"...HEAD \
               -- '**/SKILL.md' '**/skills/**' | \
               grep 'SKILL.md$' | \
               xargs -I {} dirname {} | \
@@ -81,8 +85,9 @@ jobs:
 
       - name: Validate skill directory structure
         if: steps.detect.outputs.skills != ''
+        env:
+          SKILLS: ${{ steps.detect.outputs.skills }}
         run: |
-          SKILLS="${{ steps.detect.outputs.skills }}"
           INVALID_PATHS=""
 
           while IFS= read -r dir; do
@@ -111,8 +116,9 @@ jobs:
         if: steps.detect.outputs.skills != ''
         id: review
         continue-on-error: true
+        env:
+          SKILLS: ${{ steps.detect.outputs.skills }}
         run: |
-          SKILLS="${{ steps.detect.outputs.skills }}"
           FAILED=0
           TABLE="| Skill | Status | Review Score |"
           TABLE="${TABLE}\n|-------|--------|--------------|"
@@ -124,8 +130,9 @@ jobs:
             echo "$RESULT"
             echo "::endgroup::"
 
-            OVERALL=$(echo "$RESULT" | grep -oP 'Overall: \K(PASSED|FAILED)' || echo "ERROR")
-            SCORE=$(echo "$RESULT" | grep -oP 'Average Score: \K[0-9]+' || echo "")
+            OVERALL=$(echo "$RESULT" | sed -n 's/.*Overall: \(PASSED\|FAILED\).*/\1/p' | head -1)
+            OVERALL="${OVERALL:-ERROR}"
+            SCORE=$(echo "$RESULT" | sed -n 's/.*Average Score: \([0-9]\{1,\}\).*/\1/p' | head -1)
 
             if [[ "$OVERALL" == "PASSED" ]]; then
               STATUS="PASSED"
@@ -162,12 +169,17 @@ jobs:
           fi
 
       - name: Post or update PR comment
-        if: github.event_name == 'pull_request' && steps.detect.outputs.skills != ''
+        if: >-
+          github.event_name == 'pull_request_target'
+          && steps.detect.outputs.skills != ''
+          && steps.review.outputs.comment != ''
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          COMMENT_BODY: ${{ steps.review.outputs.comment }}
         with:
           script: |
             const marker = '<!-- tessl-skill-review -->';
-            const body = `${{ steps.review.outputs.comment }}`;
+            const body = process.env.COMMENT_BODY;
 
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
@@ -204,6 +216,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -216,10 +229,13 @@ jobs:
 
       - name: Find skills with eval scenarios
         id: detect
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          if [[ "$EVENT_NAME" == "pull_request_target" ]]; then
             SKILL_DIRS=$(git diff --name-only --diff-filter=ACMR \
-              "origin/${{ github.base_ref }}"...HEAD \
+              "origin/${BASE_REF}"...HEAD \
               -- '**/SKILL.md' '**/skills/**' | \
               grep 'SKILL.md$' | \
               xargs -I {} dirname {} | \
@@ -257,8 +273,9 @@ jobs:
         if: steps.detect.outputs.skills != ''
         id: evals
         continue-on-error: true
+        env:
+          SKILLS: ${{ steps.detect.outputs.skills }}
         run: |
-          SKILLS="${{ steps.detect.outputs.skills }}"
           FAILED=0
           TABLE="| Skill | Result |"
           TABLE="${TABLE}\n|-------|--------|"
@@ -266,11 +283,12 @@ jobs:
           while IFS= read -r dir; do
             [[ -z "$dir" ]] && continue
             echo "::group::Evaluating $dir"
-            RESULT=$(tessl eval run "$dir" --force 2>&1) || true
+            EXIT_CODE=0
+            RESULT=$(tessl eval run "$dir" --force 2>&1) || EXIT_CODE=$?
             echo "$RESULT"
             echo "::endgroup::"
 
-            if echo "$RESULT" | grep -qi "fail"; then
+            if [[ "$EXIT_CODE" -ne 0 ]]; then
               STATUS="FAILED"
               FAILED=1
             else
@@ -295,12 +313,17 @@ jobs:
           fi
 
       - name: Post or update PR comment
-        if: github.event_name == 'pull_request' && steps.detect.outputs.skills != ''
+        if: >-
+          github.event_name == 'pull_request_target'
+          && steps.detect.outputs.skills != ''
+          && steps.evals.outputs.comment != ''
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          COMMENT_BODY: ${{ steps.evals.outputs.comment }}
         with:
           script: |
             const marker = '<!-- tessl-task-evals -->';
-            const body = `${{ steps.evals.outputs.comment }}`;
+            const body = process.env.COMMENT_BODY;
 
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
