@@ -134,7 +134,13 @@ jobs:
 
             OVERALL=$(echo "$RESULT" | sed -n 's/.*Overall: \(PASSED\|FAILED\).*/\1/p' | head -1)
             OVERALL="${OVERALL:-ERROR}"
-            SCORE=$(echo "$RESULT" | sed -n 's/.*Average Score: \([0-9]\{1,\}\).*/\1/p' | head -1)
+            SCORE=$(echo "$RESULT" | sed -n 's/.*Average Score:[[:space:]]\{0,1\}\([0-9]\{1,3\}\(\.[0-9]\+\)\?\).*/\1/p' | head -1)
+            if [[ -n "$SCORE" ]]; then
+              # Validate that SCORE is a number between 0 and 100 (optionally with decimals)
+              if ! [[ "$SCORE" =~ ^([0-9]|[1-9][0-9]|100)(\.[0-9]+)?$ ]]; then
+                SCORE=""
+              fi
+            fi
 
             if [[ "$OVERALL" == "PASSED" ]]; then
               STATUS="PASSED"
