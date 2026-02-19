@@ -149,7 +149,8 @@ jobs:
 
             SCORE_DISPLAY="${SCORE:+${SCORE}%}"
             SCORE_DISPLAY="${SCORE_DISPLAY:----}"
-            TABLE="${TABLE}\n| \`${dir}\` | ${STATUS} | ${SCORE_DISPLAY} |"
+            DIR_DISPLAY=$(echo "$dir" | tr '|' '/')
+            TABLE="${TABLE}\n| \`${DIR_DISPLAY}\` | ${STATUS} | ${SCORE_DISPLAY} |"
           done <<< "$SKILLS"
 
           # Write results
