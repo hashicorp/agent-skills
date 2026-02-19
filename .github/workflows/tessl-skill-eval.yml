@@ -48,11 +48,13 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
         run: |
           if [[ "$EVENT_NAME" == "pull_request" ]]; then
-            # Check for eval-scenarios changes and warn
+            # Check for eval-scenarios changes and enforce restriction
             EVAL_CHANGES=$(git diff --name-only --diff-filter=ACMR \
               "origin/${BASE_REF}"...HEAD -- '**/eval-scenarios/**' || true)
             if [[ -n "$EVAL_CHANGES" ]]; then
-              echo "::warning::This PR modifies eval-scenarios/ files. These should only be changed by maintainers."
+              echo "::error::This PR modifies eval-scenarios/ files, which should only be changed by maintainers. Changed files:"
+              echo "$EVAL_CHANGES"
+              exit 1
             fi
 
             # Find changed SKILL.md files and extract skill directories
