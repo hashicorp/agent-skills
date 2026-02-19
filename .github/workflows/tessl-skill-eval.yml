@@ -249,14 +249,14 @@ jobs:
           fi
 
           # Filter to only skills that have eval-scenarios/
-          EVAL_SKILLS=""
-          while IFS= read -r dir; do
-            [[ -z "$dir" ]] && continue
-            if [[ -d "${dir}/eval-scenarios" ]]; then
-              EVAL_SKILLS="${EVAL_SKILLS}${dir}\n"
-            fi
-          done <<< "$SKILL_DIRS"
-          EVAL_SKILLS=$(echo -e "$EVAL_SKILLS" | sed '/^$/d')
+          EVAL_SKILLS=$(
+            while IFS= read -r dir; do
+              [[ -z "$dir" ]] && continue
+              if [[ -d "${dir}/eval-scenarios" ]]; then
+                printf '%s\n' "$dir"
+              fi
+            done <<< "$SKILL_DIRS"
+          )
 
           if [[ -z "$EVAL_SKILLS" ]]; then
             echo "No skills with eval-scenarios/ found."
