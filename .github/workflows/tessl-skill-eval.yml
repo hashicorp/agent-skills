@@ -216,8 +216,7 @@ jobs:
     runs-on: ubuntu-latest
     if: >-
       github.event_name != 'pull_request' ||
-      contains(github.event.pull_request.labels.*.name, 'run-evals') ||
-      (github.event_name == 'workflow_dispatch' && inputs.run_evals)
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.run_evals == 'true')
 
     steps:
       - name: Checkout repository
@@ -278,7 +277,7 @@ jobs:
       - name: Run task evals
         if: steps.detect.outputs.skills != ''
         id: evals
-        continue-on-error: true
+
         env:
           SKILLS: ${{ steps.detect.outputs.skills }}
           TESSL_TOKEN: ${{ secrets.TESSL_API_KEY }}
