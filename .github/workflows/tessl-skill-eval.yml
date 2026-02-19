@@ -19,9 +19,6 @@ permissions:
   contents: read
   pull-requests: write
 
-env:
-  TESSL_TOKEN: ${{ secrets.TESSL_API_KEY }}
-
 jobs:
   review-skills:
     name: Review Skills
@@ -119,6 +116,7 @@ jobs:
         id: review
         env:
           SKILLS: ${{ steps.detect.outputs.skills }}
+          TESSL_TOKEN: ${{ secrets.TESSL_API_KEY }}
         run: |
           FAILED=0
           TABLE="| Skill | Status | Review Score |"
@@ -283,6 +281,7 @@ jobs:
         continue-on-error: true
         env:
           SKILLS: ${{ steps.detect.outputs.skills }}
+          TESSL_TOKEN: ${{ secrets.TESSL_API_KEY }}
         run: |
           FAILED=0
           TABLE="| Skill | Result |"
