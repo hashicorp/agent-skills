@@ -6,6 +6,7 @@ on:
     paths:
       - '**/SKILL.md'
       - '**/skills/**'
+      - '.github/workflows/tessl-skill-eval.yml'
   workflow_dispatch:
     inputs:
       run_evals:
