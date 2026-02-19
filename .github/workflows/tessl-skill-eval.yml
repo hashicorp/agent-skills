@@ -1,7 +1,7 @@
 name: Tessl Skill Review
 
 on:
-  pull_request_target:
+  pull_request:
     branches: [main]
     paths:
       - '**/SKILL.md'
@@ -30,7 +30,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -47,7 +46,7 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           BASE_REF: ${{ github.base_ref }}
         run: |
-          if [[ "$EVENT_NAME" == "pull_request_target" ]]; then
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
             # Check for eval-scenarios changes and warn
             EVAL_CHANGES=$(git diff --name-only --diff-filter=ACMR \
               "origin/${BASE_REF}"...HEAD -- '**/eval-scenarios/**' || true)
@@ -170,7 +169,7 @@ jobs:
 
       - name: Post or update PR comment
         if: >-
-          github.event_name == 'pull_request_target'
+          github.event_name == 'pull_request'
           && steps.detect.outputs.skills != ''
           && steps.review.outputs.comment != ''
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
@@ -216,7 +215,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
       - name: Setup Node.js
@@ -233,7 +231,7 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           BASE_REF: ${{ github.base_ref }}
         run: |
-          if [[ "$EVENT_NAME" == "pull_request_target" ]]; then
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
             SKILL_DIRS=$(git diff --name-only --diff-filter=ACMR \
               "origin/${BASE_REF}"...HEAD \
               -- '**/SKILL.md' '**/skills/**' | \
@@ -314,7 +312,7 @@ jobs:
 
       - name: Post or update PR comment
         if: >-
-          github.event_name == 'pull_request_target'
+          github.event_name == 'pull_request'
           && steps.detect.outputs.skills != ''
           && steps.evals.outputs.comment != ''
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
