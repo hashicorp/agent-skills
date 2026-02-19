@@ -139,7 +139,7 @@ provider "aws" "configurations" {
 - Integrates with cloud provider IAM (AWS IAM Roles, Azure Managed Identities, GCP Service Accounts)
 - Eliminates need for platform-managed environment variables
 
-Configure workload identity using `identity_token` blocks and `assume_role_with_web_identity` in provider configuration.
+Configure workload identity using `identity_token` blocks and `assume_role_with_web_identity` in provider configuration. For detailed setup instructions for AWS, Azure, and GCP, see: https://developer.hashicorp.com/terraform/cloud-docs/dynamic-provider-credentials
 
 ### Component Block
 
