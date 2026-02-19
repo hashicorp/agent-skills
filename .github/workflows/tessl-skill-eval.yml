@@ -209,6 +209,7 @@ jobs:
     name: Task Evals
     runs-on: ubuntu-latest
     if: >-
+      github.event_name == 'pull_request' ||
       contains(github.event.pull_request.labels.*.name, 'run-evals') ||
       (github.event_name == 'workflow_dispatch' && inputs.run_evals)
 
