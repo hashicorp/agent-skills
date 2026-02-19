@@ -173,7 +173,7 @@ jobs:
         if: >-
           github.event_name == 'pull_request'
           && steps.detect.outputs.skills != ''
-          && steps.review.outputs.comment != ''
+          && (steps.review.outcome == 'success' || steps.review.outputs.comment != '')
         uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
           COMMENT_BODY: ${{ steps.review.outputs.comment }}
