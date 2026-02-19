@@ -82,13 +82,11 @@ variable "instance_count" {
 
 ### Required Providers Block
 
-Works the same as traditional Terraform configurations:
-
 ```hcl
 required_providers {
   aws = {
     source  = "hashicorp/aws"
-    version = "~> 5.7.0"
+    version = "~> 6.0"
   }
   random = {
     source  = "hashicorp/random"
@@ -161,34 +159,9 @@ component "vpc" {
     aws = provider.aws.this
   }
 }
-
-component "compute" {
-  source = "./modules/compute"
-
-  inputs = {
-    vpc_id     = component.vpc.vpc_id        # Creates dependency
-    subnet_ids = component.vpc.private_subnet_ids
-  }
-
-  providers = {
-    aws = provider.aws.this
-  }
-}
-
-# Multi-region with for_each
-component "s3" {
-  for_each = var.regions
-  source   = "./modules/s3"
-
-  inputs = {
-    region = each.value
-  }
-
-  providers = {
-    aws = provider.aws.configurations[each.value]
-  }
-}
 ```
+
+See `references/component-blocks.md` for examples of dependencies, for_each, public registry modules, Git sources, and more.
 
 **Key Points:**
 - Reference outputs: `component.<name>.<output>` or `component.<name>[key].<output>` for for_each
@@ -219,7 +192,7 @@ output "endpoint_urls" {
 
 ### Locals Block
 
-Works exactly as in traditional Terraform:
+Locals blocks work the same in both `.tfcomponent.hcl` and `.tfdeploy.hcl` files:
 
 ```hcl
 locals {
@@ -228,7 +201,7 @@ locals {
     ManagedBy   = "Terraform Stacks"
     Project     = var.project_name
   }
-  
+
   region_config = {
     for region in var.regions : region => {
       name_suffix = "${var.environment}-${region}"
@@ -290,17 +263,6 @@ deployment "production" {
 
 Use to centralize credentials and share variables across Stacks. See `references/deployment-blocks.md` for details.
 
-### Locals Block
-
-Define local values for deployment configuration:
-
-```hcl
-locals {
-  aws_regions = ["us-west-1", "us-east-1", "eu-west-1"]
-  role_arn    = "arn:aws:iam::123456789012:role/hcp-terraform-stacks"
-}
-```
-
 ### Deployment Block
 
 Define deployment instances (minimum 1, maximum 20 per Stack):
@@ -331,7 +293,7 @@ deployment "development" {
 
 ### Deployment Group Block
 
-Group deployments together for shared settings (Premium feature). Free/standard tiers use default groups named `{deployment-name}_default`.
+Group deployments together for shared settings (HCP Terraform Premium tier feature). Free/standard tiers use default groups named `{deployment-name}_default`.
 
 ```hcl
 deployment_group "canary" {
@@ -348,7 +310,7 @@ Multiple deployments can reference the same group. See `references/deployment-bl
 
 ### Deployment Auto-Approve Block
 
-Define rules to automatically approve deployment plans (Premium feature):
+Define rules to automatically approve deployment plans (HCP Terraform Premium tier feature):
 
 ```hcl
 deployment_auto_approve "safe_changes" {
@@ -391,7 +353,7 @@ deployment "app" {
 }
 ```
 
-See `references/deployment-blocks.md` and `references/examples.md` for complete linked Stack examples.
+See `references/linked-stacks.md` for complete documentation and examples.
 
 ## Terraform Stacks CLI
 
@@ -482,7 +444,7 @@ For complete examples including multi-region deployments, component dependencies
 4. **Input Variables**: Use variables for values that differ across deployments; use locals for shared values
 5. **Provider Lock Files**: Always generate and commit `.terraform.lock.hcl` to version control
 6. **Naming Conventions**: Use descriptive names for components and deployments
-7. **Deployment Groups**: Always organize deployments into deployment groups, even if you only have one deployment. Deployment groups enable auto-approval rules, logical organization, and provide a foundation for scaling. While deployment groups are a Premium feature, organizing your configurations to use them is a best practice for all Stacks
+7. **Deployment Groups**: You can organize deployments into deployment groups. Deployment groups enable auto-approval rules, logical organization, and provide a foundation for scaling. Deployment groups are an HCP Terraform Premium tier feature
 8. **Testing**: Test Stack configurations in dev/staging deployments before production
 
 ## Troubleshooting
@@ -495,13 +457,12 @@ For complete examples including multi-region deployments, component dependencies
 
 **Module Compatibility**: Test public registry modules before production use. Some modules may have compatibility issues with Stacks.
 
-For detailed troubleshooting including provider authentication, module issues, state problems, and API errors, see `references/troubleshooting.md`.
-
 ## References
 
 For detailed documentation, see:
 - `references/component-blocks.md` - Complete component block reference with all arguments and syntax
 - `references/deployment-blocks.md` - Complete deployment block reference with all configuration options
-- `references/examples.md` - Complete working examples for multi-region, dependencies, and linked Stacks
+- `references/linked-stacks.md` - Publish outputs and upstream inputs for linking Stacks together
+- `references/examples.md` - Complete working examples for multi-region and component dependencies
 - `references/api-monitoring.md` - Full API workflow for programmatic monitoring and automation
 - `references/troubleshooting.md` - Detailed troubleshooting guide for common issues and solutions
