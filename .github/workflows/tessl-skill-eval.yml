@@ -185,32 +185,16 @@ jobs:
           COMMENT_BODY: ${{ steps.review.outputs.comment }}
         with:
           script: |
-            const marker = '<!-- tessl-skill-review -->';
             const body = process.env.COMMENT_BODY;
+            const prNumber = context.payload.pull_request.number;
 
-            const { data: comments } = await github.rest.issues.listComments({
+            await github.rest.pulls.createReview({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
+              pull_number: prNumber,
+              body: body,
+              event: 'COMMENT',
             });
-
-            const existing = comments.find(c => c.body.includes(marker));
-
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body: body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: body,
-              });
-            }
 
   task-evals:
     name: Task Evals
@@ -329,29 +313,13 @@ jobs:
           COMMENT_BODY: ${{ steps.evals.outputs.comment }}
         with:
           script: |
-            const marker = '<!-- tessl-task-evals -->';
             const body = process.env.COMMENT_BODY;
+            const prNumber = context.payload.pull_request.number;
 
-            const { data: comments } = await github.rest.issues.listComments({
+            await github.rest.pulls.createReview({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
+              pull_number: prNumber,
+              body: body,
+              event: 'COMMENT',
             });
-
-            const existing = comments.find(c => c.body.includes(marker));
-
-            if (existing) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body: body,
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: body,
-              });
-            }
