@@ -159,7 +159,7 @@ jobs:
           done <<< "$SKILLS"
 
           # Write results
-          COMMENT_BODY=$(printf "<!-- tessl-skill-review -->\n## Tessl Skill Review Results\n\n${TABLE}\n\nChecks: frontmatter validity, required fields, body structure, examples, line count.\nReview Score is informational — not used for pass/fail gating.")
+          COMMENT_BODY=$(printf '%b' "<!-- tessl-skill-review -->\n## Tessl Skill Review Results\n\n${TABLE}\n\nChecks: frontmatter validity, required fields, body structure, examples, line count.\nReview Score is informational — not used for pass/fail gating.")
 
           EOF_MARKER=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "comment<<${EOF_MARKER}" >> "$GITHUB_OUTPUT"
@@ -304,7 +304,7 @@ jobs:
             TABLE="${TABLE}\n| \`${dir}\` | ${STATUS} |"
           done <<< "$SKILLS"
 
-          COMMENT_BODY=$(printf "<!-- tessl-task-evals -->\n## Tessl Task Eval Results\n\n${TABLE}")
+          COMMENT_BODY=$(printf '%b' "<!-- tessl-task-evals -->\n## Tessl Task Eval Results\n\n${TABLE}")
 
           EOF_MARKER=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "comment<<${EOF_MARKER}" >> "$GITHUB_OUTPUT"
