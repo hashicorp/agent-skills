@@ -4,7 +4,7 @@ Agent skills for building machine images with Packer and HCP Packer.
 
 ## Plugins
 
-### packer-builders
+### build-machine-image
 
 Skills for building images on AWS, Azure, and Windows.
 
@@ -14,7 +14,7 @@ Skills for building images on AWS, Azure, and Windows.
 | azure-image-builder | Build Azure managed images and Azure Compute Gallery images |
 | windows-builder     | Platform-agnostic Windows image patterns with WinRM and PowerShell |
 
-### packer-hcp
+### publish-metadata-to-hcp
 
 Skills for HCP Packer registry integration.
 
@@ -29,33 +29,33 @@ Skills for HCP Packer registry integration.
 ```bash
 claude plugin marketplace add hashicorp/agent-skills
 
-claude plugin install packer-builders@hashicorp
-claude plugin install packer-hcp@hashicorp
+claude plugin install packer-build-machine-image@hashicorp
+claude plugin install packer-publish-metadata-to-hcp@hashicorp
 ```
 
 ### Individual Skills
 
 ```bash
-# Builders
-npx skills add hashicorp/agent-skills/packer/builders/skills/aws-ami-builder
-npx skills add hashicorp/agent-skills/packer/builders/skills/azure-image-builder
-npx skills add hashicorp/agent-skills/packer/builders/skills/windows-builder
+# Build machine image
+npx skills add hashicorp/agent-skills/packer/build-machine-image/skills/aws-ami-builder
+npx skills add hashicorp/agent-skills/packer/build-machine-image/skills/azure-image-builder
+npx skills add hashicorp/agent-skills/packer/build-machine-image/skills/windows-builder
 
-# HCP Packer
-npx skills add hashicorp/agent-skills/packer/hcp/skills/push-to-registry
+# Publish metadata to HCP
+npx skills add hashicorp/agent-skills/packer/publish-metadata-to-hcp/skills/push-to-registry
 ```
 
 ## Structure
 
 ```
 packer/
-├── builders/
+├── build-machine-image/
 │   ├── .claude-plugin/plugin.json
 │   └── skills/
 │       ├── aws-ami-builder/
 │       ├── azure-image-builder/
 │       └── windows-builder/
-└── hcp/
+└── publish-metadata-to-hcp/
     ├── .claude-plugin/plugin.json
     └── skills/
         └── push-to-registry/
