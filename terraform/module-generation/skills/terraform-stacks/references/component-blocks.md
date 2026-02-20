@@ -52,24 +52,10 @@ variable "aws_region" {
   default     = "us-west-1"
 }
 
-variable "instance_count" {
-  type        = number
-  description = "Number of instances"
-  nullable    = false
-}
-
 variable "identity_token" {
   type        = string
   description = "OIDC identity token"
   ephemeral   = true
-}
-
-variable "tags" {
-  type = map(string)
-  default = {
-    Environment = "dev"
-    ManagedBy   = "Terraform"
-  }
 }
 
 variable "subnet_config" {
@@ -80,6 +66,8 @@ variable "subnet_config" {
   })
 }
 ```
+
+For complete variable examples in context, see `examples.md`.
 
 ## Required Providers Block
 
@@ -152,29 +140,13 @@ provider "<provider_type>" "<alias>" {
 3. Supports `for_each` meta-argument
 4. Provider configurations are treated as first-class values
 
-### Examples
-
-**Single Provider:**
+### Example
 
 ```hcl
 provider "aws" "main" {
   config {
     region = var.aws_region
-    
-    default_tags {
-      tags = var.common_tags
-    }
-  }
-}
-```
 
-**Provider with OIDC Authentication:**
-
-```hcl
-provider "aws" "authenticated" {
-  config {
-    region = var.aws_region
-    
     assume_role_with_web_identity {
       role_arn           = var.role_arn
       web_identity_token = var.identity_token
@@ -183,38 +155,7 @@ provider "aws" "authenticated" {
 }
 ```
 
-**Multiple Providers with for_each:**
-
-```hcl
-provider "aws" "regional" {
-  for_each = toset(var.regions)
-  
-  config {
-    region = each.value
-    
-    assume_role_with_web_identity {
-      role_arn           = var.role_arn
-      web_identity_token = var.identity_token
-    }
-  }
-}
-```
-
-**Multiple Cloud Accounts:**
-
-```hcl
-provider "aws" "accounts" {
-  for_each = var.aws_accounts
-  
-  config {
-    region = var.default_region
-    
-    assume_role {
-      role_arn = "arn:aws:iam::${each.value.account_id}:role/${var.role_name}"
-    }
-  }
-}
-```
+For complete provider examples including for_each and multi-cloud patterns, see `examples.md`.
 
 ## Component Block
 
@@ -315,44 +256,7 @@ For components with `for_each`: `component.<name>[<key>].<output>`
 
 ### Examples
 
-**Basic Component (Local Module):**
-
-```hcl
-component "vpc" {
-  source = "./modules/vpc"
-
-  inputs = {
-    cidr_block  = var.vpc_cidr
-    name_prefix = var.name_prefix
-  }
-
-  providers = {
-    aws = provider.aws.main
-  }
-}
-```
-
-**Component from Public Registry:**
-
-```hcl
-component "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 5.0"
-
-  inputs = {
-    cidr            = var.vpc_cidr
-    azs             = var.availability_zones
-    private_subnets = var.private_subnet_cidrs
-    public_subnets  = var.public_subnet_cidrs
-  }
-
-  providers = {
-    aws = provider.aws.main
-  }
-}
-```
-
-**Component from Private Registry:**
+**Basic Component:**
 
 ```hcl
 component "vpc" {
@@ -362,7 +266,6 @@ component "vpc" {
   inputs = {
     cidr_block  = var.vpc_cidr
     name_prefix = var.name_prefix
-    environment = var.environment
   }
 
   providers = {
@@ -376,78 +279,21 @@ component "vpc" {
 ```hcl
 component "database" {
   source = "./modules/rds"
-  
+
   inputs = {
     vpc_id             = component.vpc.vpc_id
     subnet_ids         = component.vpc.private_subnet_ids
     security_group_ids = [component.security.database_sg_id]
     engine_version     = var.db_engine_version
   }
-  
+
   providers = {
     aws = provider.aws.main
   }
 }
 ```
 
-**Component with for_each (Multi-Region):**
-
-```hcl
-component "regional_s3" {
-  for_each = toset(var.regions)
-  
-  source = "./modules/s3"
-  
-  inputs = {
-    region      = each.value
-    bucket_name = "${var.app_name}-${each.value}"
-    tags        = local.common_tags
-  }
-  
-  providers = {
-    aws = provider.aws.regional[each.value]
-  }
-}
-```
-
-**Component with Multiple Providers:**
-
-```hcl
-component "cross_region_replication" {
-  source = "./modules/s3-replication"
-  
-  inputs = {
-    source_bucket = var.source_bucket
-    dest_bucket   = var.dest_bucket
-  }
-  
-  providers = {
-    aws.source = provider.aws.us_east
-    aws.dest   = provider.aws.eu_west
-  }
-}
-```
-
-**Component with for_each over Map:**
-
-```hcl
-component "applications" {
-  for_each = var.applications
-  
-  source = "./modules/application"
-  
-  inputs = {
-    app_name        = each.key
-    instance_type   = each.value.instance_type
-    instance_count  = each.value.count
-    vpc_id          = component.vpc.vpc_id
-  }
-  
-  providers = {
-    aws = provider.aws.main
-  }
-}
-```
+For complete component examples including for_each, multi-region, public registry, and multi-provider patterns, see `examples.md`.
 
 ## Output Block
 
@@ -488,21 +334,6 @@ output "vpc_id" {
   value       = component.vpc.vpc_id
 }
 
-output "database_endpoint" {
-  type        = string
-  description = "Database endpoint"
-  value       = component.database.endpoint
-  sensitive   = true
-}
-
-output "regional_endpoints" {
-  type        = map(string)
-  description = "API endpoints by region"
-  value       = {
-    for region, comp in component.api_gateway : region => comp.endpoint_url
-  }
-}
-
 output "instance_details" {
   type = object({
     id         = string
@@ -518,6 +349,8 @@ output "instance_details" {
 }
 ```
 
+For complete output examples including sensitive outputs and for expressions, see `examples.md`.
+
 ## Locals Block
 
 Defines local values for reuse within the Stack configuration.
@@ -530,7 +363,7 @@ locals {
 }
 ```
 
-### Examples
+### Example
 
 ```hcl
 locals {
@@ -538,22 +371,16 @@ locals {
     Environment = var.environment
     ManagedBy   = "Terraform Stacks"
     Project     = var.project_name
-    CostCenter  = var.cost_center
   }
-  
+
   name_prefix = "${var.project_name}-${var.environment}"
-  
+
   region_config = {
     for region in var.regions : region => {
       name_suffix    = region
       instance_count = var.environment == "prod" ? 3 : 1
     }
   }
-  
-  availability_zones = [
-    for az in var.availability_zones : az
-    if can(regex("^${var.aws_region}", az))
-  ]
 }
 ```
 
