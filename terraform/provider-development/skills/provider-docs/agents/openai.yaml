@@ -1,0 +1,4 @@
+interface:
+  display_name: "Terraform Provider Docs"
+  short_description: "Best practices for Terraform provider docs"
+  default_prompt: "Use $terraform-provider-docs to create or update Terraform Registry provider documentation with HashiCorp-aligned structure and style."
