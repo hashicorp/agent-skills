@@ -34,6 +34,7 @@ All configuration files must be at the root level of the Stack repository. HCP T
 
 ```
 my-stack/
+├── .terraform-version               # The required Terraform version for this Stack
 ├── variables.tfcomponent.hcl        # Variable declarations
 ├── providers.tfcomponent.hcl        # Provider configurations
 ├── components.tfcomponent.hcl       # Component definitions
@@ -52,6 +53,17 @@ my-stack/
 - Git: `git::https://github.com/org/repo.git//path?ref=v1.0.0`
 
 HCP Terraform processes all `.tfcomponent.hcl` and `.tfdeploy.hcl` files in dependency order.
+
+## Required Terraform version (.terraform-version)
+
+Use Terraform v1.13.x or later to access the Stacks CLI plugin and to run
+terraform stacks CLI commands. Begin by adding a .terraform-version file to
+your Stack's root directory to specify the Terraform version required for your
+Stack. For example, the following file specifies Terraform v1.14.5:
+
+```
+1.14.5
+```
 
 ## Component Configuration (.tfcomponent.hcl)
 
