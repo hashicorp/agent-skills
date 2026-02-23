@@ -1,3 +1,8 @@
+# This workflow reviews changed skills and runs task evals.
+# It does NOT post PR comments directly because pull_request events from forks
+# lack write permissions. Instead, it saves results as artifacts, which the
+# companion workflow (tessl-skill-eval-comment.yml) picks up via workflow_run
+# and posts as PR comments with write access.
 name: Tessl Skill Review
 
 on:
@@ -17,8 +22,6 @@ on:
 
 permissions:
   contents: read
-  issues: write
-  pull-requests: write
 
 jobs:
   review-skills:
@@ -175,26 +178,32 @@ jobs:
             exit 1
           fi
 
-      - name: Post or update PR comment
+      # Save the PR number and comment body as an artifact so the companion
+      # workflow (tessl-skill-eval-comment.yml) can post it as a PR comment.
+      # The PR number comes from github.event.pull_request.number, which is
+      # only available in pull_request-triggered runs.
+      - name: Save PR comment artifact
         if: >-
           github.event_name == 'pull_request'
           && steps.detect.outputs.skills != ''
           && (steps.review.outcome == 'success' || steps.review.outputs.comment != '')
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
           COMMENT_BODY: ${{ steps.review.outputs.comment }}
-        with:
-          script: |
-            const body = process.env.COMMENT_BODY;
-            const prNumber = context.payload.pull_request.number;
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          mkdir -p pr-comment
+          echo "$PR_NUMBER" > pr-comment/pr_number
+          echo "$COMMENT_BODY" > pr-comment/comment.md
 
-            await github.rest.pulls.createReview({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber,
-              body: body,
-              event: 'COMMENT',
-            });
+      - name: Upload PR comment artifact
+        if: >-
+          github.event_name == 'pull_request'
+          && steps.detect.outputs.skills != ''
+          && (steps.review.outcome == 'success' || steps.review.outputs.comment != '')
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: skill-review-comment
+          path: pr-comment/
 
   task-evals:
     name: Task Evals
@@ -303,23 +312,27 @@ jobs:
             exit 1
           fi
 
-      - name: Post or update PR comment
+      # Same artifact pattern as the review-skills job — save PR number + comment
+      # for the companion workflow to post.
+      - name: Save PR comment artifact
         if: >-
           github.event_name == 'pull_request'
           && steps.detect.outputs.skills != ''
           && steps.evals.outputs.comment != ''
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         env:
           COMMENT_BODY: ${{ steps.evals.outputs.comment }}
-        with:
-          script: |
-            const body = process.env.COMMENT_BODY;
-            const prNumber = context.payload.pull_request.number;
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          mkdir -p pr-comment
+          echo "$PR_NUMBER" > pr-comment/pr_number
+          echo "$COMMENT_BODY" > pr-comment/comment.md
 
-            await github.rest.pulls.createReview({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber,
-              body: body,
-              event: 'COMMENT',
-            });
+      - name: Upload PR comment artifact
+        if: >-
+          github.event_name == 'pull_request'
+          && steps.detect.outputs.skills != ''
+          && steps.evals.outputs.comment != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: task-evals-comment
+          path: pr-comment/
