@@ -75,11 +75,7 @@ func ResourceExample() *schema.Resource {
                 Type:     schema.TypeString,
                 Computed: true,
             },
-            "tags":     tftags.TagsSchema(),
-            "tags_all": tftags.TagsSchemaComputed(),
         },
-
-        CustomizeDiff: verify.SetTagsDiff,
     }
 }
 ```
@@ -90,19 +86,19 @@ func ResourceExample() *schema.Resource {
 
 ```go
 func resourceExampleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-    conn := meta.(*conns.AWSClient).ExampleConn(ctx)
+    conn := meta.(*conns.Client).ExampleClient(ctx)
 
     name := d.Get("name").(string)
     input := &example.CreateExampleInput{
-        Name: aws.String(name),
+        Name: name,
     }
 
-    output, err := conn.CreateExampleWithContext(ctx, input)
+    output, err := conn.CreateExample(ctx, input)
     if err != nil {
         return diag.Errorf("creating Example (%s): %s", name, err)
     }
 
-    d.SetId(aws.StringValue(output.Id))
+    d.SetId(output.Id)
 
     if _, err := waitExampleCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
         return diag.Errorf("waiting for Example (%s) creation: %s", d.Id(), err)
@@ -116,7 +112,7 @@ func resourceExampleCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 ```go
 func resourceExampleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-    conn := meta.(*conns.AWSClient).ExampleConn(ctx)
+    conn := meta.(*conns.Client).ExampleClient(ctx)
 
     output, err := findExampleByID(ctx, conn, d.Id())
     if tfresource.NotFound(err) {
@@ -140,15 +136,15 @@ func resourceExampleRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 ```go
 func resourceExampleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-    conn := meta.(*conns.AWSClient).ExampleConn(ctx)
+    conn := meta.(*conns.Client).ExampleClient(ctx)
 
     if d.HasChanges("description") {
         input := &example.UpdateExampleInput{
-            Id:          aws.String(d.Id()),
-            Description: aws.String(d.Get("description").(string)),
+            Id:          d.Id(),
+            Description: d.Get("description").(string),
         }
 
-        _, err := conn.UpdateExampleWithContext(ctx, input)
+        _, err := conn.UpdateExample(ctx, input)
         if err != nil {
             return diag.Errorf("updating Example (%s): %s", d.Id(), err)
         }
@@ -162,15 +158,15 @@ func resourceExampleUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 ```go
 func resourceExampleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-    conn := meta.(*conns.AWSClient).ExampleConn(ctx)
+    conn := meta.(*conns.Client).ExampleClient(ctx)
 
     log.Printf("[DEBUG] Deleting Example: %s", d.Id())
 
-    _, err := conn.DeleteExampleWithContext(ctx, &example.DeleteExampleInput{
-        Id: aws.String(d.Id()),
+    _, err := conn.DeleteExample(ctx, &example.DeleteExampleInput{
+        Id: d.Id(),
     })
 
-    if tfawserr.ErrCodeEquals(err, example.ErrCodeResourceNotFoundException) {
+    if tfresource.NotFound(err) {
         return nil
     }
 
@@ -192,7 +188,7 @@ func resourceExampleDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 | Terraform Type | SDKv2 Type | Use Case |
 |---|---|---|
-| `string` | `schema.TypeString` | Names, ARNs, IDs |
+| `string` | `schema.TypeString` | Names, IDs, identifiers |
 | `int` | `schema.TypeInt` | Counts, ports |
 | `float` | `schema.TypeFloat` | Numeric values |
 | `bool` | `schema.TypeBool` | Feature flags |
@@ -252,19 +248,19 @@ Use `ForceNew: true` on attributes where an in-place update is not possible:
 ```go
 func findExampleByID(ctx context.Context, conn *example.Client, id string) (*example.Example, error) {
     input := &example.GetExampleInput{
-        Id: aws.String(id),
+        Id: id,
     }
 
-    output, err := conn.GetExampleWithContext(ctx, input)
-
-    if tfawserr.ErrCodeEquals(err, example.ErrCodeResourceNotFoundException) {
-        return nil, &retry.NotFoundError{
-            LastError:   err,
-            LastRequest: input,
-        }
-    }
+    output, err := conn.GetExample(ctx, input)
 
     if err != nil {
+        var notFound *types.ResourceNotFoundException
+        if errors.As(err, &notFound) {
+            return nil, &retry.NotFoundError{
+                LastError:   err,
+                LastRequest: input,
+            }
+        }
         return nil, err
     }
 
@@ -320,7 +316,7 @@ func statusExample(ctx context.Context, conn *example.Client, id string) retry.S
         if err != nil {
             return nil, "", err
         }
-        return output, aws.StringValue(output.Status), nil
+        return output, output.Status, nil
     }
 }
 ```
@@ -328,13 +324,15 @@ func statusExample(ctx context.Context, conn *example.Client, id string) retry.S
 ## Error Handling
 
 ```go
-// Match specific AWS error codes
-if tfawserr.ErrCodeEquals(err, example.ErrCodeResourceNotFoundException) {
+// Match specific API error types
+var notFound *types.ResourceNotFoundException
+if errors.As(err, &notFound) {
     // Resource doesn't exist
 }
 
-if tfawserr.ErrMessageContains(err, example.ErrCodeConflictException, "already exists") {
-    // Conflict on creation
+var conflict *types.ConflictException
+if errors.As(err, &conflict) {
+    // Resource state conflict
 }
 ```
 
@@ -415,7 +413,7 @@ func testAccCheckExampleExists(ctx context.Context, name string) resource.TestCh
             return fmt.Errorf("Not found: %s", name)
         }
 
-        conn := acctest.Provider.Meta().(*conns.AWSClient).ExampleConn(ctx)
+        conn := acctest.Provider.Meta().(*conns.Client).ExampleClient(ctx)
         _, err := findExampleByID(ctx, conn, rs.Primary.ID)
 
         return err
@@ -424,7 +422,7 @@ func testAccCheckExampleExists(ctx context.Context, name string) resource.TestCh
 
 func testAccCheckExampleDestroy(ctx context.Context) resource.TestCheckFunc {
     return func(s *terraform.State) error {
-        conn := acctest.Provider.Meta().(*conns.AWSClient).ExampleConn(ctx)
+        conn := acctest.Provider.Meta().(*conns.Client).ExampleClient(ctx)
 
         for _, rs := range s.RootModule().Resources {
             if rs.Type != "provider_example" {
