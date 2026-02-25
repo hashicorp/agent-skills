@@ -17,29 +17,6 @@ This guide covers developing Terraform Provider resources and data sources using
 - [Resource Development](https://developer.hashicorp.com/terraform/plugin/framework/resources)
 - [Data Source Development](https://developer.hashicorp.com/terraform/plugin/framework/data-sources)
 
-## File Structure
-
-Resources follow the standard service package structure:
-
-```
-internal/service/<service>/
-├── <resource_name>.go           # Resource implementation
-├── <resource_name>_test.go      # Acceptance tests
-├── <resource_name>_data_source.go    # Data source (if applicable)
-├── find.go                      # Finder functions
-├── exports_test.go              # Test exports
-└── service_package_gen.go       # Auto-generated registration
-```
-
-Documentation structure:
-```
-website/docs/r/
-└── <service>_<resource_name>.html.markdown  # Resource documentation
-
-website/docs/d/
-└── <service>_<resource_name>.html.markdown  # Data source documentation
-```
-
 ## Resource Structure
 
 ### SDKv2 Resource Pattern
