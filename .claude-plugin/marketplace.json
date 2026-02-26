@@ -72,6 +72,84 @@
       "category": "integration",
       "license": "MPL-2.0",
       "strict": false
+    },
+    {
+      "name": "vault-credential-generation",
+      "source": "./vault/credential-generation",
+      "description": "Generate dynamic credentials for databases, cloud providers, and encryption keys.",
+      "version": "0.2.0",
+      "author": {
+        "name": "HashiCorp"
+      },
+      "keywords": ["vault", "secrets", "credentials", "database", "transit", "pki", "vault-agent", "dynamic-credentials"],
+      "category": "integration",
+      "license": "MPL-2.0",
+      "strict": false
+    },
+    {
+      "name": "vault-app-access",
+      "source": "./vault/app-access",
+      "description": "Give applications secure access to Vault secrets with authentication and policies.",
+      "version": "0.2.0",
+      "author": {
+        "name": "HashiCorp"
+      },
+      "keywords": ["vault", "auth", "authentication", "access", "approle", "kubernetes", "oidc", "policies"],
+      "category": "integration",
+      "license": "MPL-2.0",
+      "strict": false
+    },
+    {
+      "name": "vault-deployment",
+      "source": "./vault/deployment",
+      "description": "Deploy and operate Vault on Kubernetes with HA, DR, and monitoring.",
+      "version": "0.2.0",
+      "author": {
+        "name": "HashiCorp"
+      },
+      "keywords": ["vault", "deployment", "kubernetes", "vso", "ha", "dr", "monitoring", "troubleshooting"],
+      "category": "integration",
+      "license": "MPL-2.0",
+      "strict": false
+    },
+    {
+      "name": "vault-multi-tenancy",
+      "source": "./vault/multi-tenancy",
+      "description": "Set up multi-tenant Vault with namespaces, replication, and policy-as-code.",
+      "version": "0.2.0",
+      "author": {
+        "name": "HashiCorp"
+      },
+      "keywords": ["vault", "enterprise", "multi-tenancy", "namespaces", "replication", "sentinel", "mfa", "hsm"],
+      "category": "integration",
+      "license": "MPL-2.0",
+      "strict": false
+    },
+    {
+      "name": "vault-ai-workflows",
+      "source": "./vault/ai-workflows",
+      "description": "Use AI assistants to manage Vault secrets through MCP integration.",
+      "version": "0.2.0",
+      "author": {
+        "name": "HashiCorp"
+      },
+      "keywords": ["vault", "mcp", "ai", "workflows", "claude", "secrets", "automation"],
+      "category": "integration",
+      "license": "MPL-2.0",
+      "strict": false
+    },
+    {
+      "name": "vault-hashicorp-secrets-engines",
+      "source": "./vault/hashicorp-secrets-engines",
+      "description": "Vault secrets engines for HashiCorp products (Consul, Nomad, Terraform Cloud).",
+      "version": "0.2.0",
+      "author": {
+        "name": "HashiCorp"
+      },
+      "keywords": ["vault", "consul", "nomad", "terraform", "secrets-engines", "acl-tokens", "dynamic-tokens"],
+      "category": "integration",
+      "license": "MPL-2.0",
+      "strict": false
     }
   ]
 }
