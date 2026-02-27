@@ -1,0 +1,53 @@
+---
+name: {{SKILL_NAME}}
+description: {{SKILL_DESCRIPTION}}
+{{#DISABLE_MODEL_INVOCATION}}disable-model-invocation: true
+{{/DISABLE_MODEL_INVOCATION}}{{#ALLOWED_TOOLS}}allowed-tools: {{ALLOWED_TOOLS}}
+{{/ALLOWED_TOOLS}}{{#CONTEXT_FORK}}context: fork
+agent: {{AGENT_TYPE}}
+{{/CONTEXT_FORK}}---
+
+# {{SKILL_TITLE}}
+
+{{SKILL_INTRODUCTION}}
+
+**Reference:** [{{REFERENCE_TITLE}}]({{REFERENCE_URL}})
+
+{{#NOTE}}
+> **Note:** {{NOTE_TEXT}}
+{{/NOTE}}
+
+## {{SECTION_1_TITLE}}
+
+{{SECTION_1_CONTENT}}
+
+## {{SECTION_2_TITLE}}
+
+{{SECTION_2_CONTENT}}
+
+{{#ADDITIONAL_SECTIONS}}
+## {{SECTION_TITLE}}
+
+{{SECTION_CONTENT}}
+
+{{/ADDITIONAL_SECTIONS}}
+
+## Common Issues
+
+{{#COMMON_ISSUES}}
+**{{ISSUE_TITLE}}**
+{{ISSUE_SOLUTION}}
+
+{{/COMMON_ISSUES}}
+
+## Best Practices
+
+{{#BEST_PRACTICES}}
+- {{PRACTICE}}
+{{/BEST_PRACTICES}}
+
+## References
+
+{{#REFERENCES}}
+- [{{REFERENCE_TITLE}}]({{REFERENCE_URL}})
+{{/REFERENCES}}
