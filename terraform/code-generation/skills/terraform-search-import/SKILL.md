@@ -110,8 +110,10 @@ list "aws_instance" "all" {
 ```hcl
 list "<list_type>" "<symbolic_name>" {
   provider = <provider_reference>  # Required
-  
+
   # Optional: filter configuration (provider-specific)
+  # The `config` block schema is provider-specific. Discover available options using `terraform providers schema -json | jq '.provider_schemas."registry.terraform.io/hashicorp/<provider>".list_resource_schemas."<resource_type>"'`
+
   config {
     filter {
       name   = "<filter_name>"
@@ -119,12 +121,6 @@ list "<list_type>" "<symbolic_name>" {
     }
     region = "<region>"  # AWS-specific
   }
-}
-
-# The `config` block schema is provider-specific. Discover available options using `terraform providers schema -json | jq '.provider_schemas."registry.terraform.io/hashicorp/<provider>".list_resource_schemas."<resource_type>"'`
-
-  }
-  
   # Optional: limit results
   limit = 100
 }
