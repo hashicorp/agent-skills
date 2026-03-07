@@ -1,0 +1,127 @@
+{
+  "$schema": "https://skills.ai/schema/v1/skills-manifest.json",
+  "name": "hashicorp-agent-skills",
+  "version": "1.0.0",
+  "description": "HashiCorp Agent Skills for Terraform and Packer development",
+  "author": {
+    "name": "HashiCorp",
+    "url": "https://github.com/hashicorp"
+  },
+  "repository": "https://github.com/hashicorp/agent-skills",
+  "license": "MPL-2.0",
+  "skills": [
+    {
+      "name": "terraform-style-guide",
+      "path": "terraform/code-generation/skills/terraform-style-guide",
+      "description": "Generate Terraform HCL code following HashiCorp's official style conventions and best practices",
+      "category": "terraform",
+      "tags": ["terraform", "hcl", "style-guide", "best-practices"]
+    },
+    {
+      "name": "terraform-test",
+      "path": "terraform/code-generation/skills/terraform-test",
+      "description": "Writing and running .tftest.hcl test files for Terraform modules",
+      "category": "terraform",
+      "tags": ["terraform", "testing", "tftest"]
+    },
+    {
+      "name": "azure-verified-modules",
+      "path": "terraform/code-generation/skills/azure-verified-modules",
+      "description": "Azure Verified Modules (AVM) requirements and certification guidelines",
+      "category": "terraform",
+      "tags": ["terraform", "azure", "avm", "modules"]
+    },
+    {
+      "name": "refactor-module",
+      "path": "terraform/module-generation/skills/refactor-module",
+      "description": "Transform monolithic Terraform configurations into reusable modules",
+      "category": "terraform",
+      "tags": ["terraform", "modules", "refactoring"]
+    },
+    {
+      "name": "terraform-stacks",
+      "path": "terraform/module-generation/skills/terraform-stacks",
+      "description": "Multi-region/environment orchestration with Terraform Stacks",
+      "category": "terraform",
+      "tags": ["terraform", "stacks", "orchestration", "multi-region"]
+    },
+    {
+      "name": "new-terraform-provider",
+      "path": "terraform/provider-development/skills/new-terraform-provider",
+      "description": "Scaffold a new Terraform provider using the Plugin Framework",
+      "category": "terraform",
+      "tags": ["terraform", "provider", "plugin-framework", "scaffolding"]
+    },
+    {
+      "name": "run-acceptance-tests",
+      "path": "terraform/provider-development/skills/run-acceptance-tests",
+      "description": "Run and debug Terraform provider acceptance tests",
+      "category": "terraform",
+      "tags": ["terraform", "provider", "testing", "acceptance-tests"]
+    },
+    {
+      "name": "provider-actions",
+      "path": "terraform/provider-development/skills/provider-actions",
+      "description": "Implement provider actions (lifecycle operations) in Terraform providers",
+      "category": "terraform",
+      "tags": ["terraform", "provider", "actions", "lifecycle"]
+    },
+    {
+      "name": "provider-resources",
+      "path": "terraform/provider-development/skills/provider-resources",
+      "description": "Implement resources and data sources in Terraform providers",
+      "category": "terraform",
+      "tags": ["terraform", "provider", "resources", "data-sources"]
+    },
+    {
+      "name": "aws-ami-builder",
+      "path": "packer/builders/skills/aws-ami-builder",
+      "description": "Build Amazon Machine Images (AMIs) with Packer's amazon-ebs builder",
+      "category": "packer",
+      "tags": ["packer", "aws", "ami", "image-building"]
+    },
+    {
+      "name": "azure-image-builder",
+      "path": "packer/builders/skills/azure-image-builder",
+      "description": "Build Azure managed images and Azure Compute Gallery images with Packer",
+      "category": "packer",
+      "tags": ["packer", "azure", "image-building", "compute-gallery"]
+    },
+    {
+      "name": "windows-builder",
+      "path": "packer/builders/skills/windows-builder",
+      "description": "Platform-agnostic Windows image building patterns with WinRM and PowerShell",
+      "category": "packer",
+      "tags": ["packer", "windows", "winrm", "powershell"]
+    },
+    {
+      "name": "push-to-registry",
+      "path": "packer/hcp/skills/push-to-registry",
+      "description": "Configure hcp_packer_registry to push build metadata to HCP Packer",
+      "category": "packer",
+      "tags": ["packer", "hcp-packer", "registry", "metadata"]
+    }
+  ],
+  "mcpServers": {
+    "terraform": {
+      "description": "Terraform MCP Server for HCP Terraform integration",
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "TFE_TOKEN",
+        "-e",
+        "TFE_ADDRESS",
+        "hashicorp/terraform-mcp-server"
+      ],
+      "env": {
+        "TFE_TOKEN": "${TFE_TOKEN}",
+        "TFE_ADDRESS": "${TFE_ADDRESS}"
+      },
+      "requiredEnvVars": ["TFE_TOKEN"],
+      "optionalEnvVars": ["TFE_ADDRESS"]
+    }
+  }
+}

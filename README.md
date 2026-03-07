@@ -11,7 +11,36 @@ A collection of Agent skills and Claude Code plugins for HashiCorp products.
 
 ## Installation
 
-### Individual Skills
+### Bob (IBM)
+
+Install skills directly using npx. See [BOB.md](./BOB.md) for complete Bob integration guide.
+
+```bash
+# List all skills
+npx skills add hashicorp/agent-skills
+
+# Install a specific skill
+npx skills add hashicorp/agent-skills/terraform/code-generation/skills/terraform-style-guide
+```
+
+**MCP Server Configuration:** Add to Bob's MCP settings for enhanced Terraform integration:
+
+```json
+{
+  "mcpServers": {
+    "terraform": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-e", "TFE_TOKEN", "-e", "TFE_ADDRESS", "hashicorp/terraform-mcp-server"],
+      "env": {
+        "TFE_TOKEN": "${TFE_TOKEN}",
+        "TFE_ADDRESS": "${TFE_ADDRESS}"
+      }
+    }
+  }
+}
+```
+
+### Other AI Coding Assistants
 
 Install Agent Skills in GitHub Copilot, Claude Code, Opencode, Cursor, and more:
 
@@ -44,15 +73,31 @@ Or use the interactive interface:
 /plugin
 ```
 
+## Available Skills
+
+### Terraform
+- **Code Generation**: HCL style guide, testing, Azure Verified Modules
+- **Module Generation**: Refactoring, Terraform Stacks orchestration
+- **Provider Development**: Scaffolding, resources, actions, acceptance tests
+
+### Packer
+- **Builders**: AWS AMI, Azure images, Windows patterns
+- **HCP Integration**: Registry metadata and tracking
+
+See [BOB.md](./BOB.md) for complete skill list and usage examples for [IBM Bob](https://www.ibm.com/products/bob).
+
 ## Structure
 
 ```
 agent-skills/
+├── .bob/
+│   └── skills.json         # Bob skill manifest
 ├── .claude-plugin/
-│   └── marketplace.json
+│   └── marketplace.json    # Claude Code marketplace
 ├── terraform/              # Terraform skills
 ├── packer/                 # Packer skills
 ├── <product>/              # Future products (Vault, Consul, etc.)
+├── BOB.md                  # Bob integration guide
 └── README.md
 ```
 
@@ -66,6 +111,13 @@ Each product folder contains plugins, and each plugin contains skills:
         └── <skill>/
             └── SKILL.md
 ```
+
+## Documentation
+
+- **[BOB.md](./BOB.md)** - Complete [IBM Bob](https://www.ibm.com/products/bob) integration guide
+- **[AGENTS.md](./AGENTS.md)** - Detailed agent instructions and plugin documentation
+- **[Terraform README](./terraform/README.md)** - Terraform-specific skills
+- **[Packer README](./packer/README.md)** - Packer-specific skills
 
 ## License
 
