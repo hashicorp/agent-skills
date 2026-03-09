@@ -150,6 +150,66 @@ run "test_nat_gateway_disabled" {
 }
 ```
 
+### Resource counts
+
+```hcl
+run "test_resource_count" {
+  command = plan
+
+  variables {
+    instance_count = 3
+  }
+
+  assert {
+    condition     = length(aws_instance.workers) == 3
+    error_message = "Should create exactly 3 worker instances"
+  }
+}
+```
+
+### Tags
+
+```hcl
+run "test_resource_tags" {
+  command = plan
+
+  variables {
+    common_tags = {
+      Environment = "production"
+      ManagedBy   = "Terraform"
+    }
+  }
+
+  assert {
+    condition     = aws_instance.example.tags["Environment"] == "production"
+    error_message = "Environment tag should be set correctly"
+  }
+
+  assert {
+    condition     = aws_instance.example.tags["ManagedBy"] == "Terraform"
+    error_message = "ManagedBy tag should be set correctly"
+  }
+}
+```
+
+### Data sources
+
+```hcl
+run "test_data_source_lookup" {
+  command = plan
+
+  assert {
+    condition     = data.aws_ami.ubuntu.id != ""
+    error_message = "Should find a valid Ubuntu AMI"
+  }
+
+  assert {
+    condition     = can(regex("^ami-", data.aws_ami.ubuntu.id))
+    error_message = "AMI ID should be in correct format"
+  }
+}
+```
+
 ### Validation rules
 
 ```hcl
@@ -188,6 +248,147 @@ run "test_subnet_in_vpc" {
   assert {
     condition     = aws_subnet.example.vpc_id == run.setup_vpc.vpc_id
     error_message = "Subnet should be in the VPC from setup_vpc"
+  }
+}
+```
+
+### Plan options (refresh-only, targeted)
+
+```hcl
+run "test_refresh_only" {
+  command = plan
+
+  plan_options {
+    mode = refresh-only
+  }
+
+  assert {
+    condition     = aws_instance.example.tags["Environment"] == "production"
+    error_message = "Tags should be refreshed correctly"
+  }
+}
+
+run "test_specific_resource" {
+  command = plan
+
+  plan_options {
+    target = [aws_instance.example]
+  }
+
+  assert {
+    condition     = aws_instance.example.instance_type == "t2.micro"
+    error_message = "Targeted resource should be planned"
+  }
+}
+```
+
+### Parallel modules
+
+```hcl
+run "test_networking_module" {
+  command  = plan
+  parallel = true
+
+  module {
+    source = "./modules/networking"
+  }
+
+  assert {
+    condition     = output.vpc_id != ""
+    error_message = "VPC should be created"
+  }
+}
+
+run "test_compute_module" {
+  command  = plan
+  parallel = true
+
+  module {
+    source = "./modules/compute"
+  }
+
+  assert {
+    condition     = output.instance_id != ""
+    error_message = "Instance should be created"
+  }
+}
+```
+
+### State key sharing
+
+```hcl
+run "create_foundation" {
+  command   = apply
+  state_key = "foundation"
+
+  assert {
+    condition     = aws_vpc.main.id != ""
+    error_message = "Foundation VPC should be created"
+  }
+}
+
+run "create_application" {
+  command   = apply
+  state_key = "foundation"
+
+  variables {
+    vpc_id = run.create_foundation.vpc_id
+  }
+
+  assert {
+    condition     = aws_instance.app.vpc_id == run.create_foundation.vpc_id
+    error_message = "Application should use foundation VPC"
+  }
+}
+```
+
+### Cleanup ordering (S3 objects before bucket)
+
+```hcl
+run "create_bucket" {
+  command = apply
+
+  assert {
+    condition     = aws_s3_bucket.example.id != ""
+    error_message = "Bucket should be created"
+  }
+}
+
+run "add_objects" {
+  command = apply
+
+  assert {
+    condition     = length(aws_s3_object.files) > 0
+    error_message = "Objects should be added"
+  }
+}
+
+# Cleanup destroys in reverse: objects first, then bucket
+```
+
+### Multiple aliased providers
+
+```hcl
+provider "aws" {
+  alias  = "primary"
+  region = "us-west-2"
+}
+
+provider "aws" {
+  alias  = "secondary"
+  region = "us-east-1"
+}
+
+run "test_with_specific_provider" {
+  command = plan
+
+  providers = {
+    aws = provider.aws.secondary
+  }
+
+  assert {
+    condition     = aws_instance.example.availability_zone == "us-east-1a"
+    error_message = "Instance should be in us-east-1 region"
   }
 }
 ```

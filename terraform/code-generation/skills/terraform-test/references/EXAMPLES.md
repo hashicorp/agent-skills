@@ -201,6 +201,39 @@ run "test_instance_with_mocks" {
   }
 }
 
+run "test_data_source_with_mocks" {
+  command = plan
+
+  assert {
+    condition     = data.aws_ami.ubuntu.id == "ami-0c55b159cbfafe1f0"
+    error_message = "Mock data source should return predictable AMI ID"
+  }
+
+  assert {
+    condition     = length(data.aws_availability_zones.available.names) == 3
+    error_message = "Should return 3 mocked availability zones"
+  }
+
+  assert {
+    condition     = contains(data.aws_availability_zones.available.names, "us-west-2a")
+    error_message = "Should include us-west-2a in mocked zones"
+  }
+}
+
+run "test_outputs_with_mocks" {
+  command = plan
+
+  assert {
+    condition     = output.vpc_id == "vpc-12345678"
+    error_message = "VPC ID output should match mocked value"
+  }
+
+  assert {
+    condition     = can(regex("^vpc-", output.vpc_id))
+    error_message = "VPC ID output should have correct format"
+  }
+}
+
 run "test_conditional_resources_with_mocks" {
   command = plan
 
@@ -237,6 +270,18 @@ run "test_tag_inheritance_with_mocks" {
     ])
     error_message = "All common tags should be present on instance"
   }
+}
+
+run "test_invalid_cidr_with_mocks" {
+  command = plan
+
+  variables {
+    vpc_cidr = "invalid"
+  }
+
+  expect_failures = [
+    var.vpc_cidr
+  ]
 }
 
 run "setup_vpc_with_mocks" {
