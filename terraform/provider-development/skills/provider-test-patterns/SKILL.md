@@ -6,10 +6,11 @@ description: >-
   ConfigStateChecks with custom statecheck.StateCheck implementations,
   plan checks, CompareValue for cross-step assertions, config helpers,
   import testing with ImportStateKind, sweepers, and scenario patterns
-  (basic, update, disappears, validation, regression). Use when writing,
-  reviewing, or debugging provider acceptance tests, including questions about
-  statecheck, plancheck, TestCheckFunc, CheckDestroy, ExpectError, import
-  state verification, or how to structure test files.
+  (basic, update, disappears, validation, regression), and ephemeral resource
+  testing with the echoprovider package. Use when writing, reviewing, or
+  debugging provider acceptance tests, including questions about statecheck,
+  plancheck, TestCheckFunc, CheckDestroy, ExpectError, import state
+  verification, ephemeral resources, or how to structure test files.
 metadata:
   copyright: Copyright IBM Corp. 2026
   version: "0.0.1"
@@ -26,6 +27,7 @@ Source: [HashiCorp Testing Patterns](https://developer.hashicorp.com/terraform/p
 **References** (load when needed):
 - `references/checks.md` — statecheck, plancheck, knownvalue types, tfjsonpath, comparers
 - `references/sweepers.md` — sweeper setup, TestMain, dependencies
+- `references/ephemeral.md` — ephemeral resource testing, echoprovider, multi-step patterns
 
 ---
 
