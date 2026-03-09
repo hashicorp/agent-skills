@@ -410,20 +410,3 @@ func testAccPreCheck(t *testing.T) {
     }
 }
 ```
-
----
-
-## Running Tests
-
-```bash
-# Single test
-TF_ACC=1 go test ./internal/service/example -run TestAccExample_basic -v -timeout 60m
-
-# Compile only (fast syntax check)
-go test -c -o /dev/null ./internal/service/example
-
-# Debug logging
-TF_ACC=1 TF_LOG=debug go test ./internal/service/example -run TestAccExample_basic -v
-```
-
-For sweeper setup and execution, read `references/sweepers.md`.
