@@ -1,0 +1,73 @@
+# Companion workflow to tessl-skill-eval.yml.
+#
+# The main workflow (Tessl Skill Review) runs on pull_request events, which
+# don't have write access to the PR (especially for fork PRs). To work around
+# this, the main workflow saves the review results and the PR number as
+# artifacts. This workflow triggers on workflow_run (after the main workflow
+# completes), downloads those artifacts, and posts/updates the PR comment
+# with pull-requests: write permission.
+#
+# The PR number is read from the artifact file (pr-comment/pr_number) that
+# was written by the main workflow using github.event.pull_request.number.
+name: Post Tessl Review Comment
+
+on:
+  workflow_run:
+    workflows: ["Tessl Skill Review"]
+    types: [completed]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  post-comment:
+    name: Post PR Comment
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.event == 'pull_request'
+
+    steps:
+      # Download the artifact produced by the main workflow's review-skills job.
+      # run-id ties this to the specific workflow run that triggered us.
+      - name: Download skill-review-comment artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: skill-review-comment
+          path: skill-review-comment
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Read the PR number and comment body from the artifact, then create or
+      # update the PR comment. Uses an HTML comment marker (<!-- tessl-skill-review -->)
+      # to find and update an existing comment instead of posting duplicates.
+      - name: Post skill review comment
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const fs = require('fs');
+            const prNumber = parseInt(fs.readFileSync('skill-review-comment/pr_number', 'utf8').trim());
+            const body = fs.readFileSync('skill-review-comment/comment.md', 'utf8');
+            const marker = '<!-- tessl-skill-review -->';
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            const existing = comments.find(c => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: body,
+              });
+            }

@@ -13,6 +13,7 @@ Skills for generating and validating Terraform HCL code.
 | terraform-style-guide  | Generate Terraform HCL code following HashiCorp style conventions |
 | terraform-test         | Writing and running `.tftest.hcl` test files |
 | azure-verified-modules | Azure Verified Modules (AVM) requirements and certification |
+| terraform-search-import | Discover existing resources with Terraform Search and bulk import |
 
 ### terraform-module-generation
 
@@ -53,6 +54,7 @@ claude plugin install terraform-provider-development@hashicorp
 npx skills add hashicorp/agent-skills/terraform/code-generation/skills/terraform-style-guide
 npx skills add hashicorp/agent-skills/terraform/code-generation/skills/terraform-test
 npx skills add hashicorp/agent-skills/terraform/code-generation/skills/azure-verified-modules
+npx skills add hashicorp/agent-skills/terraform/code-generation/skills/terraform-search-import
 
 # Module generation
 npx skills add hashicorp/agent-skills/terraform/module-generation/skills/refactor-module
@@ -83,7 +85,8 @@ terraform/
 │   └── skills/
 │       ├── terraform-style-guide/
 │       ├── terraform-test/
-│       └── azure-verified-modules/
+│       ├── azure-verified-modules/
+│       └── terraform-search-import/
 ├── module-generation/
 │   ├── .claude-plugin/plugin.json
 │   └── skills/
