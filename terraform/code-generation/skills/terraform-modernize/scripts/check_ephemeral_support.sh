@@ -17,13 +17,15 @@ if [ ! -d ".terraform" ]; then
     terraform init -upgrade > /dev/null 2>&1
 fi
 
+# Cache provider schema output for reuse within script
+SCHEMA=$(terraform providers schema -json 2>/dev/null)
+
 # Get provider schema and extract ephemeral_resource_schemas
 if [ -n "$PROVIDER" ]; then
     # Specific provider (must be declared in current config)
-    provider_key=$(terraform providers schema -json 2>/dev/null | jq -r '.provider_schemas | keys[]' | grep "/${PROVIDER}$" || true)
+    provider_key=$(jq -r '.provider_schemas | keys[]' <<< "$SCHEMA" | grep "/$1$" || true)
     if [ -n "$provider_key" ]; then
-        terraform providers schema -json 2>/dev/null | jq -r \
-            "{\"$PROVIDER\": (.provider_schemas.\"${provider_key}\" | .ephemeral_resource_schemas // {} | keys | sort)}"
+        jq -r "{\"$PROVIDER\": (.provider_schemas.\"${provider_key}\" | .ephemeral_resource_schemas // {} | keys | sort)}" <<< "$SCHEMA"
     else
         echo "{\"$PROVIDER\": []}" >&2
         echo "Note: Provider '${PROVIDER}' not found in current configuration." >&2
@@ -32,10 +34,10 @@ if [ -n "$PROVIDER" ]; then
     fi
 else
     # All providers declared in current config
-    terraform providers schema -json 2>/dev/null | jq -r '
+    jq -r '
         .provider_schemas
         | to_entries
         | map({key: (.key | split("/")[-1]), value: (.value.ephemeral_resource_schemas // {} | keys | sort)})
         | from_entries
-    '
+    ' <<< "$SCHEMA"
 fi

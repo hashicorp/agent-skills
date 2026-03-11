@@ -25,8 +25,9 @@ if [ ! -d ".terraform" ]; then
     terraform init -upgrade > /dev/null 2>&1
 fi
 
-# Get provider key
-provider_key=$(terraform providers schema -json 2>/dev/null | jq -r '.provider_schemas | keys[]' | grep "/${PROVIDER}$" || true)
+# Cache provider schema output for reuse within script
+SCHEMA=$(terraform providers schema -json 2>/dev/null)
+provider_key=$(jq -r '.provider_schemas | keys[]' <<< "$SCHEMA" | grep "/$1$" || true)
 
 if [ -z "$provider_key" ]; then
     echo "{}" >&2
@@ -38,7 +39,7 @@ fi
 # Extract write-only capable attributes from provider schema
 if [ -n "$RESOURCE" ]; then
     # Specific resource
-    terraform providers schema -json 2>/dev/null | jq -r --arg provider "$provider_key" --arg resource "$RESOURCE" '
+    jq -r --arg provider "$provider_key" --arg resource "$RESOURCE" '
         .provider_schemas[$provider].resource_schemas[$resource] // {} |
         {
             resource: $resource,
@@ -49,10 +50,10 @@ if [ -n "$RESOURCE" ]; then
                 | .key
             ]
         }
-    '
+    ' <<< "$SCHEMA"
 else
     # All resources for provider - show which have write-only arguments
-    terraform providers schema -json 2>/dev/null | jq -r --arg provider "$provider_key" '
+    jq -r --arg provider "$provider_key" '
         .provider_schemas[$provider].resource_schemas // {} |
         to_entries |
         map({
@@ -65,5 +66,5 @@ else
             ]
         }) |
         map(select(.write_only_arguments | length > 0))
-    '
+    ' <<< "$SCHEMA"
 fi
