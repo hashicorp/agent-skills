@@ -150,7 +150,7 @@ Steps: []resource.TestStep{
                 knownvalue.StringExact("john-doe")),
             statecheck.ExpectKnownValue("echo.test_krb",
                 tfjsonpath.New("data").AtMapKey("password"),
-                knownvalue.StringRegularExpression(regexp.MustCompile(`^.{12}$`))),
+                knownvalue.StringRegexp(regexp.MustCompile(`^.{12}$`))),
         },
     },
 },
