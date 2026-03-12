@@ -102,7 +102,7 @@ Use with `ExpectKnownValue` to assert attribute values:
 | Type | Example |
 |------|---------|
 | `knownvalue.StringExact("value")` | Exact string match |
-| `knownvalue.StringRegularExpression(regexp.MustCompile(`^arn:`))` | Regex match |
+| `knownvalue.StringRegexp(regexp.MustCompile(`^arn:`))` | Regex match |
 | `knownvalue.Bool(true)` | Boolean value |
 | `knownvalue.Int64Exact(42)` | Exact int64 |
 | `knownvalue.Float64Exact(3.14)` | Exact float64 |
