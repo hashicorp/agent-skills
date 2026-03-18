@@ -64,19 +64,20 @@ test-created resources.
 
 ### Dependencies
 
-When resources have dependencies (e.g., child resources must be deleted before
-parents), specify ordering:
+When resources have ordering requirements (e.g., child resources must be
+deleted before parents), the **parent** sweeper declares children as
+dependencies so they run first:
 
 ```go
-resource.AddTestSweepers("example_widget_child", &resource.Sweeper{
-    Name:         "example_widget_child",
-    Dependencies: []string{"example_widget"},
-    F:            sweepWidgetChildren,
+resource.AddTestSweepers("example_widget", &resource.Sweeper{
+    Name:         "example_widget",
+    Dependencies: []string{"example_widget_child"},
+    F:            sweepWidgets,
 })
 ```
 
-Dependencies run **after** the sweeper that declares them — so the child
-sweeper runs first, then the parent.
+Dependencies run **before** the sweeper that declares them. In this example,
+`example_widget_child` is swept first, then `example_widget`.
 
 ### Shared Client
 

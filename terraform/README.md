@@ -34,6 +34,7 @@ Skills for developing Terraform providers.
 | run-acceptance-tests   | Run and debug provider acceptance tests |
 | provider-actions       | Implement provider actions (lifecycle operations) |
 | provider-resources     | Implement resources and data sources |
+| provider-test-patterns | Acceptance test patterns for terraform-plugin-testing |
 
 ## Installation
 
@@ -65,6 +66,7 @@ npx skills add hashicorp/agent-skills/terraform/provider-development/skills/new-
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/run-acceptance-tests
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-actions
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-resources
+npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-test-patterns
 ```
 
 ## MCP Server
@@ -98,7 +100,8 @@ terraform/
         ├── new-terraform-provider/
         ├── provider-actions/
         ├── provider-resources/
-        └── run-acceptance-tests/
+        ├── run-acceptance-tests/
+        └── provider-test-patterns/
 ```
 
 ## References

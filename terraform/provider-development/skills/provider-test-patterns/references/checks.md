@@ -119,6 +119,12 @@ Use with `ExpectKnownValue` to assert attribute values:
 | `knownvalue.MapSizeExact(1)` | Map has N keys |
 | `knownvalue.ObjectExact(map[string]knownvalue.Check{...})` | Exact object match |
 | `knownvalue.ObjectPartial(map[string]knownvalue.Check{...})` | Object has attributes |
+| `knownvalue.Float32Exact(1.5)` | Exact float32 |
+| `knownvalue.Int32Exact(42)` | Exact int32 |
+| `knownvalue.NumberExact(big.NewFloat(42))` | Exact number (`*big.Float`) |
+| `knownvalue.TupleExact([]knownvalue.Check{...})` | Exact tuple match |
+| `knownvalue.TuplePartial(map[int]knownvalue.Check{0: ...})` | Partial tuple match |
+| `knownvalue.TupleSizeExact(3)` | Tuple has N elements |
 
 ### Nested Value Example
 
