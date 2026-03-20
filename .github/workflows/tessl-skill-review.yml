@@ -112,7 +112,7 @@ jobs:
           DETAILS=""
 
           # Create temporary file for cache entries
-          CACHE_FILE_TEMP=$(mktemp)
+          CACHE_FILE_TEMP="cache-entries.tsv"
           echo "Cache entries file: $CACHE_FILE_TEMP"
 
           while IFS= read -r dir; do
@@ -319,72 +319,13 @@ jobs:
             exit 1
           fi
 
-      - name: Update review cache
-        if: always() && steps.update-cache.outcome == 'success' || steps.detect.outputs.skills != ''
-        id: update-cache
-        run: |
-          CACHE_FILE=".github/.tessl/skill-review-cache.json"
-          mkdir -p .github/.tessl
-
-          # Load existing cache or create new structure
-          if [[ -f "$CACHE_FILE" ]]; then
-            if CACHE=$(cat "$CACHE_FILE" 2>&1); then
-              if ! echo "$CACHE" | jq empty 2>/dev/null; then
-                echo "::warning::Cache file is invalid JSON, recreating"
-                CACHE='{"version":"1","last_updated":"","skills":{}}'
-              fi
-            else
-              echo "::warning::Cache file exists but cannot be read: $CACHE"
-              CACHE='{"version":"1","last_updated":"","skills":{}}'
-            fi
-          else
-            echo "Creating new cache file..."
-            CACHE='{"version":"1","last_updated":"","skills":{}}'
-          fi
-
-          # Update timestamp
-          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          if ! CACHE=$(echo "$CACHE" | jq --arg ts "$TIMESTAMP" '.last_updated = $ts'); then
-            echo "::error::Failed to update cache timestamp"
-            exit 1
-          fi
-
-          # Merge cache updates (using TAB delimiter)
-          MERGED_COUNT=0
-          FAILED_COUNT=0
-
-          while IFS=$'\t' read -r skill_path entry_json; do
-            [[ -z "$skill_path" ]] && continue
-            if NEW_CACHE=$(echo "$CACHE" | jq --arg path "$skill_path" --argjson entry "$entry_json" \
-              '.skills[$path] = $entry' 2>&1); then
-              CACHE="$NEW_CACHE"
-              MERGED_COUNT=$((MERGED_COUNT + 1))
-            else
-              echo "::warning::Failed to merge cache entry for $skill_path: $NEW_CACHE"
-              FAILED_COUNT=$((FAILED_COUNT + 1))
-              continue
-            fi
-          done < "$CACHE_ENTRIES_FILE"
-
-          # Write cache file
-          if ! echo "$CACHE" | jq '.' > "$CACHE_FILE"; then
-            echo "::error::Failed to write cache file"
-            exit 1
-          fi
-
-          # Report accurate merge counts
-          if [[ $FAILED_COUNT -gt 0 ]]; then
-            echo "Cache updated with $MERGED_COUNT entries ($FAILED_COUNT failed)"
-          else
-            echo "Cache updated with $MERGED_COUNT entries"
-          fi
-
-      - name: Upload cache file
-        if: always() && steps.update-cache.outcome == 'success'
+      - name: Upload cache entries artifact
+        if: always() && steps.review.outcome != 'skipped'
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: skill-review-cache
-          path: .github/.tessl/skill-review-cache.json
+          name: cache-entries
+          path: cache-entries.tsv
+          retention-days: 1
 
       - name: Save PR comment artifact
         if: >-
@@ -408,48 +349,3 @@ jobs:
         with:
           name: skill-review-comment
           path: pr-comment/
-
-  commit-cache:
-    name: Commit Cache
-    runs-on: ubuntu-latest
-    needs: review-skills
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
-
-      - name: Download cache file
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: skill-review-cache
-
-      - name: Move cache to correct location
-        run: |
-          mkdir -p .github/.tessl
-          mv skill-review-cache.json .github/.tessl/skill-review-cache.json
-
-      - name: Check for cache changes
-        id: check
-        run: |
-          if git diff --quiet HEAD .github/.tessl/skill-review-cache.json; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Commit cache
-        if: steps.check.outputs.changed == 'true'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .github/.tessl/skill-review-cache.json
-          git commit -m "chore: update skill review cache [skip ci]"
-          if ! git push; then
-            echo "::error::Failed to push cache update to main"
-            exit 1
-          fi
