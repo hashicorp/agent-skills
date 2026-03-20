@@ -112,7 +112,7 @@ jobs:
           DETAILS=""
 
           # Create temporary file for cache entries
-          CACHE_FILE_TEMP=$(mktemp)
+          CACHE_FILE_TEMP="cache-entries.tsv"
           echo "Cache entries file: $CACHE_FILE_TEMP"
 
           while IFS= read -r dir; do
@@ -320,7 +320,7 @@ jobs:
           fi
 
       - name: Update review cache
-        if: always() && steps.update-cache.outcome == 'success' || steps.detect.outputs.skills != ''
+        if: always() && steps.review.outcome != 'skipped'
         id: update-cache
         run: |
           CACHE_FILE=".github/.tessl/skill-review-cache.json"
@@ -353,18 +353,20 @@ jobs:
           MERGED_COUNT=0
           FAILED_COUNT=0
 
-          while IFS=$'\t' read -r skill_path entry_json; do
-            [[ -z "$skill_path" ]] && continue
-            if NEW_CACHE=$(echo "$CACHE" | jq --arg path "$skill_path" --argjson entry "$entry_json" \
-              '.skills[$path] = $entry' 2>&1); then
-              CACHE="$NEW_CACHE"
-              MERGED_COUNT=$((MERGED_COUNT + 1))
-            else
-              echo "::warning::Failed to merge cache entry for $skill_path: $NEW_CACHE"
-              FAILED_COUNT=$((FAILED_COUNT + 1))
-              continue
-            fi
-          done < "$CACHE_ENTRIES_FILE"
+          if [[ -f "$CACHE_ENTRIES_FILE" ]]; then
+            while IFS=$'\t' read -r skill_path entry_json; do
+              [[ -z "$skill_path" ]] && continue
+              if NEW_CACHE=$(echo "$CACHE" | jq --arg path "$skill_path" --argjson entry "$entry_json" \
+                '.skills[$path] = $entry' 2>&1); then
+                CACHE="$NEW_CACHE"
+                MERGED_COUNT=$((MERGED_COUNT + 1))
+              else
+                echo "::warning::Failed to merge cache entry for $skill_path: $NEW_CACHE"
+                FAILED_COUNT=$((FAILED_COUNT + 1))
+                continue
+              fi
+            done < "$CACHE_ENTRIES_FILE"
+          fi
 
           # Write cache file
           if ! echo "$CACHE" | jq '.' > "$CACHE_FILE"; then
@@ -385,6 +387,14 @@ jobs:
         with:
           name: skill-review-cache
           path: .github/.tessl/skill-review-cache.json
+
+      - name: Upload cache entries artifact
+        if: always() && steps.review.outcome != 'skipped'
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: cache-entries
+          path: cache-entries.tsv
+          retention-days: 1
 
       - name: Save PR comment artifact
         if: >-
