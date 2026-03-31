@@ -1,324 +1,88 @@
 ---
 name: mcp-secrets-workflows
-description: Use Vault MCP Server tools for secrets management workflows. Use when asked about managing secrets with Claude, creating KV mounts via MCP, reading/writing secrets through AI assistants, or automating Vault operations with MCP tools. Covers create_mount, list_mounts, write_secret, read_secret, list_secrets, and delete_secret tool patterns.
+description: Use Vault MCP Server tools for secrets workflows. Use when asked to create mounts, read/write KV secrets, list existing secrets, rotate values, or clean up deprecated paths through an AI assistant. Covers create_mount, list_mounts, write_secret, read_secret, list_secrets, delete_secret, and delete_mount.
 ---
 
 # MCP Secrets Workflows
 
 ## What Are You Trying to Solve?
 
-### "I want to set up a new secrets mount for my app"
-→ Use **create_mount** to create KV mount. [Jump to Mount Management](#mount-management-tools)
+### "I need a new secrets mount for an app"
+Use `create_mount`, then verify with `list_mounts`.
 
-### "I need to store/retrieve secrets via AI assistant"
-→ Use **write_secret** and **read_secret**. [Jump to Secret Tools](#key-value-secret-tools)
+### "I need to store or retrieve secrets"
+Use `write_secret`, `read_secret`, and `list_secrets`.
 
-### "I want to audit what secrets exist"
-→ Use **list_mounts** and **list_secrets**. [Jump to Audit Pattern](#pattern-2-audit-existing-secrets)
+### "I need to rotate a credential safely"
+Use read -> write -> verify sequence.
 
-### "I need to rotate a secret value"
-→ Read → Write new value → Verify. [Jump to Rotate Pattern](#pattern-3-rotate-a-secret)
+### "I need to remove deprecated secrets"
+Use explicit pre-delete checks before `delete_secret` or `delete_mount`.
 
----
+## Quick Tool Map
 
-## How MCP Secrets Workflows Work
+| Goal | Primary tools |
+|------|---------------|
+| Create mount | `create_mount`, `list_mounts` |
+| Read/write values | `write_secret`, `read_secret` |
+| Discover paths | `list_secrets`, `list_mounts` |
+| Rotate value | `read_secret`, `write_secret`, `read_secret` |
+| Delete key/path | `delete_secret` |
+| Delete entire mount | `delete_mount` |
 
-1. **Connect** → AI assistant connects to Vault MCP Server
-2. **Authenticate** → Server uses configured VAULT_TOKEN
-3. **Invoke Tools** → AI uses tools like `write_secret`, `read_secret`
-4. **Vault Operations** → Server translates to Vault API calls
-5. **Audit** → All operations logged in Vault audit log
+## Workflow Patterns
 
----
+### Pattern 1: Bootstrap New App Secrets
 
-## Available MCP Tools
+1. Create mount: `create_mount(type=kv2, path=<app>)`
+2. Write initial values with `write_secret`
+3. Verify written paths with `list_secrets`
 
-| Tool | What It Does |
-|------|--------------|
-| `create_mount` | Create KV, KV v2, or PKI mount |
-| `list_mounts` | List all secrets engine mounts |
-| `delete_mount` | Delete a mount (⚠️ permanent) |
-| `write_secret` | Write key/value to KV mount |
-| `read_secret` | Read secret from KV mount |
-| `list_secrets` | List paths in a mount |
-| `delete_secret` | Delete secret or key |
-
----
-
-## Reference
-
-- [Vault MCP Server GitHub](https://github.com/hashicorp/vault-mcp-server)
-- [Detailed Workflows Reference](references/mcp-secrets-workflows.md)
-
----
-
-## Prerequisites
-
-Before using these workflows, ensure:
-1. Vault MCP Server is running and connected
-2. Your Vault token has appropriate policies
-3. Required secrets engines are enabled
-
----
-
-## Mount Management Tools
-
-### create_mount
-
-Create a new secrets engine mount.
-
-**Parameters:**
-- `type` (required): Mount type - `kv`, `kv2`, `pki`
-- `path` (required): Mount path
-- `description` (optional): Description for the mount
-
-**Example Prompts:**
-```
-"Create a KV v2 secrets engine at path 'myapp'"
-"Set up a new KV mount called 'team-secrets' with description 'Team A secrets'"
-```
-
-**Workflow:**
-```
-1. Tool: create_mount
-   - type: "kv2"
-   - path: "myapp"
-   - description: "Application secrets for MyApp"
-```
-
-### list_mounts
-
-List all secrets engine mounts.
-
-**Parameters:** None
-
-**Example Prompts:**
-```
-"Show me all the secrets engines in Vault"
-"What mounts are available?"
-```
-
-### delete_mount
-
-Delete a secrets engine mount.
-
-**Parameters:**
-- `path` (required): Path of mount to delete
-
-> **Warning**: This permanently deletes all secrets in the mount!
-
-**Example Prompts:**
-```
-"Delete the secrets engine at path 'old-app'"
-"Remove the mount called 'deprecated'"
-```
-
----
-
-## Key-Value Secret Tools
-
-### write_secret
-
-Write a secret to a KV mount.
-
-**Parameters:**
-- `mount` (required): Mount path
-- `path` (required): Secret path within mount
-- `key` (required): Key name
-- `value` (required): Value to store
-
-**Example Prompts:**
-```
-"Store API key 'abc123' at myapp/config"
-"Write database password 'secret' to myapp/db-creds"
-```
-
-**Workflow:**
-```
-1. Tool: write_secret
-   - mount: "myapp"
-   - path: "config"
-   - key: "api_key"
-   - value: "abc123"
-```
-
-### read_secret
-
-Read a secret from a KV mount.
-
-**Parameters:**
-- `mount` (required): Mount path
-- `path` (required): Secret path within mount
-
-**Example Prompts:**
-```
-"Read the secrets at myapp/config"
-"Get the database credentials from myapp/db-creds"
-```
-
-### list_secrets
-
-List secrets under a path.
-
-**Parameters:**
-- `mount` (required): Mount path
-- `path` (optional): Path to list (defaults to root)
-
-**Example Prompts:**
-```
-"List all secrets in myapp"
-"Show what's under myapp/databases/"
-```
-
-### delete_secret
-
-Delete a secret or specific key.
-
-**Parameters:**
-- `mount` (required): Mount path
-- `path` (required): Secret path
-- `key` (optional): Specific key to delete (if omitted, deletes entire secret)
-
-**Example Prompts:**
-```
-"Delete the secret at myapp/old-config"
-"Remove the 'deprecated_key' from myapp/config"
-```
-
----
-
-## Common Workflow Patterns
-
-### Pattern 1: Bootstrap New Application
-
-Complete workflow for setting up secrets for a new application:
-
-```
-Step 1: Create a dedicated KV mount
-  Tool: create_mount
-  - type: "kv2"
-  - path: "newapp"
-  - description: "NewApp production secrets"
-
-Step 2: Write initial secrets
-  Tool: write_secret (multiple calls)
-  - mount: "newapp", path: "config", key: "api_key", value: "<key>"
-  - mount: "newapp", path: "config", key: "secret_key", value: "<secret>"
-  - mount: "newapp", path: "database", key: "connection_string", value: "<conn>"
-
-Step 3: Verify secrets were written
-  Tool: list_secrets
-  - mount: "newapp"
-```
+Use `kv2` by default for versioning and recovery options.
 
 ### Pattern 2: Audit Existing Secrets
 
-Discover and review secrets in a mount:
+1. Enumerate mounts with `list_mounts`
+2. Enumerate paths with `list_secrets`
+3. Read selected paths with `read_secret`
 
-```
-Step 1: List all mounts to find target
-  Tool: list_mounts
-
-Step 2: List secrets in target mount
-  Tool: list_secrets
-  - mount: "myapp"
-
-Step 3: Read specific secrets (iterate through paths)
-  Tool: read_secret
-  - mount: "myapp", path: "config"
-  - mount: "myapp", path: "database"
-```
+Prefer listing before reading to avoid guessing paths.
 
 ### Pattern 3: Rotate a Secret
 
-Update an existing secret value:
+1. Read current secret (`read_secret`) to confirm path and key names
+2. Write new value (`write_secret`)
+3. Re-read (`read_secret`) to verify update
 
-```
-Step 1: Read current secret to verify path
-  Tool: read_secret
-  - mount: "myapp"
-  - path: "config"
+For production rotation, coordinate with downstream consumers before write.
 
-Step 2: Write new value (KV v2 creates new version)
-  Tool: write_secret
-  - mount: "myapp"
-  - path: "config"
-  - key: "api_key"
-  - value: "<new-value>"
+### Pattern 4: Cleanup Deprecated Secrets (Destructive)
 
-Step 3: Verify update
-  Tool: read_secret
-  - mount: "myapp"
-  - path: "config"
-```
+1. Verify target scope with `list_secrets`
+2. Confirm no active consumers
+3. Delete specific values (`delete_secret`) first
+4. Delete mount (`delete_mount`) only when fully unused
 
-### Pattern 4: Clean Up Deprecated Secrets
+Do not run `delete_mount` until steps 1-3 are complete and acknowledged.
 
-Remove old secrets systematically:
+## Safety Checklist for Destructive Operations
 
-```
-Step 1: List secrets to identify targets
-  Tool: list_secrets
-  - mount: "legacy-app"
+Before `delete_secret` or `delete_mount`, confirm:
 
-Step 2: Delete individual secrets
-  Tool: delete_secret
-  - mount: "legacy-app"
-  - path: "old-config"
+- Target path is correct and explicitly listed
+- Secret or mount is no longer used by applications or jobs
+- Recovery plan exists (for KV v1, deletion is permanent)
+- Caller explicitly approved deletion
 
-Step 3: Optionally delete entire mount
-  Tool: delete_mount
-  - path: "legacy-app"
-```
+## Output Expectations
 
----
+When assisting users, return:
 
-## KV v1 vs KV v2 Differences
+- What changed (mount/path/key)
+- What was verified
+- Any follow-up action required by operators or apps
 
-| Aspect | KV v1 | KV v2 |
-|--------|-------|-------|
-| Versioning | No | Yes (keeps history) |
-| Delete behavior | Permanent | Soft delete (can undelete) |
-| Metadata | No | Yes (custom_metadata) |
-| Check-and-set | No | Yes (cas parameter) |
+## References
 
-When using MCP tools:
-- Both versions use the same tool parameters
-- KV v2 automatically versions writes
-- Delete on KV v2 is recoverable via Vault CLI
-
----
-
-## Required Policies
-
-Ensure your Vault token has appropriate permissions:
-
-```hcl
-# Mount management
-path "sys/mounts/*" {
-  capabilities = ["create", "read", "update", "delete", "list"]
-}
-
-# KV v2 secrets
-path "myapp/data/*" {
-  capabilities = ["create", "read", "update", "delete", "list"]
-}
-
-path "myapp/metadata/*" {
-  capabilities = ["list", "read", "delete"]
-}
-```
-
----
-
-## Best Practices
-
-- **Least privilege**: Use tokens with minimal required permissions
-- **Audit trail**: All MCP operations are logged in Vault audit log
-- **KV v2 preferred**: Use versioned secrets for recoverability
-- **Path conventions**: Use consistent naming (e.g., `app/environment/type`)
-- **Sensitive data**: Remember LLM can see secret values - use carefully
-
----
-
-For detailed workflow examples and advanced patterns, see [references/mcp-secrets-workflows.md](references/mcp-secrets-workflows.md).
+- For full parameter tables, examples, and advanced scenarios, see [references/mcp-secrets-workflows.md](references/mcp-secrets-workflows.md)
+- For MCP server setup and transport/security configuration, see [../vault-mcp-server/SKILL.md](../vault-mcp-server/SKILL.md)
