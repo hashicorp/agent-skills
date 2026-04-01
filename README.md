@@ -75,12 +75,6 @@ Each product folder contains plugins, and each plugin contains skills:
             └── SKILL.md
 ```
 
-## Contributing
-
-Want to add skills for a new HashiCorp product? See [CONTRIBUTING.md](CONTRIBUTING.md) and [examples/README.md](examples/README.md) for detailed instructions.
-
-Use the `/new-product` command for interactive scaffolding, or follow the templates in `examples/new-product-template/`.
-
 ## License
 
 MPL-2.0
