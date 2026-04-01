@@ -60,7 +60,6 @@ agent-skills/
 ├── terraform/              # Terraform skills
 ├── packer/                 # Packer skills
 ├── vault/                  # Vault skills
-├── examples/               # Templates for adding new products
 └── README.md
 ```
 
