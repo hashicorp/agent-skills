@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright IBM Corp. 2025, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 # Extract list resources supported by Terraform providers
 # Usage: ./list_resources.sh [provider_name]
 # Requires: terraform, jq
