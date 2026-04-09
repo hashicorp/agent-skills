@@ -35,12 +35,12 @@ When generating Terraform code:
 ```hcl
 # terraform.tf
 terraform {
-  required_version = ">= 1.7"
+  required_version = ">= 1.14"
 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "~> 6.0"
     }
   }
 }
@@ -272,16 +272,17 @@ resource "aws_s3_bucket_public_access_block" "data" {
 
 ```hcl
 terraform {
-  required_version = ">= 1.7"
+  required_version = ">= 1.14"
 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"  # Allow minor updates
+      version = "~> 6.0"  # Allow minor updates
     }
   }
 }
 ```
+Use the latest major version of each provider and the latest minor version of Terraform, unless otherwise constrained by a dependency lock file or by other modules used by the configuration.
 
 **Version constraint operators:**
 - `= 1.0.0` - Exact version
