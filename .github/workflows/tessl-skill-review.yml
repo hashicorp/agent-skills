@@ -204,6 +204,8 @@ jobs:
             DIR_DISPLAY=$(echo "$dir" | tr '|' '/')
             TABLE="${TABLE}\\n| \\`${DIR_DISPLAY}\\` | ${STATUS} | ${AVG_SCORE}% | ${CHANGE} |"
 
+            echo "Validate dimension scores..."
+
             # Calculate dimension scores for cache and details
             DESC_SCORE=$(echo "$JSON" | jq -r '
               (.descriptionJudge.evaluation.scores | to_entries | map(.value.score) | add) * 100 / ((.descriptionJudge.evaluation.scores | length) * 3) | round
@@ -221,6 +223,8 @@ jobs:
               echo "::warning::Invalid content score for $dir: $CONTENT_SCORE, using 0"
               CONTENT_SCORE=0
             fi
+
+            ec
 
             # --- Extract detailed review for collapsible section ---
             DESC_EVAL=$(echo "$JSON" | jq -r '.descriptionJudge.evaluation |
@@ -396,70 +400,70 @@ jobs:
           path: cache-entries.tsv
           retention-days: 1
 
-      - name: Save PR comment artifact
-        if: >-
-          github.event_name == 'pull_request'
-          && steps.detect.outputs.skills != ''
-          && (steps.review.outcome == 'success' || steps.review.outputs.comment != '')
-        env:
-          COMMENT_BODY: ${{ steps.review.outputs.comment }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          mkdir -p pr-comment
-          echo "$PR_NUMBER" > pr-comment/pr_number
-          echo "$COMMENT_BODY" > pr-comment/comment.md
+      # - name: Save PR comment artifact
+      #   if: >-
+      #     github.event_name == 'pull_request'
+      #     && steps.detect.outputs.skills != ''
+      #     && (steps.review.outcome == 'success' || steps.review.outputs.comment != '')
+      #   env:
+      #     COMMENT_BODY: ${{ steps.review.outputs.comment }}
+      #     PR_NUMBER: ${{ github.event.pull_request.number }}
+      #   run: |
+      #     mkdir -p pr-comment
+      #     echo "$PR_NUMBER" > pr-comment/pr_number
+      #     echo "$COMMENT_BODY" > pr-comment/comment.md
 
-      - name: Upload PR comment artifact
-        if: >-
-          github.event_name == 'pull_request'
-          && steps.detect.outputs.skills != ''
-          && (steps.review.outcome == 'success' || steps.review.outputs.comment != '')
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-        with:
-          name: skill-review-comment
-          path: pr-comment/
+      # - name: Upload PR comment artifact
+      #   if: >-
+      #     github.event_name == 'pull_request'
+      #     && steps.detect.outputs.skills != ''
+      #     && (steps.review.outcome == 'success' || steps.review.outputs.comment != '')
+      #   uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      #   with:
+      #     name: skill-review-comment
+      #     path: pr-comment/
 
-  commit-cache:
-    name: Commit Cache
-    runs-on: ubuntu-latest
-    needs: review-skills
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    permissions:
-      contents: write
+  # commit-cache:
+  #   name: Commit Cache
+  #   runs-on: ubuntu-latest
+  #   needs: review-skills
+  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  #   permissions:
+  #     contents: write
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+  #       with:
+  #         fetch-depth: 0
 
-      - name: Download cache file
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: skill-review-cache
+  #     - name: Download cache file
+  #       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+  #       with:
+  #         name: skill-review-cache
 
-      - name: Move cache to correct location
-        run: |
-          mkdir -p .github/.tessl
-          mv skill-review-cache.json .github/.tessl/skill-review-cache.json
+  #     - name: Move cache to correct location
+  #       run: |
+  #         mkdir -p .github/.tessl
+  #         mv skill-review-cache.json .github/.tessl/skill-review-cache.json
 
-      - name: Check for cache changes
-        id: check
-        run: |
-          if git diff --quiet HEAD .github/.tessl/skill-review-cache.json; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
+  #     - name: Check for cache changes
+  #       id: check
+  #       run: |
+  #         if git diff --quiet HEAD .github/.tessl/skill-review-cache.json; then
+  #           echo "changed=false" >> "$GITHUB_OUTPUT"
+  #         else
+  #           echo "changed=true" >> "$GITHUB_OUTPUT"
+  #         fi
 
-      - name: Commit cache
-        if: steps.check.outputs.changed == 'true'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .github/.tessl/skill-review-cache.json
-          git commit -m "chore: update skill review cache [skip ci]"
-          if ! git push; then
-            echo "::error::Failed to push cache update to main"
-            exit 1
-          fi
+  #     - name: Commit cache
+  #       if: steps.check.outputs.changed == 'true'
+  #       run: |
+  #         git config user.name "github-actions[bot]"
+  #         git config user.email "github-actions[bot]@users.noreply.github.com"
+  #         git add .github/.tessl/skill-review-cache.json
+  #         git commit -m "chore: update skill review cache [skip ci]"
+  #         if ! git push; then
+  #           echo "::error::Failed to push cache update to main"
+  #           exit 1
+  #         fi
