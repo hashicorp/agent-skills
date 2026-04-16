@@ -3,7 +3,7 @@ name: terraform-search-import
 description: Discover existing cloud resources using Terraform Search queries and bulk import them into Terraform management. Use when bringing unmanaged infrastructure under Terraform control, auditing cloud resources, or migrating to IaC.
 metadata:
   copyright: Copyright IBM Corp. 2026
-  version: "0.1.0"
+  version: "0.2.0"
 compatibility: Requires Terraform >= 1.14 and providers with list resource support (always use latest provider version)
 ---
 
@@ -259,9 +259,13 @@ import {
 Generated configuration includes all attributes. Clean up by:
 
 1. Remove computed/read-only attributes
-2. Replace hardcoded values with variables
-3. Add proper resource naming
-4. Organize into appropriate files
+1. Replace hardcoded values with variables
+1. Remove computed sensitive values
+1. Remove non-computed sensitive values. If the provider still requires one of the removed arguments, use an ignored write-only placeholder instead.
+1. Remove top-level `timeout` blocks from all resources.
+1. Run `terraform validate` and resolve conflicting generated arguments.
+1. Add proper resource naming
+1. Organize into appropriate files
 
 ```hcl
 # Before: generated
@@ -273,6 +277,12 @@ resource "aws_instance" "all_0" {
   # ... many more attributes
 }
 
+resource "aws_ssm_parameter" "all_0" {
+  type = "SecureString"
+  name = "AccessCode"
+  value = "secret" # Remove - sensitive
+}
+
 # After: cleaned
 resource "aws_instance" "web_server" {
   ami           = var.ami_id
@@ -282,6 +292,17 @@ resource "aws_instance" "web_server" {
   tags = {
     Name        = "web-server"
     Environment = var.environment
+  }
+}
+
+resource "aws_ssm_parameter" "access_code" {
+  type             = "SecureString"
+  name             = "AccessCode"
+  value_wo         = "__imported__"
+  value_wo_version = 1
+
+  lifecycle {
+    ignore_changes = [value, value_wo, value_wo_version]
   }
 }
 ```
