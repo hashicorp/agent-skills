@@ -261,7 +261,7 @@ Generated configuration includes all attributes. Clean up by:
 1. Remove computed/read-only attributes
 1. Replace hardcoded values with variables
 1. Remove computed sensitive values
-1. Remove non-computed sensitive values. If the provider still requires one of the removed arguments, use an ignored write-only placeholder instead.
+1. Remove non-computed sensitive values. If the provider still requires one of the removed arguments, use a write-only placeholder instead. If that write-only attribute requires a paired non-write-only attribute, ignore changes only to the paired non-write-only attribute, not to the write-only attribute itself.
 1. Remove top-level `timeout` blocks from all resources.
 1. Run `terraform validate` and resolve conflicting generated arguments.
 1. Add proper resource naming
@@ -302,7 +302,7 @@ resource "aws_ssm_parameter" "access_code" {
   value_wo_version = 1
 
   lifecycle {
-    ignore_changes = [value, value_wo, value_wo_version]
+    ignore_changes = [value_wo_version]
   }
 }
 ```
