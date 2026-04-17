@@ -10,14 +10,20 @@ metadata:
 
 Generated configuration includes all resource attributes. For correctness, reliability, and security, we tidy Terraform code before committing it to version control and before running `terraform apply`.
 
+1. Temporarily rename the source file to a .tf.bak extension so that `terraform` commands do not read it.
+1. Run `terraform validate`. Resolve conflicting generated arguments. Resolve all other validation errors.
+1. In a temporary directory, save resource schema information for later reference by running `terraform providers schema -json | jq '.provider_schemas | with_entries(.value |= .resource_schemas)' > resource_schemas.json`
 1. Remove computed/read-only attributes
-1. Replace hardcoded values with variables
-1. Remove computed sensitive values
+1. Replace literal values with variables for values that are used 3 or more times
+1. Remove computed sensitive values. A sensitive value is defined as `sensitive: true` by the schema for this resource type.
 1. Remove non-computed sensitive values. If the provider still requires one of the removed arguments, use an equivalent write-only attribute, such as `value_wo` for `value`. Use the `lifecycle` meta-argument to ignore changes to these sensitive attributes.
 1. Remove top-level `timeout` blocks from all resources.
-1. Run `terraform validate` and resolve conflicting generated arguments.
 1. Add proper resource naming
 1. Organize into appropriate files
+1. On completion, restore the original source file name
+1. On completion, print a summary of the most time-intensive actions in this process so that we can refine this skill.
+1. On completion, print a list of all tools used in this process, so that we can speciy an allowlist of tools on the next run.
+1. On completion, print the computer's plan.md file for this process.
 
 ```hcl
 # Before: generated
