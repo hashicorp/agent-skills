@@ -202,7 +202,7 @@ jobs:
             fi
 
             DIR_DISPLAY=$(echo "$dir" | tr '|' '/')
-            TABLE="${TABLE}\\n| \\`${DIR_DISPLAY}\\` | ${STATUS} | ${AVG_SCORE}% | ${CHANGE} |"
+            TABLE="${TABLE}\\n| \`${DIR_DISPLAY}\` | ${STATUS} | ${AVG_SCORE}% | ${CHANGE} |"
 
             # Calculate dimension scores for cache and details
             DESC_SCORE=$(echo "$JSON" | jq -r '
@@ -253,7 +253,7 @@ jobs:
               DETAILS="${DETAILS}---\\n\\n"
             fi
 
-            DETAILS="${DETAILS}\\`\\`\\`\\n${DESC_EVAL}\\n\\n${CONTENT_EVAL}\\n\\`\\`\\`\\n"
+            DETAILS="${DETAILS}\`\`\`\\n${DESC_EVAL}\\n\\n${CONTENT_EVAL}\\n\`\`\`\\n"
 
             if [[ -n "$SUGGESTIONS" ]]; then
               DETAILS="${DETAILS}\\n**Suggestions:**\\n\\n${SUGGESTIONS}\\n"
