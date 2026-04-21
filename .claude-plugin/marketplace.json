@@ -48,6 +48,19 @@
       "strict": false
     },
     {
+      "name": "terraform-policy-controls",
+      "source": "./terraform/policy-controls",
+      "description": "Terraform policy controls skills including HCP Terraform run task result retrieval and analysis.",
+      "version": "1.0.0",
+      "author": {
+        "name": "HashiCorp"
+      },
+      "keywords": ["terraform", "policy-controls", "run-tasks", "policy-enforcement", "hcp-terraform"],
+      "category": "integration",
+      "license": "MPL-2.0",
+      "strict": false
+    },
+    {
       "name": "packer-builders",
       "source": "./packer/builders",
       "description": "Packer builder skills for AWS, Azure, and Windows image creation.",
