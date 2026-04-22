@@ -12,68 +12,19 @@ Generated Terraform configuration includes all resource attributes. For
 correctness, reliability, and security, we tidy Terraform code before we commit
 it to version control and before we run `terraform apply`.
 
-The resource schema analysis needed for computed and sensitive attribute
-cleanup is time-consuming, due to the size of the resource schemas. Analysis
-needs to use local tools in order to avoid slow model calls. Start that work as
-a non-blocking background task as early as possible, let it run while other
-cleanup continues, and only wait for it immediately before the schema-dependent
-cleanup steps. That background task should identify the distinct `TYPE`
-arguments for the `resource` blocks in the input Terraform code, look up the
-schema for each resource types, build a lookup table of sensitive attributes by
-resource type, and build a lookup table of computed attributes by resource type
-that also records whether each computed attribute is optional.
-
-Perform this analysis via a Python script. For future skill optimization, write
-this script to the current working directory.
-
-When editing Terraform `resource` blocks, honor the Terraform resource
-configuration model. Preserve any Terraform-supported built-in resource
-argument or nested block that is already present, including `count`,
-`depends_on`, `for_each`, `provider`, `lifecycle`, `connection`, and
-`provisioner`, along with supported nested arguments and blocks inside them.
-Never remove these Terraform language arguments or blocks during cleanup. Apply
-computed, sensitive, and timeout cleanup only to provider-defined resource
-attributes and provider-defined top-level blocks. For provider-defined
-attributes, remove attributes that are `computed` and not `optional`. Preserve
-attributes that are both `computed` and `optional` unless the configuration
-explicitly sets them to `null`; in that case, remove the null-valued argument
-instead of preserving an explicit `null`.
-
-When editing Terraform `import` blocks, honor the Terraform import
-configuration model. If an existing `import` block passes `terraform validate`,
-it does not need to be edited. Preserve all Terraform-supported `import` block
-arguments, including `to`, `id`, `identity`, `for_each`, and `provider`. Never
-remove a valid `import` block or remove the `provider` argument from one.
-
-<parse_terraform_code_using_python_hcl2_and_hq>
-Prioritize correctness when parsing Terraform code. To do so, use the
-python-hcl2 module in a virtualenv. This module includes the hq command line
-tool. Examples:
-
-* Convert to JSON: `hq '*' <input file> --json`
-* Identity resource blocks with top-level timeouts: `hq 'resource~[select(.timeouts)] | .labels' <input file>`
-* Identity null-valued attributes: `hq '*..attribute:*[select(.value == null)]' <input file>`
-
-Use generic tools such as grep, awk, and sed only as a last resort when parsing Terraform code.
-</parse_terraform_code_using_python_hcl2_and_hq>
-
 The user may specify a priority of either speed or thoroughness. Default to
 thoroughness. If the user prioritizes speed, then skip all schema-dependent
 work and simply use `terraform validate` as a feedback loop to converge on a
 validatable configuration.
 
+When parsing or editing Terraform files (.tf), follow the [correctness
+reference](references/terraform-editing-correctness.md).
+
 1. Temporarily rename the source file to a .tf.bak extension so that
    `terraform` commands do not read it.
-1. Start a non-blocking background task in a temporary directory to collect
-   schema data for the resource types present in the input Terraform code. Save
-   resource schema information for later reference by running `terraform
-   providers schema -json | jq '.provider_schemas | with_entries(.value |=
-   .resource_schemas)' > resource_schemas.json`. Then, trim the JSON structure
-   to only the resource types that are present in the input Terraform code.
-   Then derive a sensitive-attributes lookup table and a computed-attributes
-   lookup table for just those resource types, including whether each computed
-   attribute is optional. Never send the entire schema JSON in a model call --
-   it is too large and too slow.
+1. Start a non-blocking background task in a temporary directory to build
+   resource schema lookup tables, as detailed in
+   [resource-schema-lookup-tables.md](references/resource-schema-lookup-tables.md).
 1. Run `terraform validate`. Resolve conflicting generated provider arguments
    without removing Terraform-supported built-in resource arguments or blocks.
    Resolve all other validation errors.
