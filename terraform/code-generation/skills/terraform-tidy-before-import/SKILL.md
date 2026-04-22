@@ -37,21 +37,13 @@ reference](references/terraform-editing-correctness.md).
    using the computed-attributes lookup table for each resource type. Preserve
    provider-defined attributes that are both `computed` and `optional`, unless
    the configuration explicitly sets them to `null`; in that case, remove the
-   null-valued argument. Do not remove Terraform-supported built-in resource
-   arguments or blocks.
+   null-valued argument.
 1. Remove non-computed sensitive provider-defined attributes. If the provider
-   still requires one of the removed arguments, try to use an equivalent
+   requires one of the removed arguments, try to use an equivalent
    write-only attribute, such as the `value_wo` and `value_wo_version` pair for
-   `value`. Use the sensitive-attributes lookup table to identify the
-   attributes to remove. If the write-only attribute requires a non-write-only
+   `value`. If the write-only attribute requires a non-write-only
    paired attribute, use the `lifecycle` meta-argument to ignore changes only
-   to that paired non-write-only attribute, e.g. `value_wo_version`. Do not add
-   the write-only attribute itself, such as `value_wo`, to `ignore_changes`,
-   and do not re-add the removed sensitive attribute just to ignore it. The
-   write-only attribute itself cannot produce a plan difference, so there is no
-   change to ignore for the write-only attribute itself -- only the paired
-   non-write-only attribute. Do not remove Terraform-supported built-in
-   resource arguments or blocks.
+   to that paired non-write-only attribute, e.g. `value_wo_version`.
 1. Run `terraform validate` as the final validation step. Make a best effort to
    resolve errors before continuing.
 1. On completion, restore the original source file name
