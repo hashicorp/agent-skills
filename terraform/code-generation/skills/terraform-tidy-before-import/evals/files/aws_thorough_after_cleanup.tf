@@ -29,6 +29,7 @@ variable "primary_owner_email" {
 
 resource "aws_ssm_parameter" "unlock_code" {
   provider         = aws
+  arn              = "arn:aws:ssm:us-east-2:904233096703:parameter/UnlockCode"
   data_type        = "text"
   key_id           = "alias/aws/ssm"
   name             = "UnlockCode"
@@ -57,6 +58,7 @@ import {
 
 resource "aws_ssm_parameter" "foo_parameter" {
   provider         = aws
+  arn              = "arn:aws:ssm:us-east-2:904233096703:parameter/foo"
   data_type        = "text"
   name             = "foo"
   region           = var.aws_primary_region
