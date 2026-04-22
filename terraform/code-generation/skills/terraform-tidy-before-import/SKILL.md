@@ -79,11 +79,7 @@ validatable configuration.
    Resolve all other validation errors.
 1. Replace literal values with variables for values that are used 3 or more
    times
-1. Remove top-level provider-defined `timeout` blocks from all resources. Do
-   not remove Terraform-supported arguments such as `connection { timeout = ...
-   }`.
-1. Add proper resource naming
-1. Organize into appropriate files
+1. Remove top-level provider-defined `timeouts` blocks from all resources.
 1. Wait for the background schema-analysis task to finish, then use its lookup
    tables for the remaining schema-dependent cleanup steps.
 1. Remove provider-defined attributes that are `computed` and not `optional` by
@@ -92,13 +88,6 @@ validatable configuration.
    the configuration explicitly sets them to `null`; in that case, remove the
    null-valued argument. Do not remove Terraform-supported built-in resource
    arguments or blocks.
-1. Apply the same rule to computed sensitive provider-defined attributes:
-   remove them only when the schema for this resource type marks them as
-   `computed` and not `optional`, or when a `computed`+`optional` attribute is
-   explicitly set to `null`. A sensitive value is defined as `sensitive: true`
-   by the schema for this resource type. Use the sensitive-attributes lookup
-   table together with the computed-attributes lookup table. Do not remove
-   Terraform-supported built-in resource arguments or blocks.
 1. Remove non-computed sensitive provider-defined attributes. If the provider
    still requires one of the removed arguments, try to use an equivalent
    write-only attribute, such as the `value_wo` and `value_wo_version` pair for
@@ -112,6 +101,8 @@ validatable configuration.
    change to ignore for the write-only attribute itself -- only the paired
    non-write-only attribute. Do not remove Terraform-supported built-in
    resource arguments or blocks.
+1. Run `terraform validate` as the final validation step. Make a best effort to
+   resolve errors before continuing.
 1. On completion, restore the original source file name
 
 ```hcl
