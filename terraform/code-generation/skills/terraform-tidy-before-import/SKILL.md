@@ -17,8 +17,31 @@ thoroughness. If the user prioritizes speed, then skip all schema-dependent
 work and simply use `terraform validate` as a feedback loop to converge on a
 validatable configuration.
 
-When parsing or editing Terraform files (.tf), follow the [correctness
-reference](references/terraform-editing-correctness.md).
+When editing Terraform `resource` blocks, honor the Terraform resource
+configuration model. Preserve any Terraform-supported built-in resource
+argument or nested block that is already present, including `count`,
+`depends_on`, `for_each`, `provider`, `lifecycle`, `connection`, and
+`provisioner`, along with supported nested arguments and blocks inside them.
+Never remove these Terraform language arguments or blocks during cleanup.
+
+When editing Terraform `import` blocks, honor the Terraform import
+configuration model. If an existing `import` block passes `terraform validate`,
+it does not need to be edited. Preserve all Terraform-supported `import` block
+arguments, including `to`, `id`, `identity`, `for_each`, and `provider`. Never
+remove a valid `import` block or remove the `provider` argument from one.
+
+<parse_terraform_code_using_python_hcl2_and_hq>
+Prioritize correctness when parsing Terraform code. To do so, use the
+python-hcl2 module in a virtualenv. This module includes the hq command line
+tool. Examples:
+
+* Convert to JSON: `hq '*' <input file> --json`
+* Identity resource blocks with top-level timeouts: `hq 'resource~[select(.timeouts)] | .labels' <input file>`
+* Identity null-valued attributes: `hq '*..attribute:*[select(.value == null)]' <input file>`
+
+Use generic tools such as grep, awk, and sed only as a last resort when parsing Terraform code.
+</parse_terraform_code_using_python_hcl2_and_hq>
+
 
 1. Temporarily rename the source file to a .tf.bak extension so that
    `terraform` commands do not read it.
@@ -64,16 +87,11 @@ resource "aws_ssm_parameter" "all_0" {
   value = "secret" # Remove - sensitive
 }
 
-# After: cleaned
-resource "aws_instance" "web_server" {
+# After: tidied
+resource "aws_instance" "all_0" {
   ami           = var.ami_id
   instance_type = var.instance_type
   subnet_id     = var.subnet_id
-  
-  tags = {
-    Name        = "web-server"
-    Environment = var.environment
-  }
 }
 
 resource "aws_ssm_parameter" "access_code" {
@@ -84,22 +102,6 @@ resource "aws_ssm_parameter" "access_code" {
 
   lifecycle {
     ignore_changes = [value_wo_version]
-  }
-}
-```
-
-## Import by Identity
-
-Generated imports use identity-based import (Terraform 1.12+):
-
-```hcl
-import {
-  to       = aws_instance.web
-  provider = aws
-  identity = {
-    account_id = "123456789012"
-    id         = "i-0abc123"
-    region     = "us-west-2"
   }
 }
 ```
