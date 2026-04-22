@@ -1,6 +1,6 @@
 ---
 name: terraform-tidy-before-import
-description: Prepares Terraform code for safe and correct import. Resolves validation errors, sensitive attributes, and computed attributes. De-duplicates literal values. Use this before committing generated Terraform code to version control and before running `terraform apply` on generated Terraform code.
+description: Prepares Terraform code for safe and correct import. Resolves validation errors, sensitive attributes, and computed attributes. De-duplicates literal values. Use this before committing generated Terraform code to version control and before importing resources into Terraform.
 license: MPL-2.0
 metadata:
   copyright: Copyright IBM Corp. 2026
