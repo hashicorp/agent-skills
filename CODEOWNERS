@@ -1,2 +1,14 @@
 # Default owner
 * @hashicorp/team-proj-mcp-servers
+
+# Packer skills
+/packer/ @raunaq-iac
+
+# Terraform code generation
+/terraform/code-generation/ @xiehan @NicoletaPopoviciu
+
+# Terraform module generation
+/terraform/module-generation/ @xiehan @NicoletaPopoviciu
+
+# Terraform provider development
+/terraform/provider-development/ @Hashtb
