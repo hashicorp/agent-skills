@@ -1,0 +1,39 @@
+{
+  "name": "vault-credential-generation",
+  "version": "0.2.0",
+  "description": "Generate dynamic credentials for databases, cloud providers, and encryption keys. Covers KV secrets, database credentials, AWS/Azure/GCP credentials, Transit encryption, PKI certificates, and Vault Agent delivery.",
+  "author": "HashiCorp",
+  "homepage": "https://developer.hashicorp.com/vault/docs/secrets",
+  "repository": "https://github.com/hashicorp/agent-skills",
+  "license": "MPL-2.0",
+  "keywords": [
+    "vault",
+    "secrets",
+    "credentials",
+    "dynamic-credentials",
+    "database",
+    "transit",
+    "pki",
+    "vault-agent",
+    "hashicorp"
+  ],
+  "mcpServers": {
+    "vault": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "VAULT_ADDR",
+        "-e",
+        "VAULT_TOKEN",
+        "hashicorp/vault-mcp-server"
+      ],
+      "env": {
+        "VAULT_ADDR": "${VAULT_ADDR}",
+        "VAULT_TOKEN": "${VAULT_TOKEN}"
+      }
+    }
+  }
+}
