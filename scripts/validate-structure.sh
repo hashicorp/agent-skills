@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright IBM Corp. 2025, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 #
 # Validates the agent-skills repository structure
 # Ensures all plugins and skills follow the expected format
