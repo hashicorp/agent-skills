@@ -100,6 +100,11 @@ build {
   sources = ["source.amazon-ebs.windows"]
 
   # Install Chocolatey
+  # NOTE: The iex + DownloadString pattern executes a remote script directly in
+  # memory without verifying its integrity. For production images, consider using
+  # the official signed installer from https://chocolatey.org/install or
+  # verifying the downloaded script's checksum before execution.
+  # See: https://docs.chocolatey.org/en-us/choco/setup/#more-install-options
   provisioner "powershell" {
     inline = [
       "Set-ExecutionPolicy Bypass -Scope Process -Force",
