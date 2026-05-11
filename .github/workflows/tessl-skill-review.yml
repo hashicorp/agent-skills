@@ -202,7 +202,7 @@ jobs:
             fi
 
             DIR_DISPLAY=$(echo "$dir" | tr '|' '/')
-            TABLE="${TABLE}\\n| \\`${DIR_DISPLAY}\\` | ${STATUS} | ${AVG_SCORE}% | ${CHANGE} |"
+            TABLE="${TABLE}\\n| \`${DIR_DISPLAY}\` | ${STATUS} | ${AVG_SCORE}% | ${CHANGE} |"
 
             # Calculate dimension scores for cache and details
             DESC_SCORE=$(echo "$JSON" | jq -r '
@@ -225,13 +225,13 @@ jobs:
             # --- Extract detailed review for collapsible section ---
             DESC_EVAL=$(echo "$JSON" | jq -r '.descriptionJudge.evaluation |
               "  Description: " + ((.scores | to_entries | map(.value.score) | add) * 100 / ((.scores | length) * 3) | round | tostring) + "%\\n" +
-              (.scores | to_entries | map("    \\(.key): \\(.value.score)/3 - \\(.value.reasoning)") | join("\\n")) + "\\n\\n" +
+              (.scores | to_entries | map("    \(.key): \(.value.score)/3 - \(.value.reasoning)") | join("\\n")) + "\\n\\n" +
               "    Assessment: " + .overall_assessment
             ')
 
             CONTENT_EVAL=$(echo "$JSON" | jq -r '.contentJudge.evaluation |
               "  Content: " + ((.scores | to_entries | map(.value.score) | add) * 100 / ((.scores | length) * 3) | round | tostring) + "%\\n" +
-              (.scores | to_entries | map("    \\(.key): \\(.value.score)/3 - \\(.value.reasoning)") | join("\\n")) + "\\n\\n" +
+              (.scores | to_entries | map("    \(.key): \(.value.score)/3 - \(.value.reasoning)") | join("\\n")) + "\\n\\n" +
               "    Assessment: " + .overall_assessment
             ')
 
@@ -253,7 +253,7 @@ jobs:
               DETAILS="${DETAILS}---\\n\\n"
             fi
 
-            DETAILS="${DETAILS}\\`\\`\\`\\n${DESC_EVAL}\\n\\n${CONTENT_EVAL}\\n\\`\\`\\`\\n"
+            DETAILS="${DETAILS}\`\`\`\\n${DESC_EVAL}\\n\\n${CONTENT_EVAL}\\n\`\`\`\\n"
 
             if [[ -n "$SUGGESTIONS" ]]; then
               DETAILS="${DETAILS}\\n**Suggestions:**\\n\\n${SUGGESTIONS}\\n"

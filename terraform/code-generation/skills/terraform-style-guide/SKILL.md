@@ -35,12 +35,12 @@ When generating Terraform code:
 ```hcl
 # terraform.tf
 terraform {
-  required_version = ">= 1.7"
+  required_version = ">= 1.14"
 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"
+      version = "~> 6.0"
     }
   }
 }
@@ -222,66 +222,27 @@ resource "aws_cloudwatch_metric_alarm" "cpu" {
 
 ## Security Best Practices
 
-When generating code, apply security hardening:
-
-- Enable encryption at rest by default
-- Configure private networking where applicable
-- Apply principle of least privilege for security groups
-- Enable logging and monitoring
-- Never hardcode credentials or secrets
-- Mark sensitive outputs with `sensitive = true`
-
-### Example: Secure S3 Bucket
-
-```hcl
-resource "aws_s3_bucket" "data" {
-  bucket = "${var.project}-${var.environment}-data"
-  tags   = local.common_tags
-}
-
-resource "aws_s3_bucket_versioning" "data" {
-  bucket = aws_s3_bucket.data.id
-
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_bucket_server_side_encryption_configuration" "data" {
-  bucket = aws_s3_bucket.data.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm     = "aws:kms"
-      kms_master_key_id = aws_kms_key.s3.arn
-    }
-  }
-}
-
-resource "aws_s3_bucket_public_access_block" "data" {
-  bucket = aws_s3_bucket.data.id
-
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
-```
+Refer to SECURITY.md. It includes guidance on encrypting resources,
+preventing sensitive data in state, and secure configurations.
 
 ## Version Pinning
 
 ```hcl
 terraform {
-  required_version = ">= 1.7"
+  required_version = ">= 1.14"
 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"  # Allow minor updates
+      version = "~> 6.0"
     }
   }
 }
 ```
+
+Use the latest major version of each provider and the latest minor version of
+Terraform, unless otherwise constrained by a dependency lock file or by other
+modules used by the configuration.
 
 **Version constraint operators:**
 - `= 1.0.0` - Exact version
