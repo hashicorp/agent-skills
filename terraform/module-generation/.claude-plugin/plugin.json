@@ -19,7 +19,7 @@
         "--rm",
         "-e", "TFE_TOKEN",
         "-e", "TFE_ADDRESS",
-        "hashicorp/terraform-mcp-server"
+        "hashicorp/terraform-mcp-server:0.5.0"
       ],
       "env": {
         "TFE_TOKEN": "${TFE_TOKEN}",
