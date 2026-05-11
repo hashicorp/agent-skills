@@ -225,13 +225,13 @@ jobs:
             # --- Extract detailed review for collapsible section ---
             DESC_EVAL=$(echo "$JSON" | jq -r '.descriptionJudge.evaluation |
               "  Description: " + ((.scores | to_entries | map(.value.score) | add) * 100 / ((.scores | length) * 3) | round | tostring) + "%\\n" +
-              (.scores | to_entries | map("    \\(.key): \\(.value.score)/3 - \\(.value.reasoning)") | join("\\n")) + "\\n\\n" +
+              (.scores | to_entries | map("    \(.key): \(.value.score)/3 - \(.value.reasoning)") | join("\\n")) + "\\n\\n" +
               "    Assessment: " + .overall_assessment
             ')
 
             CONTENT_EVAL=$(echo "$JSON" | jq -r '.contentJudge.evaluation |
               "  Content: " + ((.scores | to_entries | map(.value.score) | add) * 100 / ((.scores | length) * 3) | round | tostring) + "%\\n" +
-              (.scores | to_entries | map("    \\(.key): \\(.value.score)/3 - \\(.value.reasoning)") | join("\\n")) + "\\n\\n" +
+              (.scores | to_entries | map("    \(.key): \(.value.score)/3 - \(.value.reasoning)") | join("\\n")) + "\\n\\n" +
               "    Assessment: " + .overall_assessment
             ')
 
