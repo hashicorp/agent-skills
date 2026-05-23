@@ -67,6 +67,14 @@ Each product folder contains plugins, and each plugin contains skills:
             └── SKILL.md
 ```
 
+## Community Skills
+
+Third-party skills compatible with the `npx skills` ecosystem:
+
+| Skill | Description | Install |
+|:------|:------------|:--------|
+| [heyneuron/flowhunt-skill](https://github.com/heyneuron/flowhunt-skill) | FlowHunt - automation discovery audit | `npx skills add heyneuron/flowhunt-skill` |
+
 ## License
 
 MPL-2.0
