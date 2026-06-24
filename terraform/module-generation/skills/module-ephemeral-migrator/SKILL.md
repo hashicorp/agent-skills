@@ -7,7 +7,7 @@ description: >
   preserve existing user secrets in state.
 compatibility:
   terraform: "1.11 or later"
-  tools: git, gh CLI, curl, jq
+  tools: git, gh CLI, tfctl, jq
 ---
 
 # Terraform Ephemeral Migration

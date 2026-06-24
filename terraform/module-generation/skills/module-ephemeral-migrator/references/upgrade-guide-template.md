@@ -37,29 +37,20 @@ SECRET_TLS_KEY=$(terraform state pull | jq -r '
 
 ### Step 2: Write secret to HCP Terraform workspace as sensitive variable
 
-```bash
-TFC_TOKEN="<your-api-token>"
-WORKSPACE_ID="<your-workspace-id>"
-TFC_API="https://app.terraform.io/api/v2"
+Authenticate with HCP Terraform if not already logged in:
 
-curl -s \
-  --request POST \
-  --header "Authorization: Bearer $TFC_TOKEN" \
-  --header "Content-Type: application/vnd.api+json" \
-  --data "{
-    \"data\": {
-      \"type\": \"vars\",
-      \"attributes\": {
-        \"key\": \"tls_private_key_data\",
-        \"value\": $(echo "$SECRET_TLS_KEY" | jq -Rs .),
-        \"category\": \"terraform\",
-        \"sensitive\": true,
-        \"description\": \"One-time migration: TLS private key from state\"
-      }
-    }
-  }" \
-  "$TFC_API/workspaces/$WORKSPACE_ID/vars"
+```bash
+tfctl auth login
 ```
+
+Export the secret under the variable name expected by the module, then import it as a sensitive workspace variable:
+
+```bash
+export tls_private_key_data="$SECRET_TLS_KEY"
+tfctl variable import --env="tls_private_key_data" --workspace="<workspace-name>"
+```
+
+`tfctl variable import` automatically marks all imported environment variables as sensitive.
 
 ### Step 3: Upgrade module and apply
 

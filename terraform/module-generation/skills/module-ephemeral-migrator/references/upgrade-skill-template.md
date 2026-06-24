@@ -22,9 +22,8 @@ Existing users: one-time manual step required to preserve secret values.
 ## Prerequisites
 
 - Terraform v1.11+
-- `curl` and `jq`
-- HCP Terraform API token
-- Workspace ID
+- `tfctl` ([install](https://github.com/hashicorp/tfctl-cli)) — authenticated via `tfctl auth login` or `TFCTL_TOKEN`
+- `jq`
 
 ## Step 1: Detect Module Usage
 
@@ -33,13 +32,7 @@ grep -rn 'module "<module-name>"' . --include="*.tf"
 terraform state list | grep 'module\.<module-name>'
 ```
 
-Get workspace ID:
-```bash
-curl -s \
-  --header "Authorization: Bearer $TFC_TOKEN" \
-  "https://app.terraform.io/api/v2/organizations/<org>/workspaces/<workspace-name>" \
-  | jq -r '.data.id'
-```
+Note your workspace name — it is used in all subsequent `tfctl` commands in place of a workspace ID.
 
 ## Step 2: Extract Secret Values into Env Vars
 
@@ -67,39 +60,27 @@ SECRET_RANDOM_PASSWORD=$(terraform state pull | jq -r '
 
 ## Step 3: Write Secrets to HCP Terraform Workspace
 
+Authenticate if not already logged in:
 ```bash
-TFC_TOKEN="<your-api-token>"
-WORKSPACE_ID="<your-workspace-id>"
-TFC_API="https://app.terraform.io/api/v2"
+tfctl auth login
 ```
 
-For each secret:
+For each secret, export it under the module variable name and import it as a sensitive workspace variable:
 ```bash
-curl -s \
-  --request POST \
-  --header "Authorization: Bearer $TFC_TOKEN" \
-  --header "Content-Type: application/vnd.api+json" \
-  --data "{
-    \"data\": {
-      \"type\": \"vars\",
-      \"attributes\": {
-        \"key\": \"<variable_name>\",
-        \"value\": $(echo "$SECRET_TLS_PRIVATE_KEY" | jq -Rs .),
-        \"category\": \"terraform\",
-        \"sensitive\": true,
-        \"description\": \"One-time migration: legacy secret from state\"
-      }
-    }
-  }" \
-  "$TFC_API/workspaces/$WORKSPACE_ID/vars"
+export tls_private_key_data="$SECRET_TLS_PRIVATE_KEY"
+tfctl variable import --env="tls_private_key_data" --workspace="<workspace-name>"
+
+export random_password_data="$SECRET_RANDOM_PASSWORD"
+tfctl variable import --env="random_password_data" --workspace="<workspace-name>"
 ```
 
-Verify (sensitive value not shown):
+`tfctl variable import` automatically marks all environment variables as sensitive.
+
+Verify (sensitive values not shown):
 ```bash
-curl -s \
-  --header "Authorization: Bearer $TFC_TOKEN" \
-  "$TFC_API/workspaces/$WORKSPACE_ID/vars" | \
-  jq '.data[] | {name: .attributes.key, sensitive: .attributes.sensitive}'
+tfctl api /workspaces/{workspace}/vars \
+  -p 'workspace=<workspace-name>' \
+  --jq '.data[] | {name: .attributes.key, sensitive: .attributes.sensitive}'
 ```
 
 ## Step 4: Upgrade Module and Apply
@@ -153,36 +134,30 @@ terraform state list | grep 'module.<module-name>'
 
 Before apply, fetch the latest state version ID:
 ```bash
-STATE_VERSION_ID=$(curl -s \
-  --header "Authorization: Bearer $TFC_TOKEN" \
-  "https://app.terraform.io/api/v2/workspaces/$WORKSPACE_ID/current-state-version" | \
-  jq -r '.data.id')
+STATE_VERSION_ID=$(tfctl api /workspaces/{workspace}/current-state-version \
+  -p 'workspace=<workspace-name>' --jq '.data.id')
 ```
 
-Lock the workspace and restore the previous state version:
+Lock the workspace:
 ```bash
-curl -s \
-  --request POST \
-  --header "Authorization: Bearer $TFC_TOKEN" \
-  --header "Content-Type: application/vnd.api+json" \
-  --data "{\"reason\": \"performing rollback\"}" \
-  "https://app.terraform.io/api/v2/workspaces/$WORKSPACE_ID/actions/lock"
+tfctl api /workspaces/{workspace}/actions/lock -X POST \
+  -p 'workspace=<workspace-name>' \
+  -a 'reason=performing rollback'
+```
 
-curl -s \
-  --request PATCH \
-  --header "Authorization: Bearer $TFC_TOKEN" \
-  --header "Content-Type: application/vnd.api+json" \
-  --data "{
-    \"data\": {
-      \"type\": \"state-versions\",
-      \"relationships\": {
-        \"rollback-state-version\": {
-          \"data\": {\"type\": \"state-versions\", \"id\": \"$STATE_VERSION_ID\"}
-        }
+Restore the previous state version:
+```bash
+jq -n --arg id "$STATE_VERSION_ID" '{
+  data: {
+    type: "state-versions",
+    relationships: {
+      "rollback-state-version": {
+        data: {type: "state-versions", id: $id}
       }
     }
-  }" \
-  "https://app.terraform.io/api/v2/workspaces/$WORKSPACE_ID/state-versions"
+  }
+}' | tfctl api /workspaces/{workspace}/state-versions -X PATCH \
+       -p 'workspace=<workspace-name>' -i -
 ```
 
 After apply, rollback requires re-importing the removed resource — contact module maintainer.
@@ -197,8 +172,8 @@ After apply, rollback requires re-importing the removed resource — contact mod
 
 ### Workspace variable not found in Step 3
 ```bash
-curl -s --header "Authorization: Bearer $TFC_TOKEN" \
-  "$TFC_API/workspaces/$WORKSPACE_ID/vars" | jq '.data[].attributes.key'
+tfctl api /workspaces/{workspace}/vars \
+  -p 'workspace=<workspace-name>' --jq '.data[].attributes.key'
 ```
 
 ## Related
