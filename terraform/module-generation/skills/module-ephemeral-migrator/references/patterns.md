@@ -25,8 +25,8 @@ resource "tls_private_key" "this" {
 variable "tls_private_key_data" {
   description = "Deprecated variable. Contains private key PEM from 1 time migration. Set only when migrating existing deployments to remove secret from state. Leave null for new deployments which will generate their own private key data."
   type        = string
-  ephemeral   = true
-  sensitive   = true
+  ephemeral = true
+  sensitive = true
   default     = null
 }
 
@@ -38,6 +38,9 @@ variable "secret_version" {
 ```
 
 ### main.tf — replace resource
+
+> ⚠️ **`lifecycle { destroy = false }` is mandatory.** A `removed` block without it will
+> **destroy the resource** on the next apply. Never omit this clause.
 
 ```hcl
 removed {
@@ -92,13 +95,16 @@ data "vault_kv_secret_v2" "creds" {
 variable "vault_secret_data" {
   description = "Legacy secret data. Set only when migrating existing deployments. Leave null for new deployments."
   type        = string
-  ephemeral   = true
-  sensitive   = true
+  ephemeral = true
+  sensitive = true
   default     = null
 }
 ```
 
 ### main.tf — replace data source
+
+> ⚠️ **`lifecycle { destroy = false }` is mandatory.** A `removed` block without it will
+> **destroy the resource** on the next apply. Never omit this clause.
 
 ```hcl
 removed {
@@ -146,8 +152,8 @@ resource "aws_secretsmanager_secret_version" "example" {
 variable "secret_string_data" {
   description = "Legacy secret string. Set only when migrating existing deployments."
   type        = string
-  ephemeral   = true
-  sensitive   = true
+  ephemeral = true
+  sensitive = true
   default     = null
 }
 

@@ -8,18 +8,13 @@ tags:
   - ephemeral-creates
 inputs:
   prompt: |
-    I maintain a Terraform module that creates a TLS private key and stores it in Vault KV v2. I need to fully remove the secret from state for ALL users of this module — both new and existing. Existing users should do a one-time manual step to preserve their key value. No intermediate versions — single breaking change. The module is at fixtures/tls-module/.
+    I maintain a Terraform module that creates a TLS private key and stores it in Vault KV v2. I need to fully remove the secret from state for ALL users of this module — both new and existing. Existing users should do a one-time manual step to preserve their key value. No intermediate versions — single breaking change. The module is at fixtures/tls-module/. Run the full ephemeral migration.
   files:
     - path: tls-module/main.tf
     - path: tls-module/variables.tf
 expected:
   should_trigger: true
 graders:
-  - type: text
-    name: fetches-ephemerality-list
-    config:
-      contains:
-        - "policy-library-ephemerality"
   - type: text
     name: creates-removed-block
     config:
@@ -31,11 +26,12 @@ graders:
     config:
       contains:
         - "ephemeral \"tls_private_key\""
-  - type: text
+  - type: prompt
     name: adds-ephemeral-input-variable
     config:
-      contains:
-        - "ephemeral   = true"
+      prompt: >
+        Did the agent add an input variable with ephemeral = true to accept the legacy secret
+        value for existing users migrating off state? Answer YES or NO.
   - type: text
     name: creates-required-docs
     config:

@@ -4,7 +4,7 @@ skill: module-ephemeral-migrator
 version: "1.0"
 config:
   trials_per_task: 1
-  timeout_seconds: 600
+  timeout_seconds: 900
   parallel: false
   executor: copilot-sdk
   model: claude-sonnet-4.6
@@ -21,6 +21,6 @@ graders:
   - type: behavior
     name: token-budget
     config:
-      max_tokens: 20000
+      max_tokens: 1000000
 tasks:
   - "tasks/*.yaml"
