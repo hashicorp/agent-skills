@@ -99,29 +99,29 @@ Then, follow this priority order for managing sensitive attributes:
      special          = true
      override_special = "!#$%&*()-_=+[]{}<>:?"
    }
- 
+
    resource "vault_kv_secret_v2" "example" {
      mount               = vault_mount.kvv2.path
      name                = "secret"
- 
+
      data_json = jsonencode(
        {
          password = "${random_password.password.result}",
        }
      )
    }
- 
+
    # Good
    ephemeral "random_password" "password" {
      length           = 16
      special          = true
      override_special = "!#$%&*()-_=+[]{}<>:?"
    }
- 
+
    resource "vault_kv_secret_v2" "example" {
      mount               = vault_mount.kvv2.path
      name                = "secret"
- 
+
      data_json_wo = jsonencode(
        {
          password = "${ephemeral.random_password.password.result}",
@@ -134,7 +134,7 @@ Then, follow this priority order for managing sensitive attributes:
    If you need to retrieve a secret from a secrets manager to pass
    to a resource, use the `ephemeral` version of the resource to
    retrieve the secret and pass it to another resource.
-   
+
    ```hcl
    # Good
    ephemeral "vault_kv_secret_v2" "db_secret" {
@@ -142,12 +142,12 @@ Then, follow this priority order for managing sensitive attributes:
      mount_id = vault_mount.kvv2.id
      name = vault_kv_secret_v2.db_root.name
    }
-   
+
    resource "vault_database_secret_backend_connection" "postgres" {
      backend       = vault_mount.db.path
      name          = "postrgres-db"
      allowed_roles = ["*"]
-   
+
      postgresql {
        connection_url = "postgresql://{{username}}:{{password}}@localhost:5432/postgres"
        password_authentication = ""
