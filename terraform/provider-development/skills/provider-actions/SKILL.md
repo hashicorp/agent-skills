@@ -18,26 +18,25 @@ Terraform Actions enable imperative operations during the Terraform lifecycle. A
 
 ## File Structure
 
-Actions follow the standard service package structure:
+Most providers keep actions alongside resources in the provider package:
 
 ```
-internal/service/<service>/
+internal/provider/
 ├── <action_name>_action.go       # Action implementation
-├── <action_name>_action_test.go  # Action tests
-└── service_package_gen.go        # Auto-generated service registration
+└── <action_name>_action_test.go  # Action tests
 ```
 
-Documentation structure:
+(Large multi-service providers use `internal/service/<service>/` packages
+instead — follow the target repository's layout.)
+
+Documentation lives with the other generated docs:
 ```
-website/docs/actions/
-└── <service>_<action_name>.html.markdown  # User-facing documentation
+docs/actions/
+└── <action_name>.md              # User-facing documentation
 ```
 
-Changelog entry:
-```
-.changelog/
-└── <pr_number_or_description>.txt  # Release note entry
-```
+(Some older, large providers hand-write
+`website/docs/actions/<name>.html.markdown` instead — match the repo.)
 
 ## Action Schema Definition
 
@@ -69,9 +68,13 @@ func (a *actionType) Schema(ctx context.Context, req action.SchemaRequest, resp 
 **Pay special attention to the schema definition** - common issues after a first draft:
 
 1. **Type Mismatches**
-   - Using `types.String` instead of `fwtypes.String` in model structs
-   - Using `types.StringType` instead of `fwtypes.StringType` in schema
-   - Mixing framework types with plugin-framework types
+   - Model structs use `types.String`/`types.Int64` and schemas use
+     `types.StringType` from
+     `github.com/hashicorp/terraform-plugin-framework/types` — don't mix in
+     types from other packages
+   - Some large providers layer their own custom type package on top (e.g.
+     terraform-provider-aws's internal `fwtypes`); inside such a repo,
+     follow its convention consistently instead of the plain types
 
 2. **List/Map Element Types**
    ```go
@@ -83,7 +86,7 @@ func (a *actionType) Schema(ctx context.Context, req action.SchemaRequest, resp 
    // CORRECT
    "items": schema.ListAttribute{
        Optional:    true,
-       ElementType: fwtypes.StringType,
+       ElementType: types.StringType,
    }
    ```
 
@@ -98,9 +101,9 @@ func (a *actionType) Schema(ctx context.Context, req action.SchemaRequest, resp 
    "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
    ```
 
-5. **Region/Provider Attribute**
-   - Use framework-provided region handling when available
-   - Don't manually define provider-specific config in schema if framework handles it
+5. **Region/Provider Attribute** (multi-region providers, e.g. AWS)
+   - Use the provider's shared region handling when it has one
+   - Don't manually re-define provider-level configuration in an action schema
 
 6. **Nested Attributes**
    - Use appropriate nested object types for complex structures
@@ -125,18 +128,19 @@ The Invoke method contains the action logic:
 func (a *actionType) Invoke(ctx context.Context, req action.InvokeRequest, resp *action.InvokeResponse) {
     var data actionModel
     resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+    if resp.Diagnostics.HasError() {
+        return
+    }
 
-    // Create provider client
-    conn := a.Meta().Client(ctx)
-
-    // Progress updates for long-running operations
-    resp.Progress.Set(ctx, "Starting operation...")
+    // a.client was stored by Configure (from req.ProviderData), the same
+    // pattern resources use.
+    resp.SendProgress(action.InvokeProgressEvent{Message: "Starting operation..."})
 
     // Implement action logic with error handling
     // Use context for timeout management
     // Poll for completion if async operation
 
-    resp.Progress.Set(ctx, "Operation completed")
+    resp.SendProgress(action.InvokeProgressEvent{Message: "Operation completed"})
 }
 ```
 
@@ -185,7 +189,8 @@ resp.Diagnostics.AddError(
 
 ### 4. Provider SDK Integration
 
-- Use provider SDK clients from `a.Meta().<Service>Client(ctx)`
+- Use the API client stored at Configure time (`a.client`), shared with
+  resources and data sources
 - Handle pagination for list operations
 - Implement retry logic for transient failures
 - Use appropriate error types
@@ -199,34 +204,52 @@ resp.Diagnostics.AddError(
 
 ### 6. Polling and Waiting
 
-For operations that require waiting for completion:
+For operations that require waiting for completion, poll on a ticker under
+a context deadline, reporting progress as you go. (Alternatively use
+`retry.StateChangeConf` from
+`github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry`, the same waiter
+primitive resources use.)
 
 ```go
-result, err := wait.WaitForStatus(ctx,
-    func(ctx context.Context) (wait.FetchResult[*ResourceType], error) {
-        // Fetch current status
-        resource, err := findResource(ctx, conn, id)
-        if err != nil {
-            return wait.FetchResult[*ResourceType]{}, err
-        }
-        return wait.FetchResult[*ResourceType]{
-            Status: wait.Status(resource.Status),
-            Value:  resource,
-        }, nil
-    },
-    wait.Options[*ResourceType]{
-        Timeout:            timeout,
-        Interval:           wait.FixedInterval(5 * time.Second),
-        SuccessStates:      []wait.Status{"AVAILABLE", "COMPLETED"},
-        TransitionalStates: []wait.Status{"CREATING", "PENDING"},
-        ProgressInterval:   30 * time.Second,
-        ProgressSink: func(fr wait.FetchResult[any], meta wait.ProgressMeta) {
+ctx, cancel := context.WithTimeout(ctx, timeout)
+defer cancel()
+
+ticker := time.NewTicker(5 * time.Second)
+defer ticker.Stop()
+
+// Poll fast, report slow: progress events cross the plugin protocol, so
+// throttle them instead of emitting one per poll.
+start := time.Now()
+var lastProgress time.Time
+for {
+    res, err := findResource(ctx, a.client, id)
+    if err != nil {
+        resp.Diagnostics.AddError("Error polling operation", fmt.Sprintf("checking status of %s: %s", id, err))
+        return
+    }
+    switch res.Status {
+    case "AVAILABLE", "COMPLETED":
+        resp.SendProgress(action.InvokeProgressEvent{Message: "Operation completed"})
+        return
+    case "CREATING", "PENDING":
+        if time.Since(lastProgress) >= 30*time.Second {
+            lastProgress = time.Now()
             resp.SendProgress(action.InvokeProgressEvent{
-                Message: fmt.Sprintf("Status: %s, Elapsed: %v", fr.Status, meta.Elapsed.Round(time.Second)),
+                Message: fmt.Sprintf("Status: %s, Elapsed: %v", res.Status, time.Since(start).Round(time.Second)),
             })
-        },
-    },
-)
+        }
+    default:
+        resp.Diagnostics.AddError("Operation Failed", fmt.Sprintf("%s entered unexpected status %q", id, res.Status))
+        return
+    }
+
+    select {
+    case <-ctx.Done():
+        resp.Diagnostics.AddError("Operation Timed Out", fmt.Sprintf("%s did not complete within %v", id, timeout))
+        return
+    case <-ticker.C:
+    }
+}
 ```
 
 ## Common Action Patterns
@@ -285,13 +308,13 @@ resource "terraform_data" "trigger" {
 
 ### Available Trigger Events
 
-**Terraform 1.14.0 Supported Events:**
+**Supported events (as of Terraform 1.14):**
 - `before_create` - Before resource creation
 - `after_create` - After resource creation
 - `before_update` - Before resource update
 - `after_update` - After resource update
 
-**Not Supported in Terraform 1.14.0:**
+**Not supported (as of Terraform 1.14; check current release notes):**
 - `before_destroy` - Not available (will cause validation error)
 - `after_destroy` - Not available (will cause validation error)
 
@@ -310,21 +333,20 @@ resource "terraform_data" "trigger" {
 ### Test Pattern
 
 ```go
-func TestAccServiceAction_basic(t *testing.T) {
-    ctx := acctest.Context(t)
-
+func TestAccExampleAction_basic(t *testing.T) {
     resource.ParallelTest(t, resource.TestCase{
-        PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-        ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+        PreCheck:                 func() { testAccPreCheck(t) },
+        ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
         TerraformVersionChecks: []tfversion.TerraformVersionCheck{
             tfversion.SkipBelow(tfversion.Version1_14_0),
         },
         Steps: []resource.TestStep{
             {
                 Config: testAccActionConfig_basic(),
-                Check: resource.ComposeTestCheckFunc(
-                    testAccCheckResourceExists(ctx, "provider_resource.test"),
-                ),
+                ConfigStateChecks: []statecheck.StateCheck{
+                    // assert the observable effect of the action on the
+                    // triggering resource
+                },
             },
         },
     })
@@ -333,47 +355,11 @@ func TestAccServiceAction_basic(t *testing.T) {
 
 ### Test Cleanup with Sweep Functions
 
-Add sweep functions to clean up test resources:
-
-```go
-func sweepResources(region string) error {
-    ctx := context.Background()
-    client := /* get client for region */
-
-    input := &service.ListInput{
-        // Filter for test resources
-    }
-
-    var sweeperErrs *multierror.Error
-
-    pages := service.NewListPaginator(client, input)
-    for pages.HasMorePages() {
-        page, err := pages.NextPage(ctx)
-        if err != nil {
-            sweeperErrs = multierror.Append(sweeperErrs, err)
-            continue
-        }
-
-        for _, item := range page.Items {
-            id := item.Id
-
-            // Skip non-test resources
-            if !strings.HasPrefix(id, "tf-acc-test") {
-                continue
-            }
-
-            _, err := client.Delete(ctx, &service.DeleteInput{
-                Id: id,
-            })
-            if err != nil {
-                sweeperErrs = multierror.Append(sweeperErrs, err)
-            }
-        }
-    }
-
-    return sweeperErrs.ErrorOrNil()
-}
-```
+Actions invoked in tests can leave real resources behind; register sweepers
+(list → filter test-prefixed names → delete) so leaked resources are
+cleanable. Sweepers are not action-specific — use the
+`provider-test-patterns` skill (if available) for the sweep function
+pattern, registration, `TestMain`, and dependency ordering.
 
 ### Testing Best Practices
 
@@ -383,34 +369,30 @@ func sweepResources(region string) error {
 
 **Error Pattern Matching**
 - Terraform wraps action errors with additional context
-- Use flexible regex patterns: `regexache.MustCompile(\`(?s)Error Title.*key phrase\`)`
+- Use flexible regex patterns: `regexp.MustCompile(\`(?s)Error Title.*key phrase\`)`
 
 **Test Patterns Not Applicable to Actions**
 1. Actions trigger on lifecycle events, not config reapplication
-2. Before/After Destroy Tests: Not supported in Terraform 1.14.0
+2. Before/After Destroy Tests: Not supported as of Terraform 1.14
 
 ### Running Tests
 
-Compile test to check for errors:
+Compile-check first, then run the focused acceptance test:
 ```bash
-go test -c -o /dev/null ./internal/service/<service>
+go test -c -o /dev/null ./internal/provider
+TF_ACC=1 go test ./internal/provider -run TestAccExampleAction_ -timeout 60m
 ```
 
-Run specific action tests:
-```bash
-TF_ACC=1 go test ./internal/service/<service> -run TestAccServiceAction_ -v
-```
-
-Run sweep to clean up test resources:
-```bash
-TF_ACC=1 go test ./internal/service/<service> -sweep=<region> -v
-```
+Use the `run-acceptance-tests` skill (if available) for environment variable
+setup, debugging failing tests, and sweeper runs.
 
 ## Documentation Standards
 
-Each action documentation file must include:
+Generate action documentation with `tfplugindocs` where the provider uses
+it (use the `provider-docs` skill, if available, for that workflow). Each
+action documentation page must include:
 
-1. **Front Matter**
+1. **Front Matter** (hand-written legacy layouts only)
    ```yaml
    ---
    subcategory: "Service Name"
@@ -437,16 +419,19 @@ Each action documentation file must include:
    - Include descriptions and defaults
    - Note any validation rules
 
-5. **Documentation Linting**
-   - Run `terrafmt fmt` before submission
-   - Verify with `terrafmt diff`
+5. **Documentation Linting** (optional tooling)
+   - If the repo uses `terrafmt`, run `terrafmt fmt` before submission and
+     verify with `terrafmt diff`
 
-## Changelog Entry Format
+## Changelog Entry Format (provider-specific convention)
 
-Create a changelog entry in `.changelog/` directory:
+Some providers (e.g. terraform-provider-aws) track release notes with
+[go-changelog](https://github.com/hashicorp/go-changelog): one file per PR
+in a `.changelog/` directory. Check the target repo's CONTRIBUTING guide;
+skip this if the repo doesn't use it.
 
 ```
-.changelog/<pr_number_or_description>.txt
+.changelog/<pr_number>.txt
 ```
 
 Content format:
@@ -459,10 +444,10 @@ action/provider_service_action: Brief description of the action
 Before submitting your action implementation:
 
 - [ ] Code compiles: `go build -o /dev/null .`
-- [ ] Tests compile: `go test -c -o /dev/null ./internal/service/<service>`
-- [ ] Code formatted: `make fmt`
-- [ ] Documentation formatted: `terrafmt fmt website/docs/actions/<action>.html.markdown`
-- [ ] Changelog entry created
+- [ ] Tests compile: `go test -c -o /dev/null ./internal/provider`
+- [ ] Code formatted: `gofmt` (or the repo's `make fmt`)
+- [ ] Documentation generated or formatted per the repo's convention
+- [ ] Changelog entry created (if the repo uses one)
 - [ ] Schema uses correct types
 - [ ] All List/Map attributes have ElementType
 - [ ] Progress updates implemented for long operations
