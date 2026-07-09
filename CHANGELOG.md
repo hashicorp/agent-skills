@@ -5,6 +5,7 @@ All notable changes to the HashiCorp Agent Skills.
 ## Unreleased
 
 ### Added
+- `provider-configuration` skill for Terraform provider authentication and credential provider chains
 - `terraform-search-import` skill for discovering existing resources with Terraform Search and bulk import
 
 ## 0.1.0
