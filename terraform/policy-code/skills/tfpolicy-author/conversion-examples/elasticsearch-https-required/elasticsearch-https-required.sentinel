@@ -1,0 +1,68 @@
+# This policy requires resources of type `aws_elasticsearch_domain` have the `tls_security_policy` set to latest policy that is 'Policy-Min-TLS-1-2-PFS-2023-10' and 'enforce_https' set to true for `domain_endpoint_options` attribute.
+
+# Copyright IBM Corp. 2025
+# SPDX-License-Identifier: BUSL-1.1
+
+# Import
+
+import "tfplan/v2" as tfplan
+import "tfresources" as tf
+import "report" as report
+import "collection" as collection
+import "collection/maps" as maps
+
+# Params
+param master_count_value default 3
+
+# Constants
+const = {
+	"policy_name":                       "elasticsearch-https-required",
+	"message":                           "Attribute 'tls_security_policy' must be set to latest policy that is 'Policy-Min-TLS-1-2-PFS-2023-10' and 'enforce_https' set to true for the attribute 'domain_endpoint_options' for 'aws_elasticsearch_domain' resources. Refer to https://docs.aws.amazon.com/securityhub/latest/userguide/es-controls.html#es-8 for more details.",
+	"resource_aws_elasticsearch_domain": "aws_elasticsearch_domain",
+	"enforce_https":                     "enforce_https",
+	"tls_security_policy":               "tls_security_policy",
+	"allowed_tls_latest_policy":         "Policy-Min-TLS-1-2-PFS-2023-10",
+}
+
+# Functions
+
+get_violations = func(resources) {
+	return collection.reject(resources, func(res) {
+		domain_endpoint_options_values = maps.get(res, "values.domain_endpoint_options", [])
+		if domain_endpoint_options_values is empty {
+			return false
+		}
+		tls_security_policy_value = maps.get(domain_endpoint_options_values[0], const.tls_security_policy, null)
+		enforce_https_value = maps.get(domain_endpoint_options_values[0], const.enforce_https, true)
+		if tls_security_policy_value is null {
+			return false
+		}
+		return enforce_https_value is true and tls_security_policy_value == const.allowed_tls_latest_policy
+	})
+}
+
+# Variables
+
+elasticsearch_resources = tf.plan(tfplan.planned_values.resources).type(const.resource_aws_elasticsearch_domain).resources
+violations = get_violations(elasticsearch_resources)
+
+summary = {
+	"policy_name": const.policy_name,
+	"violations": map violations as _, v {
+		{
+			"address":        v.address,
+			"module_address": v.module_address,
+			"message":        const.message,
+		}
+	},
+}
+
+# Outputs
+
+print(report.generate_policy_report(summary))
+
+# Rules
+
+main = rule {
+	violations is empty
+}

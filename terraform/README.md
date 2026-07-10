@@ -36,6 +36,15 @@ Skills for developing Terraform providers.
 | provider-resources     | Implement resources and data sources |
 | provider-test-patterns | Acceptance test patterns for terraform-plugin-testing |
 
+### terraform-policy-code
+
+Skills for HCP Terraform's native policy-as-code engine.
+
+| Skill | Description |
+|-------|-------------|
+| tfpolicy-author | Author `.policy.hcl` files from natural-language requirements or Sentinel source |
+| tfpolicy-test   | Write and debug `.policytest.hcl` test files and resource mocks |
+
 ## Installation
 
 ### Claude Code Plugin
@@ -46,6 +55,7 @@ claude plugin marketplace add hashicorp/agent-skills
 claude plugin install terraform-code-generation@hashicorp
 claude plugin install terraform-module-generation@hashicorp
 claude plugin install terraform-provider-development@hashicorp
+claude plugin install terraform-policy-code@hashicorp
 ```
 
 ### Individual Skills
@@ -67,6 +77,10 @@ npx skills add hashicorp/agent-skills/terraform/provider-development/skills/run-
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-actions
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-resources
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-test-patterns
+
+# Policy code skills
+npx skills add hashicorp/agent-skills/terraform/policy-code/skills/tfpolicy-author
+npx skills add hashicorp/agent-skills/terraform/policy-code/skills/tfpolicy-test
 ```
 
 ## MCP Server
@@ -102,6 +116,13 @@ terraform/
         ├── provider-resources/
         ├── run-acceptance-tests/
         └── provider-test-patterns/
+└── policy-code/
+    ├── .claude-plugin/plugin.json
+    ├── reference/
+    │   └── verified-syntax.md
+    └── skills/
+        ├── tfpolicy-author/
+        └── tfpolicy-test/
 ```
 
 ## References

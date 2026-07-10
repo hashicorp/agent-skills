@@ -1,0 +1,91 @@
+// This policy requires `aws_network_acl` resources to have 'subnet_ids' present.
+
+# Copyright IBM Corp. 2025
+# SPDX-License-Identifier: BUSL-1.1
+
+// Imports
+
+import "tfconfig/v2" as tfconfig
+import "tfresources" as tf
+import "report" as report
+import "collection" as collection
+import "collection/maps" as maps
+import "strings"
+
+// Constants
+
+const = {
+	"policy_name":                          "ec2-network-acl-should-have-subnet-ids",
+	"message":                              "Attribute 'subnet_ids' must be present for 'aws_network_acl' resources or it should include 'subnet_ids' through 'aws_network_acl_association'. Refer to https://docs.aws.amazon.com/securityhub/latest/userguide/ec2-controls.html#ec2-16 for more details.",
+	"resource_aws_network_acl":             "aws_network_acl",
+	"resource_aws_network_acl_association": "aws_network_acl_association",
+	"subnet_ids":                           "subnet_ids",
+	"constant_value":                       "constant_value",
+	"module_prefix":                        "module.",
+}
+
+// Functions
+
+get_violations = func(network_acl_resources, network_acl_association_resources) {
+	return collection.reject(network_acl_resources, func(res) {
+		subnet_id_values = maps.get(res, "config." + const.subnet_ids, [])
+		if (subnet_id_values is empty or subnet_id_values.constant_value is defined) and check_network_acl_association(res.address, network_acl_association_resources) {
+			return false
+		}
+		return true
+	})
+}
+
+check_network_acl_association = func(address, network_acl_association_resources) {
+	if network_acl_association_resources is empty {
+		return true
+	}
+	return collection.find(network_acl_association_resources, func(res) {
+		network_acl_id_reference = get_referenced_resource_address(res, "config.network_acl_id")
+		if network_acl_id_reference is empty {
+			return false
+		}
+		return address is network_acl_id_reference
+	}) is not defined
+}
+
+get_referenced_resource_address = func(res, attr) {
+	references_list = maps.get(res, attr, [])
+	if references_list.references is empty {
+		return ""
+	}
+	referenced_address = references_list.references[1]
+	if strings.has_prefix(res.address, const.module_prefix) {
+		referenced_address = res.module_address + "." + referenced_address
+	}
+	return referenced_address
+}
+
+// Variables
+
+config_resources = tf.config(tfconfig.resources)
+network_acl_resources = config_resources.type(const.resource_aws_network_acl).resources
+network_acl_association_resources = config_resources.type(const.resource_aws_network_acl_association).resources
+
+violations = get_violations(network_acl_resources, network_acl_association_resources)
+
+summary = {
+	"policy_name": const.policy_name,
+	"violations": map violations as _, v {
+		{
+			"address":        v.address,
+			"module_address": v.module_address,
+			"message":        const.message,
+		}
+	},
+}
+
+// Outputs
+
+print(report.generate_policy_report(summary))
+
+// Rules
+
+main = rule {
+	violations is empty
+}
