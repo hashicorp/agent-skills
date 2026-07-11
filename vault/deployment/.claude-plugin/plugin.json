@@ -1,0 +1,39 @@
+{
+  "name": "vault-deployment",
+  "version": "0.2.0",
+  "description": "Deploy and operate Vault in production. Covers Kubernetes integration (VSO, Injector, CSI), high availability, disaster recovery, monitoring, and troubleshooting.",
+  "author": "HashiCorp",
+  "homepage": "https://developer.hashicorp.com/vault/docs/internals",
+  "repository": "https://github.com/hashicorp/agent-skills",
+  "license": "MPL-2.0",
+  "keywords": [
+    "vault",
+    "deployment",
+    "operations",
+    "kubernetes",
+    "vso",
+    "ha",
+    "disaster-recovery",
+    "monitoring",
+    "hashicorp"
+  ],
+  "mcpServers": {
+    "vault": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "VAULT_ADDR",
+        "-e",
+        "VAULT_TOKEN",
+        "hashicorp/vault-mcp-server"
+      ],
+      "env": {
+        "VAULT_ADDR": "${VAULT_ADDR}",
+        "VAULT_TOKEN": "${VAULT_TOKEN}"
+      }
+    }
+  }
+}
