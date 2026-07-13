@@ -1,6 +1,6 @@
 ---
 name: provider-docs
-description: Create, update, and review Terraform provider documentation for Terraform Registry using HashiCorp-recommended patterns, tfplugindocs templates, and schema descriptions. Use when adding or changing provider configuration, resources, data sources, ephemeral resources, list resources, functions, or guides; when validating generated docs; and when troubleshooting missing or incorrect Registry documentation.
+description: Create, update, and review Terraform provider documentation for Terraform Registry using HashiCorp-recommended patterns, tfplugindocs templates, and schema descriptions. Use when adding or changing provider configuration, resources, data sources, ephemeral resources, list resources, functions, actions, or guides; when validating generated docs; and when troubleshooting missing or incorrect Registry documentation.
 ---
 
 # Terraform Provider Docs
@@ -8,7 +8,7 @@ description: Create, update, and review Terraform provider documentation for Ter
 ## Follow This Workflow
 
 1. Confirm scope and documentation targets.
-- Map code changes to the exact doc targets: provider index, resources, data sources, ephemeral resources, list resources, functions, or guides.
+- Map code changes to the exact doc targets: provider index, resources, data sources, ephemeral resources, list resources, functions, actions, or guides.
 - Decide whether content should come from schema descriptions, templates, or both.
 
 2. Write schema descriptions first.
@@ -24,8 +24,10 @@ description: Create, update, and review Terraform provider documentation for Ter
   - `docs/ephemeral-resources/<name>.md.tmpl`
   - `docs/list-resources/<name>.md.tmpl`
   - `docs/functions/<name>.md.tmpl`
+  - `docs/actions/<name>.md.tmpl` (tfplugindocs generates action docs with Terraform v1.14.0+)
   - `docs/guides/<name>.md.tmpl`
 - Keep templates focused on overview and examples; rely on generated sections for field-by-field details.
+- For action pages, follow the structure in `references/hashicorp-provider-docs.md` (Action Pages section): examples must show both the `action` block and the `action_trigger` lifecycle wiring, and actions get no attribute/output section.
 
 4. Generate documentation with `tfplugindocs`.
 - Prefer repository defaults when configured:

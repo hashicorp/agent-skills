@@ -20,7 +20,13 @@ Use these template paths when the corresponding provider objects exist:
 - `docs/ephemeral-resources/<name>.md.tmpl`
 - `docs/list-resources/<name>.md.tmpl`
 - `docs/functions/<name>.md.tmpl`
+- `docs/actions/<name>.md.tmpl`
 - `docs/guides/<name>.md.tmpl`
+
+The Registry renders action pages from `docs/actions/<action>.md`, and
+`tfplugindocs` generates action documentation (including missing template
+scaffolds) with Terraform v1.14.0+. Action example files follow the
+convention `examples/actions/<action_type>/action*.tf`.
 
 ## Generation Workflow
 
@@ -41,6 +47,53 @@ Alternative direct execution:
 ```bash
 go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --provider-name <provider_name>
 ```
+
+## Action Pages
+
+Structure modeled on the largest production example, terraform-provider-aws
+(`website/docs/actions/` — hand-written there because that provider predates
+`tfplugindocs` action support; new providers should generate instead):
+
+- One page per action. H1 uses an `Action:` prefix — `# Action: examplecloud_restart_widget` —
+  parallel to `# Resource:` / `# Data Source:` on sibling pages.
+- Intro paragraph states what the action does and whether it is synchronous
+  or asynchronous, then links to the upstream service documentation for the
+  operation it invokes.
+- `## Example Usage` starts with `### Basic Usage` and must show **both**
+  halves of using an action: the `action` block and the resource-side
+  `lifecycle { action_trigger { ... } }` wiring — an action example without a
+  trigger is not runnable:
+
+  ```terraform
+  action "examplecloud_restart_widget" "example" {
+    config {
+      widget_id = examplecloud_widget.example.id
+    }
+  }
+
+  resource "terraform_data" "trigger" {
+    lifecycle {
+      action_trigger {
+        events  = [after_create, after_update]
+        actions = [action.examplecloud_restart_widget.example]
+      }
+    }
+  }
+  ```
+
+- `## Argument Reference` lists `config` arguments (either flat, or split
+  into required/optional groups). **No attribute/output reference section** —
+  actions produce no state, and including one misleads readers.
+- Callout conventions (while actions remain experimental):
+  - `~> **Note:**` for the preview disclaimer, e.g. "`<action>` is in alpha.
+    Its interface and behavior may change as the feature evolves, and
+    breaking changes are possible."
+  - `!> **Warning:**` when the action causes changes Terraform does not
+    reconcile (e.g. it mutates a resource whose state attributes will be
+    stale until the next refresh) — name the affected attribute and the
+    consequence.
+- If the repo tracks release notes with go-changelog, new actions use the
+  `release-note:new-action` entry type.
 
 ## Release and Publication Constraints
 
