@@ -27,6 +27,7 @@ description: Create, update, and review Terraform provider documentation for Ter
   - `docs/actions/<name>.md.tmpl` (tfplugindocs generates action docs with Terraform v1.14.0+)
   - `docs/guides/<name>.md.tmpl`
 - Keep templates focused on overview and examples; rely on generated sections for field-by-field details.
+- Keep HCL examples in the `examples/` directory — one example per file, pulled into templates with `tffile` — rather than inlined in templates (see Example File Conventions in `references/hashicorp-provider-docs.md`). Examples must not contain `terraform`, `provider`, or `output` blocks.
 - For action pages, follow the structure in `references/hashicorp-provider-docs.md` (Action Pages section): examples must show both the `action` block and the `action_trigger` lifecycle wiring, and actions get no attribute/output section.
 
 4. Generate documentation with `tfplugindocs`.

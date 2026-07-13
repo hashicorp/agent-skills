@@ -28,6 +28,32 @@ The Registry renders action pages from `docs/actions/<action>.md`, and
 scaffolds) with Terraform v1.14.0+. Action example files follow the
 convention `examples/actions/<action_type>/action*.tf`.
 
+## Example File Conventions
+
+Keep example HCL in the `examples/` directory and pull it into templates,
+instead of inlining HCL in `.tmpl` files:
+
+```
+examples/
+├── provider/provider.tf                      # provider block for the index page only
+├── resources/<type>/resource.tf              # picked up by generated templates
+├── data-sources/<type>/data-source.tf
+└── actions/<type>/action.tf
+```
+
+- **One example per file**, referenced from templates with
+  `{{ tffile "examples/resources/examplecloud_widget/resource.tf" }}` —
+  named variants get their own files (`resource-with-tags.tf`), each behind
+  its own heading in the template.
+- **No `terraform`, `provider`, or `output` blocks** in resource, data
+  source, or action examples. Version constraints and provider
+  configuration belong on the provider index page only; outputs distract
+  from the object being documented. (The one exception is
+  `examples/provider/provider.tf`, which exists to show provider
+  configuration.)
+- Keep each example minimal, runnable, and formatted with
+  `terraform fmt` — generated docs render the file verbatim.
+
 ## Generation Workflow
 
 HashiCorp recommends wiring generator execution through `go generate`:
