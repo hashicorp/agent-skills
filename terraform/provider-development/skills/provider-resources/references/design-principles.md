@@ -76,6 +76,13 @@ problems and produces non-deterministic plans.
 - name them with the plural noun; keep filters consistent with the singular
   form
 
+**Ship both for most resources.** Users need the singular form for point
+lookups ("give me this widget by name") and the plural form for enumeration
+("give me every widget matching these filters") — different configurations
+need different shapes of the same data, and adding the missing one later is
+a common feature request. Skip one only when the API genuinely cannot
+support it.
+
 ## Naming
 
 - Resource type: `<provider>_<service?>_<noun>`, all lowercase snake_case,

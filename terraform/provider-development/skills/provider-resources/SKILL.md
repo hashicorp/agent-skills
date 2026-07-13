@@ -28,9 +28,14 @@ for all net-new resources and data sources.** Plugin SDKv2 is for maintaining
 resources that already exist on it; do not write new code against it. A
 provider can serve both during migration by muxing
 ([terraform-plugin-mux](https://developer.hashicorp.com/terraform/plugin/mux)),
-so adopting the Framework never requires a big-bang rewrite. Be cautious
-about *migrating* existing SDKv2 resources: the Framework distinguishes null
-from zero values, so naive migrations change behavior for existing users.
+so adopting the Framework never requires a big-bang rewrite. To tell which
+mode an existing provider is in, check `go.mod`: `terraform-plugin-mux`
+present means it serves both SDKv2 and Framework code; only
+`terraform-plugin-sdk/v2` means SDKv2-only; only
+`terraform-plugin-framework` means Framework-only. Be cautious about
+*migrating* existing SDKv2 resources: the Framework distinguishes null from
+zero values, so naive migrations change behavior for existing users (use the
+`provider-framework-migration` skill, if available).
 
 **References** (load when needed):
 - `references/design-principles.md` — what should (and should not) become a
@@ -505,6 +510,7 @@ Registry publication rules.
 - [ ] Error messages name the operation, type, and identifier
 - [ ] Sensitive attributes marked; every attribute has a description
 - [ ] Docs generated with `tfplugindocs`
+- [ ] Changelog entry added, if the repo tracks release notes (check CONTRIBUTING)
 
 ## References
 
