@@ -49,7 +49,7 @@
     },
     {
       "name": "terraform-policy-code",
-      "source": "./terraform/policy-code",
+      "source": "./terraform/terraform-policy",
       "description": "Terraform Policy skills for authoring .policy.hcl files, writing .policytest.hcl tests, and converting Sentinel policies to Terraform Policy.",
       "version": "1.0.0",
       "author": {

@@ -725,5 +725,5 @@ resource_policy "aws_s3_bucket_versioning" "versioning_enabled" {
 
 ## See Also
 - [`tfpolicy-test`](../tfpolicy-test/SKILL.md) — write `.policytest.hcl` files to validate the policies authored here.
-- [`conversion-examples/`](conversion-examples/) — 16 side-by-side Sentinel + `.policy.hcl` examples with quality labels and per-example READMEs.
+- [`conversion-examples/`](conversion-examples/README.md) — 16 side-by-side Sentinel + `.policy.hcl` examples with quality labels and per-example READMEs.
 - [`../../reference/verified-syntax.md`](../../reference/verified-syntax.md) — shared source-of-truth syntax reference.

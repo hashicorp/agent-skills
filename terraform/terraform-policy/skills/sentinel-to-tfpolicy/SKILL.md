@@ -15,4 +15,4 @@ metadata:
 >
 > All Sentinel conversion knowledge — construct mapping, non-convertible patterns, quality labels, conversion steps, and worked examples — has been consolidated into **[`tfpolicy-author`](../tfpolicy-author/SKILL.md)**, which now covers both authoring from intent and converting from Sentinel.
 >
-> Conversion examples remain available in [`conversion-examples/`](conversion-examples/).
+> Conversion examples remain available in [`conversion-examples/`](../tfpolicy-author/conversion-examples/README.md).

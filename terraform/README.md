@@ -79,8 +79,8 @@ npx skills add hashicorp/agent-skills/terraform/provider-development/skills/prov
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-test-patterns
 
 # Policy code skills
-npx skills add hashicorp/agent-skills/terraform/policy-code/skills/tfpolicy-author
-npx skills add hashicorp/agent-skills/terraform/policy-code/skills/tfpolicy-test
+npx skills add hashicorp/agent-skills/terraform/terraform-policy/skills/tfpolicy-author
+npx skills add hashicorp/agent-skills/terraform/terraform-policy/skills/tfpolicy-test
 ```
 
 ## MCP Server
@@ -116,7 +116,7 @@ terraform/
         ├── provider-resources/
         ├── run-acceptance-tests/
         └── provider-test-patterns/
-└── policy-code/
+└── terraform-policy/
     ├── .claude-plugin/plugin.json
     ├── reference/
     │   └── verified-syntax.md
