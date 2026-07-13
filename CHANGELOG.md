@@ -5,6 +5,7 @@ All notable changes to the HashiCorp Agent Skills.
 ## Unreleased
 
 ### Added
+- `provider-framework-migration` skill for migrating SDKv2 resources to the Plugin Framework
 - `terraform-search-import` skill for discovering existing resources with Terraform Search and bulk import
 
 ## 0.1.0
