@@ -65,7 +65,7 @@ variable "network_config" {
     availability_zones = list(string)
     enable_nat         = bool
   })
-  
+
   validation {
     condition     = can(cidrhost(var.network_config.cidr_block, 0))
     error_message = "CIDR block must be valid IPv4 CIDR."
@@ -105,7 +105,7 @@ output "private_subnet_ids" {
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
   enable_dns_hostnames = true
-  
+
   tags = {
     Name = "production-vpc"
     Environment = "prod"
@@ -116,7 +116,7 @@ resource "aws_subnet" "public_1" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = "us-east-1a"
-  
+
   tags = {
     Name = "public-subnet-1"
     Type = "public"
@@ -127,7 +127,7 @@ resource "aws_subnet" "public_2" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.2.0/24"
   availability_zone = "us-east-1b"
-  
+
   tags = {
     Name = "public-subnet-2"
     Type = "public"
@@ -136,7 +136,7 @@ resource "aws_subnet" "public_2" {
 
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
-  
+
   tags = {
     Name = "production-igw"
   }
@@ -156,7 +156,7 @@ resource "aws_vpc" "main" {
   cidr_block           = var.cidr_block
   enable_dns_hostnames = var.enable_dns_hostnames
   enable_dns_support   = var.enable_dns_support
-  
+
   tags = merge(
     var.tags,
     {
@@ -167,12 +167,12 @@ resource "aws_vpc" "main" {
 
 resource "aws_subnet" "public" {
   for_each = var.create_public_subnets ? toset(var.availability_zones) : []
-  
+
   vpc_id                  = aws_vpc.main.id
   cidr_block              = cidrsubnet(var.cidr_block, 8, index(var.availability_zones, each.value))
   availability_zone       = each.value
   map_public_ip_on_launch = true
-  
+
   tags = merge(
     var.tags,
     {
@@ -185,7 +185,7 @@ resource "aws_subnet" "public" {
 resource "aws_internet_gateway" "main" {
   count  = var.create_public_subnets ? 1 : 0
   vpc_id = aws_vpc.main.id
-  
+
   tags = merge(
     var.tags,
     {
@@ -203,7 +203,7 @@ variable "name" {
 variable "cidr_block" {
   description = "CIDR block for the VPC"
   type        = string
-  
+
   validation {
     condition     = can(cidrhost(var.cidr_block, 0))
     error_message = "Must be a valid IPv4 CIDR block."
@@ -263,11 +263,11 @@ output "internet_gateway_id" {
 # Root configuration using module
 module "vpc" {
   source = "./modules/vpc"
-  
+
   name               = "production"
   cidr_block         = "10.0.0.0/16"
   availability_zones = ["us-east-1a", "us-east-1b", "us-east-1c"]
-  
+
   tags = {
     Environment = "production"
     ManagedBy   = "Terraform"
@@ -331,15 +331,15 @@ Creates a VPC with configurable public and private subnets across multiple avail
 \`\`\`hcl
 module "vpc" {
   source = "./modules/vpc"
-  
+
   name               = "my-vpc"
   cidr_block         = "10.0.0.0/16"
   availability_zones = ["us-east-1a", "us-east-1b"]
-  
+
   create_public_subnets  = true
   create_private_subnets = true
   enable_nat_gateway     = true
-  
+
   tags = {
     Environment = "production"
   }

@@ -97,12 +97,12 @@ required_providers {
     source  = "hashicorp/aws"
     version = "~> 5.7.0"
   }
-  
+
   random = {
     source  = "hashicorp/random"
     version = "~> 3.5.0"
   }
-  
+
   azurerm = {
     source  = "hashicorp/azurerm"
     version = ">= 3.0"
@@ -119,7 +119,7 @@ Configures provider instances.
 ```hcl
 provider "<provider_type>" "<alias>" {
   for_each = <map_or_set>  # Optional
-  
+
   config {
     <provider_arguments>
   }
@@ -166,13 +166,13 @@ Defines infrastructure components to include in the Stack.
 ```hcl
 component "<component_name>" {
   for_each = <map_or_set>  # Optional
-  
+
   source = "<module_source>"
-  
+
   inputs = {
     <input_name> = <value>
   }
-  
+
   providers = {
     <provider_local_name> = provider.<type>.<alias>[<key>]
   }
@@ -394,7 +394,7 @@ Declares components to be removed from the Stack.
 removed {
   from   = component.<component_name>
   source = "<original_module_source>"
-  
+
   providers = {
     <provider_name> = provider.<type>.<alias>
   }
@@ -419,7 +419,7 @@ removed {
 removed {
   from   = component.old_component
   source = "./modules/deprecated-module"
-  
+
   providers = {
     aws = provider.aws.main
   }
@@ -428,7 +428,7 @@ removed {
 removed {
   from   = component.legacy_regional
   source = "registry.terraform.io/example/legacy/aws"
-  
+
   providers = {
     aws    = provider.aws.main
     random = provider.random.main

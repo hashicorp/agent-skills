@@ -272,7 +272,7 @@ Defines rules that automatically approve deployment plans based on specific cond
 ```hcl
 deployment_auto_approve "<rule_name>" {
   deployment_group = deployment_group.<group_name>
-  
+
   check {
     condition = <boolean_expression>
     reason    = "<failure_message>"
@@ -317,7 +317,7 @@ deployment_group "canary" {
 
 deployment_auto_approve "applyable_plans" {
   deployment_group = deployment_group.canary
-  
+
   check {
     condition = context.plan.applyable
     reason    = "Plan must be applyable without errors"
@@ -337,12 +337,12 @@ deployment_group "production" {
 
 deployment_auto_approve "safe_production_changes" {
   deployment_group = deployment_group.production
-  
+
   check {
     condition = context.plan.changes.remove == 0
     reason    = "Production deletions require manual approval"
   }
-  
+
   check {
     condition = context.plan.applyable
     reason    = "Plan must be successful"
@@ -368,17 +368,17 @@ deployment_group "production" {
 # Canary auto-approves with strict checks
 deployment_auto_approve "canary_strict" {
   deployment_group = deployment_group.canary
-  
+
   check {
     condition = context.plan.changes.remove == 0
     reason    = "Canary cannot delete resources"
   }
-  
+
   check {
     condition = context.plan.changes.change <= 5
     reason    = "Canary limited to 5 resource changes"
   }
-  
+
   check {
     condition = context.plan.applyable
     reason    = "Plan must be applyable"
