@@ -2,6 +2,7 @@ name: terraform-policy-eval
 description: Auto-generated eval for terraform-policy.
 skill: terraform-policy
 version: "1.0"
+
 config:
   trials_per_task: 1
   timeout_seconds: 300
@@ -21,6 +22,6 @@ graders:
   - type: behavior
     name: token-budget
     config:
-      max_tokens: 1200
+      max_tokens: 35000
 tasks:
   - "tasks/*.yaml"

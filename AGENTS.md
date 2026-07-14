@@ -28,11 +28,14 @@ agent-skills/
 │           └── provider-resources/
 │   └── terraform-policy/
 │       ├── .claude-plugin/plugin.json
-│       ├── reference/
+│       ├── SKILL.md
+│       ├── references/
+│       │   ├── tfpolicy-author.md
+│       │   ├── tfpolicy-test.md
 │       │   └── verified-syntax.md
-│       └── skills/
-│           ├── tfpolicy-author/
-│           └── tfpolicy-test/
+│       ├── examples/
+│       │   └── conversion/
+│       └── evals/
 ├── packer/
 │   ├── builders/
 │   │   ├── .claude-plugin/plugin.json
@@ -123,8 +126,7 @@ npx skills add hashicorp/agent-skills/terraform/provider-development/skills/prov
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-resources
 
 # Policy code skills
-npx skills add hashicorp/agent-skills/terraform/terraform-policy/skills/tfpolicy-author
-npx skills add hashicorp/agent-skills/terraform/terraform-policy/skills/tfpolicy-test
+npx skills add hashicorp/agent-skills/terraform/terraform-policy
 
 # Packer builder skills
 npx skills add hashicorp/agent-skills/packer/builders/skills/aws-ami-builder

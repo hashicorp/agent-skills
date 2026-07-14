@@ -5,15 +5,11 @@ license: MPL-2.0
 metadata:
   copyright: Copyright IBM Corp. 2026
   version: "0.1.0"
-  deprecated: true
-  superseded_by:
-    - skills/tfpolicy-author/SKILL.md
-    - skills/tfpolicy-test/SKILL.md
 ---
 
 # terraform-policy
 
-**UTILITY SKILL** — INVOKES: [tfpolicy-author](skills/tfpolicy-author/SKILL.md) | [tfpolicy-test](skills/tfpolicy-test/SKILL.md)
+**UTILITY SKILL** — INVOKES: [tfpolicy-author](references/tfpolicy-author.md) | [tfpolicy-test](references/tfpolicy-test.md)
 
 ## USE FOR:
 
@@ -31,14 +27,14 @@ metadata:
 
 | Task | Sub-skill |
 |------|-----------|
-| Write or convert a `.policy.hcl` policy | [tfpolicy-author](skills/tfpolicy-author/SKILL.md) |
-| Write or debug a `.policytest.hcl` test | [tfpolicy-test](skills/tfpolicy-test/SKILL.md) |
+| Write or convert a `.policy.hcl` policy | [tfpolicy-author](references/tfpolicy-author.md) |
+| Write or debug a `.policytest.hcl` test | [tfpolicy-test](references/tfpolicy-test.md) |
 
 ## Examples
 
-- "Block EC2 instances without encryption" → [tfpolicy-author](skills/tfpolicy-author/SKILL.md)
-- "Convert this Sentinel policy to tfpolicy" → [tfpolicy-author](skills/tfpolicy-author/SKILL.md)
-- "Write a policytest for my EBS policy" → [tfpolicy-test](skills/tfpolicy-test/SKILL.md)
+- "Block EC2 instances without encryption" → [tfpolicy-author](references/tfpolicy-author.md)
+- "Convert this Sentinel policy to tfpolicy" → [tfpolicy-author](references/tfpolicy-author.md)
+- "Write a policytest for my EBS policy" → [tfpolicy-test](references/tfpolicy-test.md)
 
 ## Troubleshooting
 

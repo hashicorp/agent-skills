@@ -1,7 +1,7 @@
 # Terraform Policy - Verified Syntax Reference
 
-> **Shared reference** used by all sibling skills in `skills/`:
-> [tfpolicy-author](../skills/tfpolicy-author/SKILL.md) | [tfpolicy-test](../skills/tfpolicy-test/SKILL.md)
+> **Shared reference** used by all sibling skills in `references/`:
+> [tfpolicy-author](tfpolicy-author.md) | [tfpolicy-test](tfpolicy-test.md)
 
 **Last Updated:** 2026-02-24
 **Status:** All patterns user-verified during private beta
@@ -389,17 +389,6 @@ has_region = local.region_value != null
 ```
 **Why:** Cannot test attribute existence before accessing (no `"attr" in attrs` syntax). Must use `core::try()` first.
 
-### ❌ Mistake 3: Missing core:: Prefix
-```hcl
-# Wrong — missing core:: prefix on built-in functions
-filter = try(attrs.encrypted, false) == true        # ❌ should be core::try()
-has_tag = contains(core::keys(attrs.tags), "Env")   # ❌ should be core::contains()
-
-# Correct
-filter = core::try(attrs.encrypted, false) == true
-has_tag = core::contains(core::keys(attrs.tags), "Env")
-```
-**Fix:** Add `core::` prefix to all built-in functions (`core::try()`, `core::contains()`, `core::length()`, etc.). Note: `core::anytrue()` and `core::alltrue()` do NOT exist — use `core::length()` with list comprehension instead.
 
 ### ❌ Mistake 4: Trusting Language Server Errors
 ```hcl
@@ -412,15 +401,6 @@ provider_policy "aws" "example" {
 ```
 **Fix:** Ignore language server errors for `locals` in `provider_policy` - they're false positives
 
-### ❌ Mistake 5: Forgetting core::keys()
-```hcl
-# Wrong - missing core:: prefix
-has_tag = core::contains(keys(attrs.tags), "Environment")
-
-# Correct
-has_tag = core::contains(core::keys(attrs.tags), "Environment")
-```
-**Fix:** Use `core::keys()` with prefix, like all built-in functions
 
 ### ❌ Mistake 6: Filter Without Length Check
 ```hcl
@@ -664,7 +644,7 @@ resource_policy "aws_s3_bucket" "public_access_required" {
   }
 }
 ```
-See the "Performance Trade-offs: Where to Call getresources()" section for the full decision guide.
+See the `core::getresources()` decision guide in Critical Rule 2 above for the full pattern guidance.
 
 ### ❌ Mistake 14: Using core::getdatasource() Inside resource_policy
 ```hcl
@@ -1844,11 +1824,6 @@ locals {
     is_compliant = core::length(local.public_ssh_rules) == 0
 }
 
-# ❌ WRONG — core::anytrue() does NOT exist in tfpolicy runtime
-# Do NOT use this pattern even if it looks cleaner:
-# locals {
-#     is_compliant = !core::anytrue([...])
-# }
 ```
 
 **Benefits:**
@@ -1894,49 +1869,6 @@ resource_policy "aws_security_group" "egress_check" {
 - Easier to maintain and test
 
 ---
-
-### ✅ Performance Trade-offs: Where to Call getresources()
-**Rule:** The choice between top-level caching and inline calls is **NOT a free choice based on preference** — it is determined by whether the filter value comes from `attrs.*`.
-
-**Approach 1: Top-level (Optimal Performance)**
-```hcl
-# Called once total
-locals {
-    all_encryption_configs = core::getresources("aws_s3_bucket_server_side_encryption_configuration", {})
-}
-
-resource_policy "aws_s3_bucket" "check" {
-    locals {
-        # Filter the cached list per bucket
-        matching = [
-            for config in local.all_encryption_configs :
-            config if config.bucket == attrs.bucket
-        ]
-    }
-}
-```
-**Performance:** O(1) - `getresources()` called once regardless of bucket count
-**Use when:** The filter value is a **constant** (literal string, number, or fixed tag value) — NOT a value derived from `attrs.*`. When the HCL-side filter involves `attrs.*` (e.g. `config.bucket == attrs.bucket`), this approach is wrong — use Approach 2 instead.
-
-> ⚠️ **The example above uses `config.bucket == attrs.bucket` for illustration only.** For any child resource type where the filter value comes from `attrs.*` (including S3 security child resources), Approach 2 (inline) is required — see the ⛔ rule in the Decision Guide below.
-
-**Approach 2: Inline with Filter — ⚠️ unreliable on first-time-create plans**
-```hcl
-resource_policy "aws_s3_bucket" "check" {
-    locals {
-        matching = core::getresources("aws_s3_bucket_server_side_encryption_configuration", {
-            bucket = attrs.bucket
-        })
-    }
-}
-```
-**Caveat:** the filter performs equality matching, but when the target attribute on a candidate resource is unknown at plan time (e.g. `bucket = aws_s3_bucket.x.id` for a bucket being created in the same plan), the comparison evaluates to unknown and the engine conservatively includes that candidate. On first-time-create plans you'll get every resource of the type back, not just the matching one. Works correctly on update plans where target values are already known. Verified on terraform 1.15.0-policy20261105 / tfpolicy 0.0.2-beta20260513 / tfpolicy-plugin 0.0.2-beta20260422.
-
-**Decision Guide:**
-- **Approach 1** (top-level cache + HCL filter) — use when the filter value is a **known literal or existing resource ID**. The top-level cache is called once and the unknown-value case is handled explicitly in HCL, making it the preferred pattern for plan-time policies.
-- **Approach 2** (inline direct filter inside `resource_policy`) — use when the filter value is the **current resource's own attribute** (e.g. `{bucket = attrs.bucket}` or `{bucket = attrs.id}`), which cannot be pre-computed at the top level. For resources with an explicit user-specified name attribute (e.g. `aws_s3_bucket.bucket`), using `attrs.bucket` may resolve at plan time even for new resources, because the name is a known literal. Using `attrs.id` (computed by the provider at apply time) only resolves at apply time for new resources — add the comment: *"This policy contains a cross-resource reference that will not resolve during plan time, but the policy will run successfully during apply time."*
-
-> ⛔ **The choice is not optional: if the filter value is derived from `attrs.*`, Approach 2 is required.** Never use Approach 1 (top-level `{}` + HCL for-loop) as a workaround when the filter value comes from the current resource's own attributes. A pattern like `[for r in local.all_X : r if r.link == attrs.Y]` inside a `resource_policy` is always the wrong pattern when inline `core::getresources("X", {link = attrs.Y})` would work.
 
 ---
 
@@ -2002,7 +1934,7 @@ resource_policy "aws_security_group" "comprehensive_check" {
 
 ## Testing
 
-See the [tfpolicy-test skill](../skills/tfpolicy-test/SKILL.md) and its [testing-guide.md](../skills/tfpolicy-test/testing-guide.md) for comprehensive testing guidance.
+See the [tfpolicy-test skill](tfpolicy-test.md) for comprehensive testing guidance.
 
 ### Module mock syntax (two labels required)
 
@@ -2081,7 +2013,7 @@ Verified on tfpolicy 0.0.2-beta20260513.
 
 - **Questions:** team-tf-policy@wwpdl.vnet.ibm.com
 - **Documentation:** See terraform-policy-agent-skill/ directory
-- **Examples:** See the reusable patterns in [`../skills/tfpolicy-author/learning/02-common-patterns.md`](../skills/tfpolicy-author/learning/02-common-patterns.md) and any companion example directories that may exist in your broader beta workspace
+- **Examples:** See the reusable patterns in [`tfpolicy-author.md`](tfpolicy-author.md) and any companion example directories that may exist in your broader beta workspace
 
 ---
 
@@ -2089,4 +2021,4 @@ Verified on tfpolicy 0.0.2-beta20260513.
 **Ready for:** Agent skill usage, documentation generation, policy creation
 **Last Review:** 2026-02-20
 
-> **See Also:** [Quick Start Guide](../skills/tfpolicy-author/learning/01-quick-start.md) | [Common Patterns](../skills/tfpolicy-author/learning/02-common-patterns.md)
+> **See Also:** [Authoring Reference](tfpolicy-author.md)
