@@ -9,7 +9,7 @@ metadata:
 
 # terraform-policy
 
-**UTILITY SKILL** — INVOKES: [tfpolicy-author](references/tfpolicy-author.md) | [tfpolicy-test](references/tfpolicy-test.md)
+**UTILITY SKILL** — INVOKES: [tfpolicy-author](skills/tfpolicy-author/SKILL.md) | [tfpolicy-test](skills/tfpolicy-test/SKILL.md)
 
 ## USE FOR:
 
@@ -27,14 +27,14 @@ metadata:
 
 | Task | Sub-skill |
 |------|-----------|
-| Write or convert a `.policy.hcl` policy | [tfpolicy-author](references/tfpolicy-author.md) |
-| Write or debug a `.policytest.hcl` test | [tfpolicy-test](references/tfpolicy-test.md) |
+| Write or convert a `.policy.hcl` policy | [tfpolicy-author](skills/tfpolicy-author/SKILL.md) |
+| Write or debug a `.policytest.hcl` test | [tfpolicy-test](skills/tfpolicy-test/SKILL.md) |
 
 ## Examples
 
-- "Block EC2 instances without encryption" → [tfpolicy-author](references/tfpolicy-author.md)
-- "Convert this Sentinel policy to tfpolicy" → [tfpolicy-author](references/tfpolicy-author.md)
-- "Write a policytest for my EBS policy" → [tfpolicy-test](references/tfpolicy-test.md)
+- "Block EC2 instances without encryption" → [tfpolicy-author](skills/tfpolicy-author/SKILL.md)
+- "Convert this Sentinel policy to tfpolicy" → [tfpolicy-author](skills/tfpolicy-author/SKILL.md)
+- "Write a policytest for my EBS policy" → [tfpolicy-test](skills/tfpolicy-test/SKILL.md)
 
 ## Troubleshooting
 

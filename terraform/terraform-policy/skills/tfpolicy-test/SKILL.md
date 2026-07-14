@@ -21,8 +21,8 @@ Expert agent for testing Terraform policies. Helps write `.policytest.hcl` files
 - The user is investigating a runner caveat (mocks evaluated regardless of `operations` scope, `expect_failure` not supported on `data` blocks, etc.).
 
 **Do not use this skill when:**
-- The user is writing the policy itself rather than its test — use [`tfpolicy-author`](tfpolicy-author.md).
-- The user is converting a Sentinel test to a `.policytest.hcl` test — start with [`tfpolicy-author`](tfpolicy-author.md), then return here for test-side refinements.
+- The user is writing the policy itself rather than its test — use [`tfpolicy-author`](../tfpolicy-author/SKILL.md).
+- The user is converting a Sentinel test to a `.policytest.hcl` test — start with [`tfpolicy-author`](../tfpolicy-author/SKILL.md), then return here for test-side refinements.
 
 ## Capabilities
 
@@ -84,11 +84,11 @@ The bulk of this skill is the testing guide:
 
 Cross-cutting facts shared with the sibling skills live in:
 
-- [`verified-syntax.md`](verified-syntax.md) — verified Terraform Policy syntax, function names, runtime limitations. Anything in conflict with the testing guide should defer to this file.
+- [`verified-syntax.md`](../../references/verified-syntax.md) — verified Terraform Policy syntax, function names, runtime limitations. Anything in conflict with the testing guide should defer to this file.
 
 ## See Also
-- [`tfpolicy-author`](tfpolicy-author.md) — write the policy under test.
-- [`tfpolicy-author`](tfpolicy-author.md) — migrate Sentinel tests alongside the policies.
+- [`tfpolicy-author`](../tfpolicy-author/SKILL.md) — write the policy under test.
+- [`tfpolicy-author`](../tfpolicy-author/SKILL.md) — migrate Sentinel tests alongside the policies.
 
 ---
 
@@ -1098,7 +1098,7 @@ resource "aws_instance" "fail_no_defaults" {
 
 ## Related
 
-- [Verified Syntax Reference](verified-syntax.md) | [tfpolicy-author skill](tfpolicy-author.md) | [tfpolicy-test skill](tfpolicy-test.md)
+- [Verified Syntax Reference](../../references/verified-syntax.md) | [tfpolicy-author skill](../tfpolicy-author/SKILL.md) | [tfpolicy-test skill](../tfpolicy-test/SKILL.md)
 
 ---
 
@@ -2108,4 +2108,4 @@ resource "aws_instance" "fail_no_defaults" {
 
 ## Related
 
-- [Verified Syntax Reference](verified-syntax.md) | [tfpolicy-author skill](tfpolicy-author.md) | [tfpolicy-test skill](tfpolicy-test.md)
+- [Verified Syntax Reference](../../references/verified-syntax.md) | [tfpolicy-author skill](../tfpolicy-author/SKILL.md) | [tfpolicy-test skill](../tfpolicy-test/SKILL.md)

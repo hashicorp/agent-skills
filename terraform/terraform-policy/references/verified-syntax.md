@@ -1,7 +1,7 @@
 # Terraform Policy - Verified Syntax Reference
 
 > **Shared reference** used by all sibling skills in `references/`:
-> [tfpolicy-author](tfpolicy-author.md) | [tfpolicy-test](tfpolicy-test.md)
+> [tfpolicy-author](../skills/tfpolicy-author/SKILL.md) | [tfpolicy-test](../skills/tfpolicy-test/SKILL.md)
 
 **Last Updated:** 2026-02-24
 **Status:** All patterns user-verified during private beta
@@ -1934,7 +1934,7 @@ resource_policy "aws_security_group" "comprehensive_check" {
 
 ## Testing
 
-See the [tfpolicy-test skill](tfpolicy-test.md) for comprehensive testing guidance.
+See the [tfpolicy-test skill](../skills/tfpolicy-test/SKILL.md) for comprehensive testing guidance.
 
 ### Module mock syntax (two labels required)
 
@@ -2013,7 +2013,7 @@ Verified on tfpolicy 0.0.2-beta20260513.
 
 - **Questions:** team-tf-policy@wwpdl.vnet.ibm.com
 - **Documentation:** See terraform-policy-agent-skill/ directory
-- **Examples:** See the reusable patterns in [`tfpolicy-author.md`](tfpolicy-author.md) and any companion example directories that may exist in your broader beta workspace
+- **Examples:** See the reusable patterns in [`tfpolicy-author.md`](../skills/tfpolicy-author/SKILL.md) and any companion example directories that may exist in your broader beta workspace
 
 ---
 
@@ -2021,4 +2021,4 @@ Verified on tfpolicy 0.0.2-beta20260513.
 **Ready for:** Agent skill usage, documentation generation, policy creation
 **Last Review:** 2026-02-20
 
-> **See Also:** [Authoring Reference](tfpolicy-author.md)
+> **See Also:** [Authoring Reference](../skills/tfpolicy-author/SKILL.md)

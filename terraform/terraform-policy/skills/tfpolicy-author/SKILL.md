@@ -24,7 +24,7 @@ Expert agent for writing Terraform Policies — from either a natural-language r
 - The user is comparing Sentinel and tfpolicy capabilities ("can I express X in tfpolicy?").
 
 **Do not use this skill when:**
-- The user is writing or debugging a `.policytest.hcl` test file — use [`tfpolicy-test`](tfpolicy-test.md).
+- The user is writing or debugging a `.policytest.hcl` test file — use [`tfpolicy-test`](../tfpolicy-test/SKILL.md).
 
 ## Capabilities
 
@@ -522,7 +522,7 @@ Terraform Policy can enforce controls at **plan time** (before `terraform apply`
 
 ### Cannot Convert (Explain the Alternative)
 
-1. **Mocking/testing infrastructure** (`import "tfconfig-functions"`) — tfpolicy uses `.policytest.hcl`. See the [tfpolicy-test skill](tfpolicy-test.md).
+1. **Mocking/testing infrastructure** (`import "tfconfig-functions"`) — tfpolicy uses `.policytest.hcl`. See the [tfpolicy-test skill](../tfpolicy-test/SKILL.md).
 2. **Custom Sentinel imports** — limited plugin support; use HTTP plugins or native functions if available.
 3. **Sentinel simulator / built-in test framework** — replace with `.policytest.hcl` test files.
 4. **Cross-workspace data access** — tfpolicy evaluates a single plan. Use workspace tags (`meta.tfe_workspace.tags`) or external plugins.
@@ -621,9 +621,9 @@ Include the quality label, test success rate (if tests written), any limitations
 
 ---
 
-- [`tfpolicy-author.md`](tfpolicy-author.md) — guided first-policy walkthrough.
-- [`tfpolicy-author.md`](tfpolicy-author.md) — reusable patterns (attribute checks, allowlists, cross-resource enforcement, etc.).
-- [`verified-syntax.md`](verified-syntax.md) — verified syntax tables, runtime limitations, common-mistake corrections. **Source of truth — defer to this file when this SKILL.md disagrees.**
+- [`tfpolicy-author.md`](SKILL.md) — guided first-policy walkthrough.
+- [`tfpolicy-author.md`](SKILL.md) — reusable patterns (attribute checks, allowlists, cross-resource enforcement, etc.).
+- [`verified-syntax.md`](../../references/verified-syntax.md) — verified syntax tables, runtime limitations, common-mistake corrections. **Source of truth — defer to this file when this SKILL.md disagrees.**
 
 ## Usage Instructions — Write a New Policy from User Intent
 
@@ -722,9 +722,9 @@ resource_policy "aws_s3_bucket_versioning" "versioning_enabled" {
 4. Offer simplifications when an exact rule isn't expressible.
 
 ## See Also
-- [`tfpolicy-test`](tfpolicy-test.md) — write `.policytest.hcl` files to validate the policies authored here.
-- [`../examples/README.md`](../examples/README.md) — side-by-side Sentinel + `.policy.hcl` examples with quality labels and per-example READMEs.
-- [`verified-syntax.md`](verified-syntax.md) — shared source-of-truth syntax reference.
+- [`tfpolicy-test`](../tfpolicy-test/SKILL.md) — write `.policytest.hcl` files to validate the policies authored here.
+- [`../../examples/README.md`](../../examples/README.md) — side-by-side Sentinel + `.policy.hcl` examples with quality labels and per-example READMEs.
+- [`verified-syntax.md`](../../references/verified-syntax.md) — shared source-of-truth syntax reference.
 
 ---
 
@@ -755,8 +755,8 @@ When a user asks you to write a Terraform Policy:
 5. [Semantic Versioning](#semantic-versioning)
 
 **See Also:**
-- [Common Patterns](tfpolicy-author.md) - Common policy patterns and examples
-- [tfpolicy-author](tfpolicy-author.md) - Complete authoring reference for this sub-skill
+- [Common Patterns](SKILL.md) - Common policy patterns and examples
+- [tfpolicy-author](SKILL.md) - Complete authoring reference for this sub-skill
 
 ---
 
@@ -900,7 +900,7 @@ provider_policy "aws" "check" {
    - Skip resources that don't need checking
    - Significantly improves performance
 
-**See [Advanced Patterns Guide](tfpolicy-author.md#8--performance-optimization-verified) for detailed performance guidance**
+**See [Advanced Patterns Guide](SKILL.md#8--performance-optimization-verified) for detailed performance guidance**
 
 ---
 
@@ -952,7 +952,7 @@ locals {
 }
 ```
 
-**See [Verified Syntax Reference](verified-syntax.md#4--critical-blocks-vs-attributes-schema-distinction) for complete details**
+**See [Verified Syntax Reference](../../references/verified-syntax.md#4--critical-blocks-vs-attributes-schema-distinction) for complete details**
 
 **Wildcards:**
 ```hcl
@@ -1277,7 +1277,7 @@ enforce {
 
 ---
 
-> **Next:** [Advanced Patterns & Best Practices](tfpolicy-author.md)
+> **Next:** [Advanced Patterns & Best Practices](SKILL.md)
 
 ---
 
@@ -1746,5 +1746,5 @@ resource_policy "aws_cloudwatch_event_bus" "require_attached_policy" {
 ---
 
 
-> **Previous:** [Quick Start Guide](tfpolicy-author.md)
-> **Back to:** [Main README](../README.md)
+> **Previous:** [Quick Start Guide](SKILL.md)
+> **Back to:** [Main README](../../README.md)
