@@ -5,6 +5,8 @@ All notable changes to the HashiCorp Agent Skills.
 ## Unreleased
 
 ### Added
+- `provider-test-patterns` skill for acceptance test patterns with terraform-plugin-testing
+- `provider-docs` skill for Terraform Registry provider documentation with tfplugindocs
 - `terraform-search-import` skill for discovering existing resources with Terraform Search and bulk import
 
 ## 0.1.0

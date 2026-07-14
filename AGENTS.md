@@ -25,7 +25,9 @@ agent-skills/
 │           ├── new-terraform-provider/
 │           ├── run-acceptance-tests/
 │           ├── provider-actions/
-│           └── provider-resources/
+│           ├── provider-docs/
+│           ├── provider-resources/
+│           └── provider-test-patterns/
 ├── packer/
 │   ├── builders/
 │   │   ├── .claude-plugin/plugin.json
@@ -112,7 +114,9 @@ npx skills add hashicorp/agent-skills/terraform/module-generation/skills/terrafo
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/new-terraform-provider
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/run-acceptance-tests
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-actions
+npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-docs
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-resources
+npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-test-patterns
 
 # Packer builder skills
 npx skills add hashicorp/agent-skills/packer/builders/skills/aws-ami-builder
@@ -171,7 +175,9 @@ Skills for developing Terraform providers:
 | `new-terraform-provider` | Scaffold a new Terraform provider |
 | `run-acceptance-tests` | Run and debug provider acceptance tests |
 | `provider-actions` | Implement provider actions (lifecycle operations) |
+| `provider-docs` | Provider documentation with tfplugindocs for the Terraform Registry |
 | `provider-resources` | Implement resources and data sources |
+| `provider-test-patterns` | Acceptance test patterns for terraform-plugin-testing |
 
 ### packer-builders
 
