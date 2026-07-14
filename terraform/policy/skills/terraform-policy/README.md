@@ -8,9 +8,9 @@ Pick the skill that matches the user's journey:
 
 | Journey | Reference |
 | --- | --- |
-| Write a new Terraform Policy from an English description | [**tfpolicy-author**](skills/tfpolicy-author/SKILL.md) |
-| Translate Sentinel (or adjacent OPA/Rego) to Terraform Policy | [**tfpolicy-author**](skills/tfpolicy-author/SKILL.md) |
-| Write or debug a `.policytest.hcl` test, mock resources, reason about the runner | [**tfpolicy-test**](skills/tfpolicy-test/SKILL.md) |
+| Write a new Terraform Policy from an English description | [**tfpolicy-author**](references/tfpolicy-author.md) |
+| Translate Sentinel (or adjacent OPA/Rego) to Terraform Policy | [**tfpolicy-author**](references/tfpolicy-author.md) |
+| Write or debug a `.policytest.hcl` test, mock resources, reason about the runner | [**tfpolicy-test**](references/tfpolicy-test.md) |
 
 ## Repository layout
 

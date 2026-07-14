@@ -16,7 +16,14 @@
       "author": {
         "name": "HashiCorp"
       },
-      "keywords": ["terraform", "hcl", "infrastructure", "iac", "testing", "style-guide"],
+      "keywords": [
+        "terraform",
+        "hcl",
+        "infrastructure",
+        "iac",
+        "testing",
+        "style-guide"
+      ],
       "category": "integration",
       "license": "MPL-2.0",
       "strict": false
@@ -29,7 +36,14 @@
       "author": {
         "name": "HashiCorp"
       },
-      "keywords": ["terraform", "modules", "infrastructure", "iac", "stacks", "refactoring"],
+      "keywords": [
+        "terraform",
+        "modules",
+        "infrastructure",
+        "iac",
+        "stacks",
+        "refactoring"
+      ],
       "category": "integration",
       "license": "MPL-2.0",
       "strict": false
@@ -42,20 +56,34 @@
       "author": {
         "name": "HashiCorp"
       },
-      "keywords": ["terraform", "provider", "plugin-framework", "resources", "testing"],
+      "keywords": [
+        "terraform",
+        "provider",
+        "plugin-framework",
+        "resources",
+        "testing"
+      ],
       "category": "integration",
       "license": "MPL-2.0",
       "strict": false
     },
     {
       "name": "terraform-policy-code",
-      "source": "./terraform/terraform-policy",
+      "source": "./terraform/policy",
       "description": "Terraform Policy skills for authoring .policy.hcl files, writing .policytest.hcl tests, and converting Sentinel policies to Terraform Policy.",
       "version": "1.0.0",
       "author": {
         "name": "HashiCorp"
       },
-      "keywords": ["terraform", "policy", "hcp-terraform", "sentinel", "policy-as-code", "tfpolicy", "enforcement"],
+      "keywords": [
+        "terraform",
+        "policy",
+        "hcp-terraform",
+        "sentinel",
+        "policy-as-code",
+        "tfpolicy",
+        "enforcement"
+      ],
       "category": "integration",
       "license": "MPL-2.0",
       "strict": false
@@ -68,7 +96,15 @@
       "author": {
         "name": "HashiCorp"
       },
-      "keywords": ["packer", "aws", "azure", "windows", "ami", "image", "builder"],
+      "keywords": [
+        "packer",
+        "aws",
+        "azure",
+        "windows",
+        "ami",
+        "image",
+        "builder"
+      ],
       "category": "integration",
       "license": "MPL-2.0",
       "strict": false
@@ -81,7 +117,13 @@
       "author": {
         "name": "HashiCorp"
       },
-      "keywords": ["packer", "hcp-packer", "registry", "metadata", "image-tracking"],
+      "keywords": [
+        "packer",
+        "hcp-packer",
+        "registry",
+        "metadata",
+        "image-tracking"
+      ],
       "category": "integration",
       "license": "MPL-2.0",
       "strict": false
