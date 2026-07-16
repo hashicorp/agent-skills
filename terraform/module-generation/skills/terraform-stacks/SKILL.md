@@ -230,7 +230,7 @@ Use to safely remove components from a Stack. HCP Terraform requires the compone
 removed {
   from   = component.old_component
   source = "./modules/old-module"
-  
+
   providers = {
     aws = provider.aws.this
   }

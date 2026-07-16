@@ -1,0 +1,54 @@
+# This policy requires resources of type `aws_elasticsearch_domain` have the `encrypt_at_rest` should have 'enabled' attribute set to `true`.
+
+# Copyright IBM Corp. 2025
+# SPDX-License-Identifier: BUSL-1.1
+
+# Import
+
+import "tfplan/v2" as tfplan
+import "tfresources" as tf
+import "report" as report
+import "collection" as collection
+import "collection/maps" as maps
+
+# Constants
+const = {
+	"policy_name":                       "elasticsearch-encrypted-at-rest",
+	"message":                           "Attribute 'enabled' must be set to true for the attribute 'encrypt_at_rest' for 'aws_elasticsearch_domain' resources. Refer to https://docs.aws.amazon.com/securityhub/latest/userguide/es-controls.html#es-1 for more details.",
+	"resource_aws_elasticsearch_domain": "aws_elasticsearch_domain",
+}
+
+# Functions
+
+get_violations = func(resources) {
+	return collection.reject(resources, func(res) {
+		encrypt_at_rest_values = maps.get(res, "values.encrypt_at_rest", [])
+		return encrypt_at_rest_values is not empty and encrypt_at_rest_values[0].enabled is true
+	})
+}
+
+# Variables
+
+elasticsearch_resources = tf.plan(tfplan.planned_values.resources).type(const.resource_aws_elasticsearch_domain).resources
+violations = get_violations(elasticsearch_resources)
+
+summary = {
+	"policy_name": const.policy_name,
+	"violations": map violations as _, v {
+		{
+			"address":        v.address,
+			"module_address": v.module_address,
+			"message":        const.message,
+		}
+	},
+}
+
+# Outputs
+
+print(report.generate_policy_report(summary))
+
+# Rules
+
+main = rule {
+	violations is empty
+}

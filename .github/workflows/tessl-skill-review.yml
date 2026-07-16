@@ -34,7 +34,14 @@ jobs:
           node-version: '20'
 
       - name: Install Tessl CLI
-        run: npm install -g @tessl/cli
+        # Pinned: an unpinned install silently picked up the release that
+        # renamed the auth env var (TESSL_API_KEY -> TESSL_TOKEN), breaking
+        # every run from 2026-06-24 onward. Note `tessl skill review` is
+        # deprecated and scheduled for removal after July 2026 — migrate to
+        # `tessl review run <path> --workspace <ws> --json` before bumping
+        # past a version that removes it:
+        # https://docs.tessl.io/improving-your-skills/migrate-from-skill-review
+        run: npm install -g @tessl/cli@0.90.0
 
       - name: Detect changed skills
         id: detect
@@ -104,8 +111,22 @@ jobs:
         id: review
         env:
           SKILLS: ${{ steps.detect.outputs.skills }}
-          TESSL_API_KEY: ${{ secrets.TESSL_API_KEY }}
+          # Tessl CLI >= 0.86 authenticates via TESSL_TOKEN and ignores the
+          # old TESSL_API_KEY variable. Fall back to the legacy secret name
+          # so existing repository configuration keeps working if the token
+          # value is still valid.
+          TESSL_TOKEN: ${{ secrets.TESSL_TOKEN || secrets.TESSL_API_KEY }}
         run: |
+          # GitHub withholds repository secrets from pull requests opened
+          # from forks; without a token the CLI can only fail. Skip with a
+          # notice instead of failing the check — structural validation
+          # still runs in the Validate Structure workflow.
+          if [[ -z "${TESSL_TOKEN}" ]]; then
+            echo "::notice::TESSL_TOKEN is not available (expected for pull requests from forks). Skipping Tessl skill review."
+            echo "skipped=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           FAILED=0
           TABLE="| Skill | Status | Review Score | Change |"
           TABLE="${TABLE}\\n|-------|--------|--------------|--------|"
@@ -119,8 +140,19 @@ jobs:
             [[ -z "$dir" ]] && continue
             echo "::group::Reviewing $dir"
 
-            # Run review with --json flag
-            JSON_OUTPUT=$(tessl skill review --json "$dir" 2>&1)
+            # Run review with --json flag. Guard the command substitution:
+            # this step runs under `bash -e`, so an unguarded failure would
+            # kill the script before the CLI's error output is echoed —
+            # exactly how the TESSL_API_KEY rename went undiagnosed.
+            if ! JSON_OUTPUT=$(tessl skill review --json "$dir" 2>&1); then
+              echo "$JSON_OUTPUT"
+              echo "::endgroup::"
+              echo "::error::tessl skill review failed for ${dir}"
+              DIR_DISPLAY=$(echo "$dir" | tr '|' '/')
+              TABLE="${TABLE}\\n| \`${DIR_DISPLAY}\` | ⚠️ REVIEW ERROR | — | — |"
+              FAILED=1
+              continue
+            fi
             echo "$JSON_OUTPUT"
             echo "::endgroup::"
 
@@ -320,7 +352,7 @@ jobs:
           fi
 
       - name: Update review cache
-        if: always() && steps.review.outcome != 'skipped'
+        if: always() && steps.review.outcome != 'skipped' && steps.review.outputs.skipped != 'true'
         id: update-cache
         run: |
           CACHE_FILE=".github/.tessl/skill-review-cache.json"
@@ -389,7 +421,7 @@ jobs:
           path: .github/.tessl/skill-review-cache.json
 
       - name: Upload cache entries artifact
-        if: always() && steps.review.outcome != 'skipped'
+        if: always() && steps.review.outcome != 'skipped' && steps.review.outputs.skipped != 'true'
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: cache-entries
@@ -400,6 +432,7 @@ jobs:
         if: >-
           github.event_name == 'pull_request'
           && steps.detect.outputs.skills != ''
+          && steps.review.outputs.skipped != 'true'
           && (steps.review.outcome == 'success' || steps.review.outputs.comment != '')
         env:
           COMMENT_BODY: ${{ steps.review.outputs.comment }}
@@ -413,6 +446,7 @@ jobs:
         if: >-
           github.event_name == 'pull_request'
           && steps.detect.outputs.skills != ''
+          && steps.review.outputs.skipped != 'true'
           && (steps.review.outcome == 'success' || steps.review.outputs.comment != '')
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:

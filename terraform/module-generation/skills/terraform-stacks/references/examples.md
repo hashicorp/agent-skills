@@ -64,7 +64,7 @@ required_providers {
 provider "aws" "main" {
   config {
     region = var.aws_region
-    
+
     assume_role_with_web_identity {
       role_arn           = var.role_arn
       web_identity_token = var.identity_token
@@ -77,12 +77,12 @@ provider "aws" "main" {
 ```hcl
 component "webapp" {
   source = "./modules/webapp"
-  
+
   inputs = {
     app_name = var.app_name
     region   = var.aws_region
   }
-  
+
   providers = {
     aws = provider.aws.main
   }
@@ -424,12 +424,12 @@ required_providers {
 provider "aws" "this" {
   config {
     region = var.aws_region
-    
+
     assume_role_with_web_identity {
       role_arn           = var.role_arn
       web_identity_token = var.identity_token
     }
-    
+
     default_tags {
       tags = {
         Environment = var.environment
@@ -448,12 +448,12 @@ locals {
 
 component "vpc" {
   source = "./modules/vpc"
-  
+
   inputs = {
     name_prefix = local.name_prefix
     cidr_block  = "10.0.0.0/16"
   }
-  
+
   providers = {
     aws = provider.aws.this
   }
@@ -461,7 +461,7 @@ component "vpc" {
 
 component "compute" {
   source = "./modules/compute"
-  
+
   inputs = {
     name_prefix    = local.name_prefix
     vpc_id         = component.vpc.vpc_id
@@ -469,7 +469,7 @@ component "compute" {
     instance_count = var.instance_count
     instance_type  = var.instance_type
   }
-  
+
   providers = {
     aws = provider.aws.this
   }
@@ -497,7 +497,7 @@ identity_token "aws" {
 
 locals {
   role_arn = "arn:aws:iam::123456789012:role/terraform-stacks"
-  
+
   environments = {
     dev = {
       region         = "us-east-1"
@@ -609,15 +609,15 @@ required_providers {
 
 provider "aws" "regional" {
   for_each = var.regions
-  
+
   config {
     region = each.value
-    
+
     assume_role_with_web_identity {
       role_arn           = var.role_arn
       web_identity_token = var.identity_token
     }
-    
+
     default_tags {
       tags = {
         Region    = each.value
@@ -633,15 +633,15 @@ provider "aws" "regional" {
 ```hcl
 component "regional_infrastructure" {
   for_each = var.regions
-  
+
   source = "./modules/regional-infra"
-  
+
   inputs = {
     region      = each.value
     app_name    = var.app_name
     name_suffix = each.value
   }
-  
+
   providers = {
     aws = provider.aws.regional[each.value]
   }
@@ -649,7 +649,7 @@ component "regional_infrastructure" {
 
 component "global_route53" {
   source = "./modules/route53"
-  
+
   inputs = {
     app_name     = var.app_name
     domain_name  = "example.com"
@@ -658,7 +658,7 @@ component "global_route53" {
       region => comp.load_balancer_dns
     }
   }
-  
+
   # Use one region's provider for global resources
   providers = {
     aws = provider.aws.regional["us-west-1"]
@@ -749,7 +749,7 @@ required_providers {
 provider "aws" "this" {
   config {
     region = var.aws_region
-    
+
     assume_role_with_web_identity {
       role_arn           = var.role_arn
       web_identity_token = var.identity_token
@@ -762,12 +762,12 @@ provider "aws" "this" {
 ```hcl
 component "vpc" {
   source = "./modules/vpc"
-  
+
   inputs = {
     cidr_block  = var.vpc_cidr
     environment = var.environment
   }
-  
+
   providers = {
     aws = provider.aws.this
   }
@@ -775,12 +775,12 @@ component "vpc" {
 
 component "security_groups" {
   source = "./modules/security-groups"
-  
+
   inputs = {
     vpc_id      = component.vpc.vpc_id
     environment = var.environment
   }
-  
+
   providers = {
     aws = provider.aws.this
   }
@@ -903,7 +903,7 @@ required_providers {
 provider "aws" "this" {
   config {
     region = var.aws_region
-    
+
     assume_role_with_web_identity {
       role_arn           = var.role_arn
       web_identity_token = var.identity_token
@@ -916,14 +916,14 @@ provider "aws" "this" {
 ```hcl
 component "application" {
   source = "./modules/app"
-  
+
   inputs = {
     vpc_id            = var.vpc_id
     subnet_ids        = var.subnet_ids
     security_group_id = var.security_group_id
     instance_count    = var.instance_count
   }
-  
+
   providers = {
     aws = provider.aws.this
   }
@@ -1021,7 +1021,7 @@ required_providers {
 provider "aws" "this" {
   config {
     region = var.aws_region
-    
+
     assume_role_with_web_identity {
       role_arn           = var.aws_role_arn
       web_identity_token = var.aws_identity_token
@@ -1032,11 +1032,11 @@ provider "aws" "this" {
 provider "azurerm" "this" {
   config {
     features {}
-    
+
     subscription_id = var.azure_subscription_id
     tenant_id       = var.azure_tenant_id
     client_id       = var.azure_client_id
-    
+
     use_oidc = true
     oidc_token = var.azure_identity_token
   }
@@ -1047,12 +1047,12 @@ provider "azurerm" "this" {
 ```hcl
 component "aws_infrastructure" {
   source = "./modules/aws-infra"
-  
+
   inputs = {
     region   = var.aws_region
     app_name = var.app_name
   }
-  
+
   providers = {
     aws = provider.aws.this
   }
@@ -1060,12 +1060,12 @@ component "aws_infrastructure" {
 
 component "azure_infrastructure" {
   source = "./modules/azure-infra"
-  
+
   inputs = {
     location = var.azure_location
     app_name = var.app_name
   }
-  
+
   providers = {
     azurerm = provider.azurerm.this
   }
@@ -1164,12 +1164,12 @@ required_providers {
 provider "aws" "this" {
   config {
     region = var.aws_region
-    
+
     assume_role_with_web_identity {
       role_arn           = var.role_arn
       web_identity_token = var.identity_token
     }
-    
+
     default_tags {
       tags = {
         Environment = var.environment
@@ -1193,13 +1193,13 @@ locals {
 
 component "vpc" {
   source = "./modules/vpc"
-  
+
   inputs = {
     name_prefix = local.name_prefix
     cidr_block  = var.vpc_cidr
     azs_count   = 3
   }
-  
+
   providers = {
     aws = provider.aws.this
   }
@@ -1207,12 +1207,12 @@ component "vpc" {
 
 component "security_groups" {
   source = "./modules/security-groups"
-  
+
   inputs = {
     name_prefix = local.name_prefix
     vpc_id      = component.vpc.vpc_id
   }
-  
+
   providers = {
     aws = provider.aws.this
   }
@@ -1220,14 +1220,14 @@ component "security_groups" {
 
 component "rds" {
   source = "./modules/rds"
-  
+
   inputs = {
     name_prefix        = local.name_prefix
     instance_class     = var.db_instance_class
     subnet_ids         = component.vpc.private_subnet_ids
     security_group_ids = [component.security_groups.database_sg_id]
   }
-  
+
   providers = {
     aws    = provider.aws.this
     random = provider.random.this
@@ -1236,11 +1236,11 @@ component "rds" {
 
 component "ecs_cluster" {
   source = "./modules/ecs-cluster"
-  
+
   inputs = {
     name_prefix = local.name_prefix
   }
-  
+
   providers = {
     aws = provider.aws.this
   }
@@ -1248,7 +1248,7 @@ component "ecs_cluster" {
 
 component "ecs_service" {
   source = "./modules/ecs-service"
-  
+
   inputs = {
     name_prefix      = local.name_prefix
     cluster_id       = component.ecs_cluster.cluster_id
@@ -1257,7 +1257,7 @@ component "ecs_service" {
     security_group_id = component.security_groups.app_sg_id
     database_endpoint = component.rds.endpoint
   }
-  
+
   providers = {
     aws = provider.aws.this
   }
@@ -1265,7 +1265,7 @@ component "ecs_service" {
 
 component "alb" {
   source = "./modules/alb"
-  
+
   inputs = {
     name_prefix       = local.name_prefix
     vpc_id            = component.vpc.vpc_id
@@ -1273,7 +1273,7 @@ component "alb" {
     security_group_id = component.security_groups.alb_sg_id
     target_group_arn  = component.ecs_service.target_group_arn
   }
-  
+
   providers = {
     aws = provider.aws.this
   }
@@ -1281,13 +1281,13 @@ component "alb" {
 
 component "cloudwatch" {
   source = "./modules/cloudwatch"
-  
+
   inputs = {
     name_prefix  = local.name_prefix
     cluster_name = component.ecs_cluster.cluster_name
     service_name = component.ecs_service.service_name
   }
-  
+
   providers = {
     aws = provider.aws.this
   }

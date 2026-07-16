@@ -26,6 +26,18 @@ agent-skills/
 │           ├── run-acceptance-tests/
 │           ├── provider-actions/
 │           └── provider-resources/
+│   └── policy/
+│       ├── .claude-plugin/plugin.json
+│       └── skills/
+│           └── terraform-policy/
+│               ├── SKILL.md
+│               ├── references/
+│               │   ├── tfpolicy-author.md
+│               │   ├── tfpolicy-test.md
+│               │   └── verified-syntax.md
+│               ├── examples/
+│               │   └── conversion/
+│               └── evals/
 ├── packer/
 │   ├── builders/
 │   │   ├── .claude-plugin/plugin.json
@@ -56,6 +68,7 @@ claude plugin marketplace add hashicorp/agent-skills
 claude plugin install terraform-code-generation@hashicorp
 claude plugin install terraform-module-generation@hashicorp
 claude plugin install terraform-provider-development@hashicorp
+claude plugin install terraform-policy-code@hashicorp
 claude plugin install packer-builders@hashicorp
 claude plugin install packer-hcp@hashicorp
 ```
@@ -113,6 +126,9 @@ npx skills add hashicorp/agent-skills/terraform/provider-development/skills/new-
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/run-acceptance-tests
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-actions
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-resources
+
+# Policy code skills
+npx skills add hashicorp/agent-skills/terraform/policy/skills/terraform-policy
 
 # Packer builder skills
 npx skills add hashicorp/agent-skills/packer/builders/skills/aws-ami-builder
@@ -173,6 +189,15 @@ Skills for developing Terraform providers:
 | `provider-actions` | Implement provider actions (lifecycle operations) |
 | `provider-resources` | Implement resources and data sources |
 
+### terraform-policy-code
+
+Skills for HCP Terraform's native policy-as-code engine:
+
+| Skill | Description |
+|-------|-------------|
+| `tfpolicy-author` | Author `.policy.hcl` files from natural-language requirements or Sentinel source |
+| `tfpolicy-test` | Write and debug `.policytest.hcl` test files and resource mocks |
+
 ### packer-builders
 
 Skills for building images on AWS, Azure, and Windows:
@@ -228,6 +253,13 @@ Use when:
 - Adding resources or data sources to an existing provider
 - Implementing provider actions
 - Running or debugging acceptance tests
+
+### terraform-policy-code
+Use when:
+- Writing a new `.policy.hcl` policy from a natural-language requirement
+- Converting a Sentinel `.sentinel` policy to Terraform Policy
+- Writing or debugging `.policytest.hcl` test files and resource mocks
+- Asking about `core::` functions, operation scoping, cross-resource checks, or `input` blocks
 
 ### packer-builders
 Use when:

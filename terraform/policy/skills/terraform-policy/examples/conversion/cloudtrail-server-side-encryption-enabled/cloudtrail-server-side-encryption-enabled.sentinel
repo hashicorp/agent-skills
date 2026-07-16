@@ -1,0 +1,53 @@
+# This policy requires that resources of type `aws_cloudtrail` have server-side encryption enabled.
+
+# Copyright IBM Corp. 2025
+# SPDX-License-Identifier: BUSL-1.1
+
+# Imports
+
+import "tfconfig/v2" as tfconfig
+import "tfresources" as tf
+import "report" as report
+import "collection" as collection
+import "collection/maps" as maps
+
+# Constants
+
+const = {
+	"resource_aws_cloudtrail":         "aws_cloudtrail",
+	"policy_name":                     "cloudtrail-server-side-encryption-enabled",
+	"message":                         "Attribute 'kms_key_id' must be present for 'aws_cloudtrail' resources. Refer to https://docs.aws.amazon.com/securityhub/latest/userguide/cloudtrail-controls.html#cloudtrail-2 for more details.",
+	"cloudtrail_attribute_kms_key_id": "kms_key_id",
+	"constant_value":                  "constant_value",
+}
+
+# Variables
+
+resources = tf.config(tfconfig.resources).type(const.resource_aws_cloudtrail).resources
+
+violations = collection.reject(resources, func(res) {
+	key_path = "config.kms_key_id"
+	return maps.get(res, key_path, false) is not false and
+		maps.get(res, key_path + "." + const.constant_value, false) is not ""
+})
+
+summary = {
+	"policy_name": const.policy_name,
+	"violations": map violations as _, v {
+		{
+			"address":        v.address,
+			"module_address": v.module_address,
+			"message":        const.message,
+		}
+	},
+}
+
+# Outputs
+
+print(report.generate_policy_report(summary))
+
+# Rules
+
+main = rule {
+	violations is empty
+}

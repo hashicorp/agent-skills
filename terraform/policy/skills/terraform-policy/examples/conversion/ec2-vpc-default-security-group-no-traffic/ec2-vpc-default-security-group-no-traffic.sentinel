@@ -1,0 +1,94 @@
+# This policy requires resources of type `aws_vpc` to have no traffic for default security group.
+
+# Copyright IBM Corp. 2025
+# SPDX-License-Identifier: BUSL-1.1
+
+# Imports
+
+import "tfconfig/v2" as tfconfig
+import "tfresources" as tf
+import "report" as report
+import "collection" as collection
+import "collection/maps" as maps
+
+# Constants
+
+const = {
+	"message":                             "VPC default security group should not allow inbound and outbound traffic. Refer to https://docs.aws.amazon.com/securityhub/latest/userguide/ec2-controls.html#ec2-2 for more details.",
+	"policy_name":                         "ec2-vpc-default-security-group-no-traffic",
+	"config":                              "config",
+	"security_group_id":                   "security_group_id",
+	"references":                          "references",
+	"constant_value":                      "constant_value",
+	"resource_aws_default_security_group": "aws_default_security_group",
+	"ingress":                                      "ingress",
+	"egress":                                       "egress",
+	"resource_aws_vpc":                             "aws_vpc",
+	"resource_aws_default_vpc":                     "aws_default_vpc",
+	"resource_aws_security_group_rule":             "aws_security_group_rule",
+	"resource_aws_vpc_security_group_ingress_rule": "aws_vpc_security_group_ingress_rule",
+	"resource_aws_vpc_security_group_egress_rule":  "aws_vpc_security_group_egress_rule",
+}
+
+# Functions
+
+is_default_security_group_of_vpc = func(reference) {
+	return reference matches "aws_default_security_group.(.*).id" or
+		reference matches "aws_vpc.(.*).default_security_group_id$" or
+		reference matches "aws_default_vpc.(.*).default_security_group_id$"
+}
+
+filter_security_group_rule_violations = func(sg_rule_resources) {
+	return collection.reject(sg_rule_resources, func(r) {
+		key = "config.security_group_id.references"
+		val = maps.get(r, key, undefined)
+		return !(val is defined and length(val) > 0 and is_default_security_group_of_vpc(val[0]))
+	})
+}
+
+# Variables
+
+config_resources = tf.config(tfconfig.resources)
+
+default_security_group_resources = config_resources.type(const.resource_aws_default_security_group).resources
+
+violations = []
+
+violations += collection.reject(default_security_group_resources, func(r) {
+	ingress_key = const.config + "." + const.ingress + "." + const.constant_value
+	egress_key = const.config + "." + const.egress + "." + const.constant_value
+	ingress_key_val = maps.get(r, ingress_key, undefined)
+	egress_key_val = maps.get(r, egress_key, undefined)
+	return !((ingress_key_val is defined and length(ingress_key_val) > 0) or
+		(egress_key_val is defined and length(egress_key_val) > 0))
+})
+
+aws_security_group_rule_resources = config_resources.type(const.resource_aws_security_group_rule).resources
+violations += filter_security_group_rule_violations(aws_security_group_rule_resources)
+
+aws_security_group_ingress_rule_resources = config_resources.type(const.resource_aws_vpc_security_group_ingress_rule).resources
+violations += filter_security_group_rule_violations(aws_security_group_ingress_rule_resources)
+
+aws_security_group_egress_rule_resources = config_resources.type(const.resource_aws_vpc_security_group_egress_rule).resources
+violations += filter_security_group_rule_violations(aws_security_group_egress_rule_resources)
+
+summary = {
+	"policy_name": const.policy_name,
+	"violations": map violations as _, v {
+		{
+			"address":        v.address,
+			"module_address": v.module_address,
+			"message":        const.message,
+		}
+	},
+}
+
+# Outputs
+
+print(report.generate_policy_report(summary))
+
+# Rules
+
+main = rule {
+	violations is empty
+}

@@ -1,0 +1,103 @@
+# This policy verifies if the attributes of the 'aws_s3_bucket_public_access_block'
+# resource (if present) block public access of an S3 general purpose bucket.
+
+# Copyright IBM Corp. 2025
+# SPDX-License-Identifier: BUSL-1.1
+
+# Imports
+
+import "tfplan/v2" as plan
+import "tfplan-functions" as tfplan
+import "tfconfig-functions" as tfconfig
+import "tfconfig/v2" as config
+import "tfresources" as tf
+import "collection/maps" as maps
+import "report" as report
+import "strings"
+
+# Constants
+const = {
+	"policy_name":                                "s3-block-public-access-bucket-level",
+	"module_address":                             "module_address",
+	"address":                                    "address",
+	"message":                                    "Bucket level Amazon S3 block public access settings are not compliant. Refer to https://docs.aws.amazon.com/securityhub/latest/userguide/s3-controls.html#s3-8 for more details.",
+	"resource_aws_s3_bucket":                     "aws_s3_bucket",
+	"module_prefix":                              "module.",
+	"resource_aws_s3_bucket_public_access_block": "aws_s3_bucket_public_access_block",
+	"public_access_block_settings":               ["ignore_public_acls", "restrict_public_buckets", "block_public_acls", "block_public_policy"],
+}
+
+# Functions
+
+is_public_access_setting_enabled = func(config, setting) {
+	const_val = maps.get(maps.get(config, setting, {}), "constant_value")
+	if const_val is defined {
+		return const_val is true
+	}
+	references = maps.get(maps.get(config, setting, {}), "references")
+	if references is defined and tfconfig.is_variable_reference(references[0]) {
+		return tfplan.get_variable_value(tfconfig.parse_variable_name_from_reference(references[0])) is true
+	}
+	return false
+}
+
+is_block_public_access_settings_compliant = func(config) {
+	return all const.public_access_block_settings as _, setting {
+		is_public_access_setting_enabled(config, setting)
+	}
+}
+
+# Prefixes the referenced s3 bucket's address with
+# the module address. This is done because resource
+# addresses comprise of module addresses
+sanitize_referenced_s3_bucket_address = func(res) {
+	module_addr = res[const.module_address]
+	if res.config.bucket.constant_value is defined {
+		return ""
+	}
+
+	bucket_reference = res.config.bucket.references[1]
+	# Check for root module
+	if not strings.has_prefix(res[const.address], const.module_prefix) {
+		return bucket_reference
+	}
+
+	return module_addr + "." + bucket_reference
+}
+
+# Variables
+
+config_resources = tf.config(config.resources)
+
+compliant_public_access_block_resources = filter config_resources.type(const.resource_aws_s3_bucket_public_access_block).resources as _, res {
+	is_block_public_access_settings_compliant(res.config)
+}
+
+s3_bucket_addresses = map compliant_public_access_block_resources as _, res {
+	sanitize_referenced_s3_bucket_address(res)
+}
+
+violations = filter config_resources.type(const.resource_aws_s3_bucket).resources as _, res {
+	res.address not in s3_bucket_addresses
+}
+
+summary = {
+	"policy_name": const.policy_name,
+	"violations": map violations as _, v {
+		{
+			"address":        v.address,
+			"module_address": v.module_address,
+			"message":        const.message,
+		}
+	},
+}
+
+# Outputs
+
+print(report.generate_policy_report(summary))
+
+# Rules
+
+main = rule {
+	violations is empty
+}

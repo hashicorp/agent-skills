@@ -1,0 +1,100 @@
+# S3 Buckets should have object lock enabled
+
+# Copyright IBM Corp. 2025
+# SPDX-License-Identifier: BUSL-1.1
+
+# Imports
+
+import "tfconfig/v2" as tfconfig
+import "tfresources" as tf
+import "report" as report
+import "collection" as collection
+import "collection/maps" as maps
+import "strings"
+import "types"
+
+# Params
+
+param valid_mode default ["GOVERNANCE", "COMPLIANCE"]
+
+# Constants
+
+const = {
+	"policy_name":                                      "s3-bucket-should-have-object-lock-enabled",
+	"message":                                          "S3 Buckets should have object lock enabled. Refer to https://docs.aws.amazon.com/securityhub/latest/userguide/s3-controls.html#s3-15 for more details.",
+	"resource_aws_s3_bucket":                           "aws_s3_bucket",
+	"resource_aws_s3_bucket_object_lock_configuration": "aws_s3_bucket_object_lock_configuration",
+	"address":           "address",
+	"module_address":    "module_address",
+	"module_prefix":     "module.",
+	"rule":              "rule",
+	"default_retention": "default_retention",
+	"mode":              "mode",
+}
+
+# Functions
+
+# Prefixes the referenced S3 Bucket's address with
+# the module address. This is done because resource
+# addresses comprise of module addresses
+sanitize_compliant_s3_bucket_address = func(res) {
+	module_addr = res[const.module_address]
+	if res.config.bucket.constant_value is defined {
+		return ""
+	}
+	rule_block = maps.get(res.config, const.rule, [])
+	if rule_block is empty {
+		return ""
+	}
+
+	default_retention = rule_block[0].default_retention[0]
+	if default_retention is empty {
+		return ""
+	}
+
+	mode = maps.get(default_retention, const.mode, "").constant_value
+	if mode is empty or mode not in valid_mode {
+		return ""
+	}
+
+	s3_bucket_reference = res.config.bucket.references[1]
+	# Check for root module
+	if not strings.has_prefix(res[const.address], const.module_prefix) {
+		return s3_bucket_reference
+	}
+
+	return module_addr + "." + s3_bucket_reference
+}
+
+# Variables
+
+config_resources = tf.config(tfconfig.resources)
+bucket_resources = config_resources.type(const.resource_aws_s3_bucket).resources
+bucket_object_lock_resources = config_resources.type(const.resource_aws_s3_bucket_object_lock_configuration).resources
+
+# Get S3 Bucket addresses that have object lock enabled
+s3_bucket_addresses_with_object_lock = map bucket_object_lock_resources as _, res {
+	sanitize_compliant_s3_bucket_address(res)
+}
+
+# Find violations: S3 Buckets that have policy violations
+violations = filter bucket_resources as _, res {
+	res.address not in s3_bucket_addresses_with_object_lock
+}
+
+summary = {
+	"policy_name": const.policy_name,
+	"violations": map violations as _, v {
+		{
+			"address":        v.address,
+			"module_address": v.module_address,
+			"message":        const.message,
+		}
+	},
+}
+
+print(report.generate_policy_report(summary))
+
+main = rule {
+	violations is empty
+}

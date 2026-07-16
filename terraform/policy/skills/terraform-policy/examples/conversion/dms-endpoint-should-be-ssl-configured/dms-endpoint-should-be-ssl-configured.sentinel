@@ -1,0 +1,55 @@
+# This policy checks if resources of type 'aws_dms_endpoint' have the 'certificate_arn'
+# shouldn't be empty
+
+# Copyright IBM Corp. 2025
+# SPDX-License-Identifier: BUSL-1.1
+
+import "tfconfig/v2" as tfconfig
+import "tfresources" as tf
+import "report" as report
+import "collection" as collection
+import "collection/maps" as maps
+
+# Constants
+const = {
+	"policy_name":               "dms-endpoint-should-be-ssl-configured",
+	"message":                   "Attribute 'certificate_arn' shouldn't be empty for AWS DMS Endpoint. Refer to https://docs.aws.amazon.com/securityhub/latest/userguide/dms-controls.html#dms-9 for more details.",
+	"resource_aws_dms_endpoint": "aws_dms_endpoint",
+}
+
+# Functions
+
+get_violations = func(resources) {
+	return collection.reject(resources, func(res) {
+		certificate_arn_values = maps.get(res, "config.certificate_arn", "")
+		if certificate_arn_values is empty {
+			return false
+		}
+		return maps.get(certificate_arn_values, "constant_value", "") is not empty or maps.get(certificate_arn_values, "references", "") is not empty
+	})
+}
+
+# Variables
+
+dms_endpoint_resource = tf.config(tfconfig.resources).type(const.resource_aws_dms_endpoint).resources
+violations = get_violations(dms_endpoint_resource)
+
+summary = {
+	"policy_name": const.policy_name,
+	"violations": map violations as _, v {
+		{
+			"address":        v.address,
+			"module_address": v.module_address,
+			"message":        const.message,
+		}
+	},
+}
+
+# Outputs
+print(report.generate_policy_report(summary))
+
+# Rules
+
+main = rule {
+	violations is empty
+}
