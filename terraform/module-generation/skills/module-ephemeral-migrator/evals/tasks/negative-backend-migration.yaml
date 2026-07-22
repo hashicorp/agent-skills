@@ -1,0 +1,21 @@
+id: negative-backend-001
+name: Terraform backend migration (should not trigger)
+description: >
+  User wants to migrate Terraform state to a new backend (S3 + DynamoDB).
+  Unrelated to ephemeral resources — should not trigger this skill.
+tags:
+  - negative-trigger
+inputs:
+  prompt: |
+    I need to migrate my Terraform state from a local backend to S3 with DynamoDB locking. Can you walk me through the steps to move state without losing anything?
+expected:
+  should_trigger: false
+graders:
+  - type: text
+    name: does-not-apply-ephemeral-pattern
+    config:
+      not_contains:
+        - "removed {"
+        - "ephemeral = true"
+        - "UPGRADE-GUIDE"
+        - "policy-library-ephemerality"
