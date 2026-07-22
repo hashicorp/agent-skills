@@ -1,0 +1,30 @@
+{
+  "name": "terraform-policy-controls",
+  "version": "1.0.0",
+  "description": "Terraform policy controls skills for Claude Code, including HCP Terraform run task result retrieval and analysis.",
+  "author": {
+    "name": "HashiCorp",
+    "url": "https://github.com/hashicorp"
+  },
+  "homepage": "https://developer.hashicorp.com/terraform/cloud-docs/run/run-tasks",
+  "repository": "https://github.com/hashicorp/agent-skills",
+  "license": "MPL-2.0",
+  "keywords": ["terraform", "policy-controls", "run-tasks", "policy-enforcement", "hcp-terraform"],
+  "mcpServers": {
+    "terraform": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e", "TFE_TOKEN",
+        "-e", "TFE_ADDRESS",
+        "hashicorp/terraform-mcp-server"
+      ],
+      "env": {
+        "TFE_TOKEN": "${TFE_TOKEN}",
+        "TFE_ADDRESS": "${TFE_ADDRESS}"
+      }
+    }
+  }
+}
