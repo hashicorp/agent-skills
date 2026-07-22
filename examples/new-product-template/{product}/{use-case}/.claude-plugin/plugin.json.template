@@ -1,0 +1,23 @@
+{
+  "name": "{{PLUGIN_NAME}}",
+  "version": "1.0.0",
+  "description": "{{PLUGIN_DESCRIPTION}}",
+  "author": {
+    "name": "HashiCorp",
+    "url": "https://github.com/hashicorp"
+  },
+  "homepage": "{{PRODUCT_HOMEPAGE}}",
+  "repository": "https://github.com/hashicorp/agent-skills",
+  "license": "MPL-2.0",
+  "keywords": [{{#KEYWORDS}}"{{KEYWORD}}"{{^LAST}}, {{/LAST}}{{/KEYWORDS}}]{{#MCP_SERVER}},
+  "mcpServers": {
+    "{{MCP_SERVER_NAME}}": {
+      "command": "{{MCP_COMMAND}}",
+      "args": [{{#MCP_ARGS}}"{{ARG}}"{{^LAST}}, {{/LAST}}{{/MCP_ARGS}}],
+      "env": {
+        {{#MCP_ENV}}"{{ENV_KEY}}": "{{ENV_VALUE}}"{{^LAST}},
+        {{/LAST}}{{/MCP_ENV}}
+      }
+    }
+  }{{/MCP_SERVER}}
+}
