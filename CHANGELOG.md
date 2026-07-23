@@ -5,6 +5,7 @@ All notable changes to the HashiCorp Agent Skills.
 ## Unreleased
 
 ### Added
+- `provider-configuration` skill for Terraform provider authentication and credential provider chains
 - `terraform-search-import` skill for discovering existing resources with Terraform Search and bulk import
 - `terraform-policy-code` plugin with `tfpolicy-author` and `tfpolicy-test` skills for HCP Terraform's native policy-as-code engine; includes waza-compliant SKILL.md, consolidated references, conversion examples, and eval suite
 
