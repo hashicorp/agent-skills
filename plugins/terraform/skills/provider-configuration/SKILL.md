@@ -4,7 +4,7 @@ description: >-
   Implement Terraform provider configuration and authentication with the
   Plugin Framework: provider schema for credentials (Optional + Sensitive
   attributes), environment variable fallbacks, credential provider chains
-  (static config > environment variables > shared credentials file >
+  (static config, then environment variables, shared credentials file, and
   platform identity), unknown-value guards in Configure(), secret redaction,
   configure-time credential validation, and diagnostics that name every
   source tried. Use when implementing or reviewing a provider's Configure

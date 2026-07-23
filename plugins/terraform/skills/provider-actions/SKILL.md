@@ -15,7 +15,7 @@ Terraform Actions enable imperative operations during the Terraform lifecycle. A
 
 **References:**
 - [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework)
-- [Terraform Actions RFC](https://github.com/hashicorp/terraform/blob/main/docs/plugin-protocol/actions.md)
+- [Terraform Plugin Framework Actions](https://developer.hashicorp.com/terraform/plugin/framework/actions)
 
 ## First Action Setup
 
