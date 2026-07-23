@@ -35,6 +35,7 @@ Skills for developing Terraform providers.
 | provider-actions       | Implement provider actions (lifecycle operations) |
 | provider-configuration | Provider authentication and credential provider chains |
 | provider-docs          | Provider documentation with tfplugindocs for the Terraform Registry |
+| provider-framework-migration | Migrate SDKv2 resources to the Plugin Framework |
 | provider-resources     | Implement resources and data sources |
 | provider-test-patterns | Acceptance test patterns for terraform-plugin-testing |
 
@@ -79,6 +80,7 @@ npx skills add hashicorp/agent-skills/terraform/provider-development/skills/run-
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-actions
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-configuration
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-docs
+npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-framework-migration
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-resources
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-test-patterns
 
@@ -119,6 +121,7 @@ terraform/
         ├── provider-actions/
         ├── provider-configuration/
         ├── provider-docs/
+        ├── provider-framework-migration/
         ├── provider-resources/
         ├── run-acceptance-tests/
         └── provider-test-patterns/
