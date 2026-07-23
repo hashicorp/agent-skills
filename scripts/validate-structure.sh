@@ -1,269 +1,171 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Copyright IBM Corp. 2025, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-#
-# Validates the agent-skills repository structure
-# Ensures all plugins and skills follow the expected format
-#
-
-set -e
+set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ERRORS=0
+EXPECTED_BUNDLES=$'packer\nterraform'
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-log_error() {
-    echo -e "${RED}ERROR:${NC} $1"
-    ERRORS=$((ERRORS + 1))
+error() {
+  printf 'ERROR: %s\n' "$1"
+  ERRORS=$((ERRORS + 1))
 }
 
-log_success() {
-    echo -e "${GREEN}OK:${NC} $1"
+ok() {
+  printf 'OK: %s\n' "$1"
 }
 
-log_info() {
-    echo -e "${YELLOW}INFO:${NC} $1"
+require_file() {
+  if [[ -f "$1" ]]; then
+    ok "found ${1#$REPO_ROOT/}"
+  else
+    error "missing ${1#$REPO_ROOT/}"
+  fi
 }
 
-# Check if jq is available
-if ! command -v jq &> /dev/null; then
-    echo "jq is required but not installed. Please install jq."
-    exit 1
+if ! command -v jq >/dev/null 2>&1; then
+  printf 'jq is required but not installed.\n'
+  exit 1
 fi
 
-echo "=========================================="
-echo "Validating agent-skills repository structure"
-echo "=========================================="
-echo ""
+cd "$REPO_ROOT" || exit 1
 
-# ---------------------------------------------
-# 1. Validate marketplace.json
-# ---------------------------------------------
-echo "1. Checking marketplace.json..."
+CLAUDE_MARKETPLACE="$REPO_ROOT/.claude-plugin/marketplace.json"
+CODEX_MARKETPLACE="$REPO_ROOT/.agents/plugins/marketplace.json"
 
-MARKETPLACE_FILE="$REPO_ROOT/.claude-plugin/marketplace.json"
+require_file "$CLAUDE_MARKETPLACE"
+require_file "$CODEX_MARKETPLACE"
+require_file "$REPO_ROOT/SKILLS.md"
+require_file "$REPO_ROOT/SUPPORTED_MODELS.md"
+require_file "$REPO_ROOT/CODEOWNERS"
 
-if [[ ! -f "$MARKETPLACE_FILE" ]]; then
-    log_error "marketplace.json not found at $MARKETPLACE_FILE"
-else
-    # Check if valid JSON
-    if ! jq empty "$MARKETPLACE_FILE" 2>/dev/null; then
-        log_error "marketplace.json is not valid JSON"
-    else
-        log_success "marketplace.json is valid JSON"
+while IFS= read -r json_file; do
+  if jq empty "$json_file" >/dev/null 2>&1; then
+    ok "valid JSON: ${json_file#./}"
+  else
+    error "invalid JSON: ${json_file#./}"
+  fi
+done < <(find . -type f -name '*.json' -not -path './.git/*' | sort)
 
-        # Check required fields
-        NAME=$(jq -r '.name // empty' "$MARKETPLACE_FILE")
-        if [[ -z "$NAME" ]]; then
-            log_error "marketplace.json missing 'name' field"
-        else
-            log_success "marketplace.json has name: $NAME"
-        fi
+if [[ -f "$CLAUDE_MARKETPLACE" && -f "$CODEX_MARKETPLACE" ]]; then
+  CLAUDE_BUNDLES="$(jq -r '.plugins[].name' "$CLAUDE_MARKETPLACE" | sort)"
+  CODEX_BUNDLES="$(jq -r '.plugins[].name' "$CODEX_MARKETPLACE" | sort)"
 
-        OWNER=$(jq -r '.owner.name // empty' "$MARKETPLACE_FILE")
-        if [[ -z "$OWNER" ]]; then
-            log_error "marketplace.json missing 'owner.name' field"
-        else
-            log_success "marketplace.json has owner: $OWNER"
-        fi
+  [[ "$CLAUDE_BUNDLES" == "$EXPECTED_BUNDLES" ]] ||
+    error "Claude marketplace must publish exactly packer and terraform"
+  [[ "$CODEX_BUNDLES" == "$EXPECTED_BUNDLES" ]] ||
+    error "Codex marketplace must publish exactly packer and terraform"
+  [[ "$CLAUDE_BUNDLES" == "$CODEX_BUNDLES" ]] ||
+    error "Claude and Codex marketplace bundle sets differ"
 
-        # Check plugins array exists
-        PLUGINS_COUNT=$(jq '.plugins | length' "$MARKETPLACE_FILE")
-        if [[ "$PLUGINS_COUNT" -eq 0 ]]; then
-            log_error "marketplace.json has no plugins defined"
-        else
-            log_success "marketplace.json has $PLUGINS_COUNT plugin(s) defined"
-        fi
-    fi
-fi
+  [[ "$(jq '.plugins | length' "$CLAUDE_MARKETPLACE")" -eq 2 ]] ||
+    error "Claude marketplace must contain exactly two entries"
+  [[ "$(jq '.plugins | length' "$CODEX_MARKETPLACE")" -eq 2 ]] ||
+    error "Codex marketplace must contain exactly two entries"
 
-echo ""
+  for product in packer terraform; do
+    plugin_root="$REPO_ROOT/plugins/$product"
+    claude_manifest="$plugin_root/.claude-plugin/plugin.json"
+    codex_manifest="$plugin_root/.codex-plugin/plugin.json"
 
-# ---------------------------------------------
-# 2. Validate each plugin referenced in marketplace
-# ---------------------------------------------
-echo "2. Checking plugins referenced in marketplace.json..."
+    [[ "$(jq -r ".plugins[] | select(.name == \"$product\") | .source" "$CLAUDE_MARKETPLACE")" == "./plugins/$product" ]] ||
+      error "Claude $product source must be ./plugins/$product"
+    [[ "$(jq -r ".plugins[] | select(.name == \"$product\") | .source.path" "$CODEX_MARKETPLACE")" == "./plugins/$product" ]] ||
+      error "Codex $product source must be ./plugins/$product"
 
-if [[ -f "$MARKETPLACE_FILE" ]]; then
-    PLUGIN_SOURCES=$(jq -r '.plugins[].source' "$MARKETPLACE_FILE" 2>/dev/null)
+    require_file "$claude_manifest"
+    require_file "$codex_manifest"
+    [[ -d "$plugin_root/skills" ]] || error "missing plugins/$product/skills"
 
-    for SOURCE in $PLUGIN_SOURCES; do
-        # Remove leading ./ if present
-        SOURCE_PATH="${SOURCE#./}"
-        PLUGIN_DIR="$REPO_ROOT/$SOURCE_PATH"
-        PLUGIN_JSON="$PLUGIN_DIR/.claude-plugin/plugin.json"
-
-        echo ""
-        log_info "Checking plugin: $SOURCE_PATH"
-
-        # Check plugin directory exists
-        if [[ ! -d "$PLUGIN_DIR" ]]; then
-            log_error "Plugin directory not found: $PLUGIN_DIR"
-            continue
-        else
-            log_success "Plugin directory exists"
-        fi
-
-        # Check plugin.json exists
-        if [[ ! -f "$PLUGIN_JSON" ]]; then
-            log_error "plugin.json not found: $PLUGIN_JSON"
-            continue
-        else
-            log_success "plugin.json exists"
-        fi
-
-        # Validate plugin.json
-        if ! jq empty "$PLUGIN_JSON" 2>/dev/null; then
-            log_error "plugin.json is not valid JSON: $PLUGIN_JSON"
-            continue
-        else
-            log_success "plugin.json is valid JSON"
-        fi
-
-        # Check required fields in plugin.json
-        PLUGIN_NAME=$(jq -r '.name // empty' "$PLUGIN_JSON")
-        if [[ -z "$PLUGIN_NAME" ]]; then
-            log_error "plugin.json missing 'name' field"
-        else
-            log_success "plugin.json has name: $PLUGIN_NAME"
-        fi
-
-        PLUGIN_VERSION=$(jq -r '.version // empty' "$PLUGIN_JSON")
-        if [[ -z "$PLUGIN_VERSION" ]]; then
-            log_error "plugin.json missing 'version' field"
-        else
-            log_success "plugin.json has version: $PLUGIN_VERSION"
-        fi
-
-        PLUGIN_DESC=$(jq -r '.description // empty' "$PLUGIN_JSON")
-        if [[ -z "$PLUGIN_DESC" ]]; then
-            log_error "plugin.json missing 'description' field"
-        else
-            log_success "plugin.json has description"
-        fi
-
-        # Check skills directory exists
-        SKILLS_DIR="$PLUGIN_DIR/skills"
-        if [[ ! -d "$SKILLS_DIR" ]]; then
-            log_error "skills/ directory not found in plugin: $PLUGIN_DIR"
-            continue
-        else
-            log_success "skills/ directory exists"
-        fi
-
-        # Validate each skill
-        SKILL_COUNT=0
-        for SKILL_DIR in "$SKILLS_DIR"/*/; do
-            if [[ -d "$SKILL_DIR" ]]; then
-                SKILL_NAME=$(basename "$SKILL_DIR")
-                SKILL_MD="$SKILL_DIR/SKILL.md"
-
-                if [[ ! -f "$SKILL_MD" ]]; then
-                    log_error "SKILL.md not found for skill: $SKILL_NAME"
-                else
-                    # Check SKILL.md has frontmatter
-                    if ! head -1 "$SKILL_MD" | grep -q "^---"; then
-                        log_error "SKILL.md missing frontmatter (---) for skill: $SKILL_NAME"
-                    else
-                        # Extract and validate frontmatter
-                        FRONTMATTER=$(sed -n '/^---$/,/^---$/p' "$SKILL_MD" | sed '1d;$d')
-
-                        # Check for name field
-                        if ! echo "$FRONTMATTER" | grep -q "^name:"; then
-                            log_error "SKILL.md missing 'name' in frontmatter for skill: $SKILL_NAME"
-                        fi
-
-                        # Check for description field
-                        if ! echo "$FRONTMATTER" | grep -q "^description:"; then
-                            log_error "SKILL.md missing 'description' in frontmatter for skill: $SKILL_NAME"
-                        fi
-
-                        if echo "$FRONTMATTER" | grep -q "^name:" && echo "$FRONTMATTER" | grep -q "^description:"; then
-                            log_success "SKILL.md valid for skill: $SKILL_NAME"
-                        fi
-                    fi
-                fi
-                SKILL_COUNT=$((SKILL_COUNT + 1))
-            fi
-        done
-
-        if [[ "$SKILL_COUNT" -eq 0 ]]; then
-            log_error "No skills found in $SKILLS_DIR"
-        else
-            log_success "Found $SKILL_COUNT skill(s) in plugin"
-        fi
-    done
-fi
-
-echo ""
-
-# ---------------------------------------------
-# 3. Check for orphaned plugins (not in marketplace)
-# ---------------------------------------------
-echo "3. Checking for orphaned plugins..."
-
-# Find all plugin.json files
-FOUND_PLUGINS=$(find "$REPO_ROOT" -path "*/.claude-plugin/plugin.json" -not -path "$REPO_ROOT/.claude-plugin/*" 2>/dev/null)
-
-for PLUGIN_JSON in $FOUND_PLUGINS; do
-    PLUGIN_DIR=$(dirname "$(dirname "$PLUGIN_JSON")")
-    RELATIVE_PATH="${PLUGIN_DIR#$REPO_ROOT/}"
-
-    # Check if this plugin is referenced in marketplace.json
-    if [[ -f "$MARKETPLACE_FILE" ]]; then
-        if ! jq -r '.plugins[].source' "$MARKETPLACE_FILE" | grep -q "$RELATIVE_PATH"; then
-            log_error "Orphaned plugin not in marketplace.json: $RELATIVE_PATH"
-        fi
-    fi
-done
-
-log_success "Orphan check complete"
-
-echo ""
-
-# ---------------------------------------------
-# 4. Validate product folder structure
-# ---------------------------------------------
-echo "4. Checking product folder structure..."
-
-# Get all top-level directories that could be products (excluding hidden and special)
-for DIR in "$REPO_ROOT"/*/; do
-    DIR_NAME=$(basename "$DIR")
-
-    # Skip special directories
-    if [[ "$DIR_NAME" == "scripts" ]] || [[ "$DIR_NAME" == "node_modules" ]] || [[ "$DIR_NAME" =~ ^\. ]]; then
-        continue
-    fi
-
-    # Check if this is a product folder (contains plugin subdirectories)
-    HAS_PLUGINS=false
-    for SUBDIR in "$DIR"/*/; do
-        if [[ -d "$SUBDIR/.claude-plugin" ]]; then
-            HAS_PLUGINS=true
-            break
-        fi
+    for manifest in "$claude_manifest" "$codex_manifest"; do
+      [[ -f "$manifest" ]] || continue
+      [[ "$(jq -r '.name // empty' "$manifest")" == "$product" ]] ||
+        error "${manifest#$REPO_ROOT/} name must match product root"
+      [[ "$(jq -r '.skills // empty' "$manifest")" == './skills/' ]] ||
+        error "${manifest#$REPO_ROOT/} must reference ./skills/"
+      jq -e '.version and .description and .author.name' "$manifest" >/dev/null ||
+        error "${manifest#$REPO_ROOT/} lacks required metadata"
     done
 
-    if [[ "$HAS_PLUGINS" == true ]]; then
-        log_success "Valid product folder: $DIR_NAME"
+    if [[ -f "$codex_manifest" ]]; then
+      jq -e '.interface.displayName and .interface.shortDescription and
+        .interface.longDescription and .interface.developerName and
+        .interface.category and .interface.capabilities and
+        .interface.defaultPrompt' "$codex_manifest" >/dev/null ||
+        error "${codex_manifest#$REPO_ROOT/} lacks required interface metadata"
     fi
-done
+  done
+fi
 
-echo ""
-echo "=========================================="
-echo "Validation complete"
-echo "=========================================="
+CLAUDE_MANIFEST_COUNT="$(find plugins -path '*/.claude-plugin/plugin.json' -type f | wc -l | tr -d ' ')"
+CODEX_MANIFEST_COUNT="$(find plugins -path '*/.codex-plugin/plugin.json' -type f | wc -l | tr -d ' ')"
+[[ "$CLAUDE_MANIFEST_COUNT" -eq 2 ]] || error "expected exactly two Claude plugin manifests"
+[[ "$CODEX_MANIFEST_COUNT" -eq 2 ]] || error "expected exactly two Codex plugin manifests"
+
+SKILL_COUNT="$(find plugins -path '*/skills/*/SKILL.md' -type f | wc -l | tr -d ' ')"
+[[ "$SKILL_COUNT" -eq 20 ]] ||
+  error "expected exactly 20 canonical Skills; found $SKILL_COUNT"
+
+while IFS= read -r skill_file; do
+  skill_dir="$(dirname "$skill_file")"
+  skill_name="$(basename "$skill_dir")"
+  product="$(printf '%s\n' "$skill_file" | cut -d/ -f2)"
+  case "$product" in
+    packer) product_label="Packer" ;;
+    terraform) product_label="Terraform" ;;
+    *) product_label="$product" ;;
+  esac
+  frontmatter="$(awk 'NR == 1 && $0 == "---" {inside=1; next} inside && $0 == "---" {exit} inside {print}' "$skill_file")"
+  declared_name="$(printf '%s\n' "$frontmatter" | sed -n 's/^name:[[:space:]]*//p' | head -1)"
+  lifecycle="$(printf '%s\n' "$frontmatter" | sed -n 's/^  lifecycle-status:[[:space:]]*//p' | head -1)"
+  relative_dir="${skill_dir#./}"
+
+  [[ "$declared_name" == "$skill_name" ]] ||
+    error "$skill_file name does not match directory"
+  printf '%s\n' "$frontmatter" | grep -q '^description:' ||
+    error "$skill_file missing description"
+  case "$lifecycle" in
+    active|deprecation-candidate|deprecated|retired) ;;
+    *) error "$skill_file has invalid or missing metadata.lifecycle-status" ;;
+  esac
+
+  expected_catalog="| $product_label | \`$skill_name\` | \`$lifecycle\` | \`$relative_dir\` |"
+  grep -Fqx "$expected_catalog" SKILLS.md ||
+    error "SKILLS.md missing aligned row for $relative_dir"
+  grep -Fqx "/$relative_dir/ @hashicorp/team-agent-skills-ecosystem" CODEOWNERS ||
+    error "CODEOWNERS missing explicit ecosystem ownership for $relative_dir"
+done < <(find plugins -path '*/skills/*/SKILL.md' -type f | sort)
+
+CATALOG_ROWS="$(grep -Ec '^\| (Packer|Terraform) \|' SKILLS.md || true)"
+[[ "$CATALOG_ROWS" -eq 20 ]] || error "SKILLS.md must contain exactly 20 Skill rows"
+
+if find plugins -type d -name evals -print -quit | grep -q .; then
+  error "public Skill evaluation assets are forbidden; keep them in proj-agent-skills/evals"
+fi
+
+LEGACY_IDS=(
+  "terraform-code""-generation"
+  "terraform-module""-generation"
+  "terraform-provider""-development"
+  "terraform-policy""-code"
+  "packer""-builders"
+  "packer""-hcp"
+)
+
+for legacy_id in "${LEGACY_IDS[@]}"; do
+  while IFS= read -r matched_file; do
+    case "$matched_file" in
+      ./README.md|./CHANGELOG.md) ;;
+      *) error "legacy plugin id $legacy_id remains outside migration guidance: $matched_file" ;;
+    esac
+  done < <(grep -RIl --exclude-dir=.git --exclude='README.md' --exclude='CHANGELOG.md' "$legacy_id" . 2>/dev/null || true)
+done
 
 if [[ "$ERRORS" -gt 0 ]]; then
-    echo -e "${RED}Found $ERRORS error(s)${NC}"
-    exit 1
-else
-    echo -e "${GREEN}All checks passed!${NC}"
-    exit 0
+  printf 'Validation failed with %d error(s).\n' "$ERRORS"
+  exit 1
 fi
+
+printf 'Validation passed for two marketplaces, two bundles, and 20 Skills.\n'
