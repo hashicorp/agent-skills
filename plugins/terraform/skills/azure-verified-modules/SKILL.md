@@ -11,7 +11,7 @@ This guide covers the mandatory requirements for Azure Verified Modules certific
 
 **References:**
 - [Azure Verified Modules](https://azure.github.io/Azure-Verified-Modules/)
-- [AVM Terraform Requirements](https://azure.github.io/Azure-Verified-Modules/specs/terraform/)
+- [AVM Module Specifications](https://azure.github.io/Azure-Verified-Modules/specs/module-specs/)
 
 ## Table of Contents
 

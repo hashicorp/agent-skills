@@ -9,7 +9,7 @@ metadata:
 
 Platform-agnostic patterns for building Windows images with Packer.
 
-**Reference:** [Windows Builders](https://developer.hashicorp.com/packer/guides/windows)
+**Reference:** [WinRM Communicator](https://developer.hashicorp.com/packer/docs/communicators/winrm)
 
 > **Note:** Windows builds incur significant costs and time. Expect 45-120 minutes per build due to Windows Updates. Failed builds may leave resources running - always verify cleanup.
 
@@ -184,6 +184,5 @@ provisioner "powershell" {
 
 ## References
 
-- [Packer Windows Builders](https://developer.hashicorp.com/packer/guides/windows)
 - [WinRM Communicator](https://developer.hashicorp.com/packer/docs/communicators/winrm)
 - [PowerShell Provisioner](https://developer.hashicorp.com/packer/docs/provisioners/powershell)

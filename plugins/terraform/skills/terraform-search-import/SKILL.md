@@ -5,7 +5,7 @@ metadata:
   lifecycle-status: active
   copyright: Copyright IBM Corp. 2026
   version: "0.1.0"
-compatibility: Requires Terraform >= 1.14 and providers with list resource support (always use latest provider version)
+  compatibility: Requires Terraform 1.14 or newer and providers with list resource support
 ---
 
 # Terraform Search and Bulk Import
