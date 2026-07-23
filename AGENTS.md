@@ -26,7 +26,9 @@ agent-skills/
 │           ├── run-acceptance-tests/
 │           ├── provider-actions/
 │           ├── provider-configuration/
-│           └── provider-resources/
+│           ├── provider-docs/
+│           ├── provider-resources/
+│           └── provider-test-patterns/
 │   └── policy/
 │       ├── .claude-plugin/plugin.json
 │       └── skills/
@@ -127,7 +129,9 @@ npx skills add hashicorp/agent-skills/terraform/provider-development/skills/new-
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/run-acceptance-tests
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-actions
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-configuration
+npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-docs
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-resources
+npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-test-patterns
 
 # Policy code skills
 npx skills add hashicorp/agent-skills/terraform/policy/skills/terraform-policy
@@ -190,7 +194,9 @@ Skills for developing Terraform providers:
 | `run-acceptance-tests` | Run and debug provider acceptance tests |
 | `provider-actions` | Implement provider actions (lifecycle operations) |
 | `provider-configuration` | Provider authentication and credential provider chains |
+| `provider-docs` | Provider documentation with tfplugindocs for the Terraform Registry |
 | `provider-resources` | Implement resources and data sources |
+| `provider-test-patterns` | Acceptance test patterns for terraform-plugin-testing |
 
 ### terraform-policy-code
 
