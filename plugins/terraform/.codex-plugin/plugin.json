@@ -1,0 +1,23 @@
+{
+  "name": "terraform",
+  "version": "1.0.0",
+  "description": "Terraform skills for configuration, modules, providers, tests, imports, stacks, and policy.",
+  "author": {
+    "name": "HashiCorp",
+    "url": "https://github.com/hashicorp"
+  },
+  "homepage": "https://developer.hashicorp.com/terraform",
+  "repository": "https://github.com/hashicorp/agent-skills",
+  "license": "MPL-2.0",
+  "keywords": ["terraform", "hcl", "provider", "modules", "infrastructure"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Terraform",
+    "shortDescription": "Build and maintain Terraform workflows.",
+    "longDescription": "HashiCorp Terraform skills for infrastructure configuration, modules, providers, tests, imports, stacks, and policy.",
+    "developerName": "HashiCorp",
+    "category": "Developer Tools",
+    "capabilities": ["Read", "Write"],
+    "defaultPrompt": "Help me complete this Terraform task using the relevant HashiCorp skill."
+  }
+}

@@ -152,3 +152,14 @@ jobs:
           fi
 
           echo "All marketplace references are valid!"
+
+  validate-links:
+    name: Validate Markdown Links
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
+      - name: Check local and external links
+        run: python3 ./scripts/check-links.py
