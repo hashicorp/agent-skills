@@ -9,6 +9,7 @@ All notable changes to the HashiCorp Agent Skills.
 - `provider-test-patterns` skill for acceptance test patterns with terraform-plugin-testing
 - `provider-docs` skill for Terraform Registry provider documentation with tfplugindocs
 - `provider-framework-migration` skill for migrating SDKv2 resources to the Plugin Framework
+- `provider-ephemeral-resources` skill for implementing ephemeral resources
 - `terraform-search-import` skill for discovering existing resources with Terraform Search and bulk import
 - `terraform-policy-code` plugin with `tfpolicy-author` and `tfpolicy-test` skills for HCP Terraform's native policy-as-code engine; includes waza-compliant SKILL.md, consolidated references, conversion examples, and eval suite
 

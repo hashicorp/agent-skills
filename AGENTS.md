@@ -27,6 +27,7 @@ agent-skills/
 │           ├── provider-actions/
 │           ├── provider-configuration/
 │           ├── provider-docs/
+│           ├── provider-ephemeral-resources/
 │           ├── provider-framework-migration/
 │           ├── provider-resources/
 │           └── provider-test-patterns/
@@ -132,6 +133,7 @@ npx skills add hashicorp/agent-skills/terraform/provider-development/skills/prov
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-configuration
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-docs
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-framework-migration
+npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-ephemeral-resources
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-resources
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-test-patterns
 
@@ -198,6 +200,7 @@ Skills for developing Terraform providers:
 | `provider-configuration` | Provider authentication and credential provider chains |
 | `provider-docs` | Provider documentation with tfplugindocs for the Terraform Registry |
 | `provider-framework-migration` | Migrate SDKv2 resources to the Plugin Framework |
+| `provider-ephemeral-resources` | Implement ephemeral resources for non-persisted secrets |
 | `provider-resources` | Implement resources and data sources |
 | `provider-test-patterns` | Acceptance test patterns for terraform-plugin-testing |
 
