@@ -1,0 +1,14 @@
+{
+  "name": "packer",
+  "version": "1.0.0",
+  "description": "Packer skills for image building and HCP Packer registry workflows.",
+  "author": {
+    "name": "HashiCorp",
+    "url": "https://github.com/hashicorp"
+  },
+  "homepage": "https://developer.hashicorp.com/packer",
+  "repository": "https://github.com/hashicorp/agent-skills",
+  "license": "MPL-2.0",
+  "keywords": ["packer", "images", "aws", "azure", "hcp-packer"],
+  "skills": "./skills/"
+}
