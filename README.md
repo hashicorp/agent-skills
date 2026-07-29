@@ -13,7 +13,7 @@ A collection of Agent skills and Claude Code plugins for HashiCorp products.
 
 ### Individual Skills
 
-Install Agent Skills in GitHub Copilot, Claude Code, Opencode, Cursor, and more:
+Install Agent Skills in GitHub Copilot, Claude Code, Opencode, Cursor, IBM Bob, and more:
 
 ```bash
 # List all skills
