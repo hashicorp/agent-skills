@@ -714,22 +714,7 @@ resource_policy "aws_s3_bucket_versioning" "versioning_enabled" {
     - **When the enforcement goal is to ensure every parent has a compliant child, the dependent child must NEVER have a standalone `resource_policy` block.** Write the `resource_policy` block on the **parent type**. Fetch the dependent child inside the parent block via `core::getresources("<child_type>", {<linking_attr> = attrs.id_or_arn_or_name})`. Evaluate all attribute checks on those lookup results. Report all violations on the parent. When the goal is only to check every existing child's own attributes, a standalone `resource_policy` on the child type is valid — see Self-check above.
     - Concrete examples: `aws_s3_bucket_public_access_block`, `aws_s3_bucket_policy`, `aws_s3_bucket_acl` (all require `bucket`) → never standalone for any enforcement goal; always fetched inside `resource_policy "aws_s3_bucket"`. `aws_lb_listener` → standalone `resource_policy "aws_lb_listener"` is valid when checking every listener's own attributes (e.g., protocol, ssl_policy); use `resource_policy "aws_lb"` with inline lookup only when the goal is "every LB must have at least one compliant listener".
     - Always add this comment when using this pattern: *"This policy contains a cross-resource reference that will not resolve during plan time, but the policy will run successfully during apply time."*
-17. **Inline `core::getdatasource()` for per-resource external validation:** use this when the check requires live provider data tied to *this specific resource* — e.g. confirming `attrs.ami` is owned by an approved account, `attrs.kms_key_id` has the required key policy, or a referenced secret/role actually exists. The filter is derived from `attrs.*`, so it cannot be hoisted to a top-level `locals` block.
-    ```hcl
-    resource_policy "aws_instance" "approved_ami" {
-        filter = core::try(attrs.ami, null) != null
-
-        locals {
-            ami = core::try(core::getdatasource("aws_ami", { image_id = attrs.ami }), null)
-        }
-
-        enforce {
-            condition     = local.ami != null && core::try(local.ami.owner_id, "") == "123456789012"
-            error_message = "aws_instance must use an AMI owned by the approved account (123456789012)."
-        }
-    }
-    ```
-    Use `filter` to skip resources that don't need the lookup (avoids the API call entirely for non-matching resources), and always wrap the call in `core::try()` — unlike `core::getresources()`, this hits a live provider API and can fail or return no match.
+17. **Inline `core::getdatasource()` for per-resource external validation:** use this when the check requires live provider data tied to *this specific resource* — e.g. confirming `attrs.ami` is owned by an approved account, `attrs.kms_key_id` has the required key policy, or a referenced secret/role actually exists. The filter is derived from `attrs.*`, so it cannot be hoisted to a top-level `locals` block. Use `filter` to skip resources that don't need the lookup (avoids the API call entirely for non-matching resources), and always wrap the call in `core::try()` — unlike `core::getresources()`, this hits a live provider API and can fail or return no match.
 
 ### Communication
 1. Ask clarifying questions; don't assume requirements.
