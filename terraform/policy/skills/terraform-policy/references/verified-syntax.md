@@ -646,21 +646,46 @@ resource_policy "aws_s3_bucket" "public_access_required" {
 ```
 See the `core::getresources()` decision guide in Critical Rule 2 above for the full pattern guidance.
 
-### ❌ Mistake 14: Using core::getdatasource() Inside resource_policy
+### ❌ Mistake 14: Using core::getdatasource() With a Static Filter Inside resource_policy
 ```hcl
-# ❌ WRONG - Makes API calls for EVERY resource!
+# ❌ WRONG - filter doesn't depend on the resource, so this repeats the same API call
+# for EVERY matching resource with no benefit
 resource_policy "aws_s3_bucket" "check" {
     locals {
         account_id = core::getdatasource("aws_caller_identity", {})
     }
 }
 
-# ✅ CORRECT - Cache in top-level locals
+# ✅ CORRECT - filter is a literal/known value, cache once in top-level locals
 locals {
     account_id = core::getdatasource("aws_caller_identity", {})
 }
+resource_policy "aws_s3_bucket" "check" {
+    locals {
+        # Reuse the cached value instead of re-fetching it
+        current_account = local.account_id
+    }
+}
 ```
-**Why:** Makes real provider API calls (not cached). Never use inside resource policies.
+**Why:** `core::getdatasource()` makes a real provider API call (not read from state/plan, not cached automatically). When the filter doesn't depend on the resource being evaluated, calling it inside `resource_policy` repeats the identical call once per matching resource — cache it at the top level instead.
+
+**✅ Exception — inline `core::getdatasource()` is correct when the filter depends on the resource's own attributes:**
+```hcl
+# ✅ CORRECT - filter references attrs.*, so it cannot be precomputed at top level
+resource_policy "aws_instance" "approved_ami" {
+    filter = core::try(attrs.ami, null) != null
+
+    locals {
+        ami = core::try(core::getdatasource("aws_ami", { image_id = attrs.ami }), null)
+    }
+
+    enforce {
+        condition     = local.ami != null && core::try(local.ami.owner_id, "") == "123456789012"
+        error_message = "aws_instance must use an AMI owned by the approved account (123456789012)."
+    }
+}
+```
+**Why this is fine:** the lookup key (`attrs.ami`) is only known once the specific resource is being evaluated, so a top-level cache is impossible — this is the same "filter depends on `attrs.*`" exception used for `core::getresources()` (see Mistake 13 above). Use `filter` to skip resources that don't need the lookup, and always wrap the call in `core::try()` since it hits a live provider API that can fail or return no match.
 
 ### ❌ Mistake 15: Using .attrs with core::getresources()
 ```hcl

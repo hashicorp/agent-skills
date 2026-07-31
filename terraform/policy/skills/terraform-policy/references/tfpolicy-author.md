@@ -702,7 +702,7 @@ resource_policy "aws_s3_bucket_versioning" "versioning_enabled" {
 6. Cover all variations of a resource family (e.g. AWS security groups: `aws_security_group`, `aws_security_group_rule`, `aws_vpc_security_group_ingress_rule`, `aws_default_security_group`).
 7. Use `filter` to skip resources that don't apply (saves work and avoids false positives).
 8. **Cache `core::getresources()` results in top-level locals** when the filter is a known literal or an existing resource ID — this avoids O(N) overhead per resource. **Exception:** when the filter depends on the current resource's own attribute (e.g. `{bucket = attrs.id}`, `{event_bus_name = attrs.name}`), the call cannot be pre-computed at top level because `attrs` is only available inside `resource_policy` — use the inline pattern instead (see item 15). ❌ Do NOT work around this by fetching all child resources at the top level with `{}` and building a lookup map — that is the same anti-pattern restructured.
-9. **Avoid `core::getdatasource()` inside `resource_policy`** — it calls provider APIs.
+9. **Cache `core::getdatasource()` results in top-level locals** when the filter is a known literal or constant — it makes a real provider API call, so repeating an identical call once per matching resource wastes work for no benefit. **Exception:** when the filter genuinely depends on the current resource's own attribute (e.g. validating that `attrs.ami` points to an AMI owned by an approved account, or that `attrs.kms_key_id` resolves to a key with the required policy), the call cannot be pre-computed at top level — use the inline pattern instead (see item 17). Scope inline calls with `filter` so the API call only runs for resources that actually need it, and wrap the result in `core::try()` since it calls a live API that can fail or return no match.
 10. Build lookup maps once for O(1) matching when iterating many resources.
 11. Keep each boolean expression on a single line (HCL parser limitation in beta).
 12. Use clear variable names (`scanning_config`, not `sc`).
@@ -714,6 +714,22 @@ resource_policy "aws_s3_bucket_versioning" "versioning_enabled" {
     - **When the enforcement goal is to ensure every parent has a compliant child, the dependent child must NEVER have a standalone `resource_policy` block.** Write the `resource_policy` block on the **parent type**. Fetch the dependent child inside the parent block via `core::getresources("<child_type>", {<linking_attr> = attrs.id_or_arn_or_name})`. Evaluate all attribute checks on those lookup results. Report all violations on the parent. When the goal is only to check every existing child's own attributes, a standalone `resource_policy` on the child type is valid — see Self-check above.
     - Concrete examples: `aws_s3_bucket_public_access_block`, `aws_s3_bucket_policy`, `aws_s3_bucket_acl` (all require `bucket`) → never standalone for any enforcement goal; always fetched inside `resource_policy "aws_s3_bucket"`. `aws_lb_listener` → standalone `resource_policy "aws_lb_listener"` is valid when checking every listener's own attributes (e.g., protocol, ssl_policy); use `resource_policy "aws_lb"` with inline lookup only when the goal is "every LB must have at least one compliant listener".
     - Always add this comment when using this pattern: *"This policy contains a cross-resource reference that will not resolve during plan time, but the policy will run successfully during apply time."*
+17. **Inline `core::getdatasource()` for per-resource external validation:** use this when the check requires live provider data tied to *this specific resource* — e.g. confirming `attrs.ami` is owned by an approved account, `attrs.kms_key_id` has the required key policy, or a referenced secret/role actually exists. The filter is derived from `attrs.*`, so it cannot be hoisted to a top-level `locals` block.
+    ```hcl
+    resource_policy "aws_instance" "approved_ami" {
+        filter = core::try(attrs.ami, null) != null
+
+        locals {
+            ami = core::try(core::getdatasource("aws_ami", { image_id = attrs.ami }), null)
+        }
+
+        enforce {
+            condition     = local.ami != null && core::try(local.ami.owner_id, "") == "123456789012"
+            error_message = "aws_instance must use an AMI owned by the approved account (123456789012)."
+        }
+    }
+    ```
+    Use `filter` to skip resources that don't need the lookup (avoids the API call entirely for non-matching resources), and always wrap the call in `core::try()` — unlike `core::getresources()`, this hits a live provider API and can fail or return no match.
 
 ### Communication
 1. Ask clarifying questions; don't assume requirements.
