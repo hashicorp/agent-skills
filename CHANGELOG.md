@@ -2,7 +2,7 @@
 
 All notable changes to the HashiCorp Agent Skills.
 
-## Unreleased
+## 1.0.0 - 2026-08-04
 
 ### Added
 - `terraform-search-import` skill for discovering existing resources with Terraform Search and bulk import
