@@ -33,6 +33,7 @@ Skills for developing Terraform providers.
 | new-terraform-provider | Scaffold a new Terraform provider |
 | run-acceptance-tests   | Run and debug provider acceptance tests |
 | provider-actions       | Implement provider actions (lifecycle operations) |
+| provider-ephemeral-resources | Implement ephemeral resources for non-persisted secrets |
 | provider-resources     | Implement resources and data sources |
 | provider-test-patterns | Acceptance test patterns for terraform-plugin-testing |
 
@@ -75,6 +76,7 @@ npx skills add hashicorp/agent-skills/terraform/module-generation/skills/terrafo
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/new-terraform-provider
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/run-acceptance-tests
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-actions
+npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-ephemeral-resources
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-resources
 npx skills add hashicorp/agent-skills/terraform/provider-development/skills/provider-test-patterns
 
@@ -113,6 +115,7 @@ terraform/
     └── skills/
         ├── new-terraform-provider/
         ├── provider-actions/
+        ├── provider-ephemeral-resources/
         ├── provider-resources/
         ├── run-acceptance-tests/
         └── provider-test-patterns/
