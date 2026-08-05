@@ -1,0 +1,63 @@
+# {{PRODUCT_DISPLAY_NAME}} Skills
+
+Agent skills for {{PRODUCT_DESCRIPTION_SHORT}}.
+
+## Plugins
+
+{{#PLUGINS}}
+### {{PLUGIN_NAME}}
+
+{{PLUGIN_DESCRIPTION}}
+
+| Skill | Description |
+|-------|-------------|
+{{#SKILLS}}
+| `{{SKILL_NAME}}` | {{SKILL_DESCRIPTION_SHORT}} |
+{{/SKILLS}}
+
+{{/PLUGINS}}
+
+## Installation
+
+### Claude Code Plugin
+
+```bash
+claude plugin marketplace add hashicorp/agent-skills
+
+{{#PLUGINS}}
+claude plugin install {{PLUGIN_NAME}}@hashicorp
+{{/PLUGINS}}
+```
+
+### Individual Skills
+
+```bash
+{{#PLUGINS}}
+# {{PLUGIN_DISPLAY_NAME}}
+{{#SKILLS}}
+npx skills add hashicorp/agent-skills/{{PRODUCT_NAME}}/{{USE_CASE}}/skills/{{SKILL_NAME}}
+{{/SKILLS}}
+
+{{/PLUGINS}}
+```
+
+## Structure
+
+```
+{{PRODUCT_NAME}}/
+{{#PLUGINS}}
+├── {{USE_CASE}}/
+│   ├── .claude-plugin/plugin.json
+│   └── skills/
+{{#SKILLS}}
+│       └── {{SKILL_NAME}}/
+{{/SKILLS}}
+{{/PLUGINS}}
+└── README.md
+```
+
+## References
+
+{{#REFERENCES}}
+- [{{REFERENCE_TITLE}}]({{REFERENCE_URL}})
+{{/REFERENCES}}

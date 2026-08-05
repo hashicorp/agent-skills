@@ -1,0 +1,13 @@
+{
+  "name": "agent-skills-templates",
+  "version": "1.0.0",
+  "description": "Templates and commands for adding new HashiCorp products to agent-skills",
+  "author": {
+    "name": "HashiCorp",
+    "url": "https://github.com/hashicorp"
+  },
+  "homepage": "https://github.com/hashicorp/agent-skills",
+  "repository": "https://github.com/hashicorp/agent-skills",
+  "license": "MPL-2.0",
+  "keywords": ["templates", "scaffolding", "generator", "hashicorp"]
+}
