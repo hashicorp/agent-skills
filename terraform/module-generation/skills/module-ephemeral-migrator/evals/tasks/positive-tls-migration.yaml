@@ -1,0 +1,40 @@
+id: positive-tls-001
+name: Migrate tls_private_key module to ephemeral
+description: >
+  User maintains a Terraform module that generates a TLS private key and stores it in Vault KV.
+  They want full state removal for all users — new and existing — with a one-time manual migration step.
+tags:
+  - positive-trigger
+  - ephemeral-creates
+inputs:
+  prompt: |
+    I maintain a Terraform module that creates a TLS private key and stores it in Vault KV v2. I need to fully remove the secret from state for ALL users of this module — both new and existing. Existing users should do a one-time manual step to preserve their key value. No intermediate versions — single breaking change. The module is at fixtures/tls-module/. Run the full ephemeral migration.
+  files:
+    - path: tls-module/main.tf
+    - path: tls-module/variables.tf
+expected:
+  should_trigger: true
+graders:
+  - type: text
+    name: creates-removed-block
+    config:
+      contains:
+        - "removed"
+        - "destroy = false"
+  - type: text
+    name: creates-ephemeral-resource
+    config:
+      contains:
+        - "ephemeral \"tls_private_key\""
+  - type: prompt
+    name: adds-ephemeral-input-variable
+    config:
+      prompt: >
+        Did the agent add an input variable with ephemeral = true to accept the legacy secret
+        value for existing users migrating off state? Answer YES or NO.
+  - type: text
+    name: creates-required-docs
+    config:
+      contains:
+        - "UPGRADE-GUIDE"
+        - "tf-ephemeral-upgrade"

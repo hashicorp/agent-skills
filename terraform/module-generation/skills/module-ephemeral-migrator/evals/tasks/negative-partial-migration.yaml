@@ -1,0 +1,22 @@
+id: negative-partial-001
+name: Partial migration — preserve secrets in state for existing users (should not trigger)
+description: >
+  User wants new deployments to use ephemeral resources but existing users should keep secrets in state —
+  no manual migration step required. This is the partial migration pattern handled by a different skill
+  (module-ephemeral-migrator), NOT the full migrator. Strong near-miss discriminator test.
+tags:
+  - negative-trigger
+inputs:
+  prompt: |
+    I want to update my Terraform module so that new deployments use ephemeral resources and don't store secrets in state. But I don't want to force existing users to do anything — their secrets should stay in state and keep working as-is. Is there a pattern for this?
+expected:
+  should_trigger: false
+graders:
+  - type: text
+    name: does-not-apply-full-migration
+    config:
+      not_contains:
+        - "UPGRADE-GUIDE"
+        - "removed {"
+        - "one-time migration"
+        - "policy-library-ephemerality"
