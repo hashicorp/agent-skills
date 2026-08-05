@@ -646,21 +646,10 @@ resource_policy "aws_s3_bucket" "public_access_required" {
 ```
 See the `core::getresources()` decision guide in Critical Rule 2 above for the full pattern guidance.
 
-### ❌ Mistake 14: Using core::getdatasource() Inside resource_policy
-```hcl
-# ❌ WRONG - Makes API calls for EVERY resource!
-resource_policy "aws_s3_bucket" "check" {
-    locals {
-        account_id = core::getdatasource("aws_caller_identity", {})
-    }
-}
+### ❌ Mistake 14: Using core::getdatasource() With a Static Filter Inside resource_policy
+`core::getdatasource()` makes a real provider API call (not read from state/plan, not cached automatically). If the filter doesn't depend on the resource being evaluated, calling it inside `resource_policy` repeats the identical call once per matching resource for no benefit — cache it once in top-level `locals` instead.
 
-# ✅ CORRECT - Cache in top-level locals
-locals {
-    account_id = core::getdatasource("aws_caller_identity", {})
-}
-```
-**Why:** Makes real provider API calls (not cached). Never use inside resource policies.
+**Exception:** inline `core::getdatasource()` inside `resource_policy` is correct — not an anti-pattern — when the filter depends on the resource's own attributes (e.g. its own `attrs.*` value), since the lookup key is only known once that specific resource is being evaluated and a top-level cache is impossible. This is the same "filter depends on `attrs.*`" exception used for `core::getresources()` (see Mistake 13 above). In this case, use `filter` to skip resources that don't need the lookup, and wrap the call in `core::try()` since it hits a live provider API that can fail or return no match.
 
 ### ❌ Mistake 15: Using .attrs with core::getresources()
 ```hcl
