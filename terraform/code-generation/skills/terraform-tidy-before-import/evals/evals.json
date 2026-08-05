@@ -1,0 +1,27 @@
+{
+  "skill_name": "terraform-tidy-before-import",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Tidy the generated Terraform in aws_thorough_before_cleanup.tf so it is ready for import and safe to commit. Use the default thoroughness level, keep valid import blocks intact, preserve Terraform language meta-arguments and nested language blocks, and organize the finished configuration into appropriate Terraform files before you wrap up. Keep terraform.tf in any terraform working directories for base provider configuration. Make a best effort: if the final file does not validate or does not meet all criteria, the computer should still present it as output for evaluation.",
+      "expected_output": "A cleaned AWS configuration as close to aws_thorough_after_cleanup.tf as possible. Expect absence of provider-defined computed attributes and top-level timeout blocks while preserving valid import blocks, lifecycle/meta-arguments, and connection timeouts.",
+      "files": [
+        "evals/files/aws_thorough_before_cleanup.tf",
+        "evals/files/aws_thorough_after_cleanup.tf",
+        "evals/files/terraform.tf"
+      ],
+      "expectations": [
+        "terraform validate exits with code 0 on the output .tf files",
+        "All 7 import blocks from the source are present across the output files",
+        "Every import block retains its provider argument",
+        "No resource block contains a top-level timeouts {} block",
+        "aws_ssm_parameter resources have no value = null attribute (sensitive attribute removed)",
+        "aws_ssm_parameter resources have value_wo set to a non-null string",
+        "Each aws_ssm_parameter resource has a lifecycle block with ignore_changes = [value_wo_version]",
+        "aws_ssm_parameter resources retain the arn attribute (it is computed+optional per schema, so must be preserved not removed)",
+        "At least 2 Terraform variables are defined for values used 3 or more times",
+        "aws_instance resources retain the tags_all attribute (it is computed+optional per schema and must be preserved)"
+      ]
+    }
+  ]
+}
