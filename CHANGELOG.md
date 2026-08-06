@@ -2,7 +2,7 @@
 
 All notable changes to HashiCorp Agent Skills.
 
-## 1.0.0 - 2026-08-04
+## Unreleased
 
 ### Added
 
@@ -31,6 +31,15 @@ Skill paths with `plugins/<product>/skills/<skill-name>`.
 This migration guidance must remain until three calendar months after the
 product-bundle integration PR merges. Record the merge date and calculated
 removal date here when the PR merges.
+
+## 1.0.0 - 2026-08-04
+
+### Added
+
+- `terraform-search-import` skill for discovering existing resources with
+  Terraform Search and bulk import.
+- `terraform-policy-code` plugin with `tfpolicy-author` and `tfpolicy-test`
+  skills for HCP Terraform's native policy-as-code engine.
 
 ## 0.1.0
 
