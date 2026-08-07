@@ -33,6 +33,3 @@ Install one entry with:
 ```bash
 npx skills add hashicorp/agent-skills/<installation-path>
 ```
-
-`CODEOWNERS` is the canonical ownership source. Retired Skills must be removed
-from this active catalog and every installation and distribution path.

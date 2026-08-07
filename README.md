@@ -26,7 +26,7 @@ and more. List the repository's Skills:
 npx skills add hashicorp/agent-skills
 ```
 
-Install one Skill from its canonical path:
+Install one Skill from its path:
 
 ```bash
 npx skills add hashicorp/agent-skills/plugins/terraform/skills/terraform-style-guide
@@ -63,10 +63,6 @@ Replace any legacy plugin installation with `terraform@hashicorp` or
 or `packer/<category>/skills` with
 `plugins/<product>/skills/<skill-name>`.
 
-This migration guidance is time-bound and must remain available until three
-calendar months after the product-bundle integration PR merges. The merge date
-and resulting removal date must be recorded in this section when that PR merges.
-
 ## Repository structure
 
 ```text
@@ -89,8 +85,8 @@ agent-skills/
 
 - [CONTRIBUTING.md](CONTRIBUTING.md) explains the internal-contribution boundary and directs contributors to the Project
   Context Repository for contribution guidance and repository workflow help.
-- [SECURITY.md](SECURITY.md) redirects sensitive reports away from public
-  issues.
+- [SECURITY.md](SECURITY.md) for instructions on reporting security or data sensitivity
+  issues related to this repository's Agent Skills.
 - [SUPPORT.md](SUPPORT.md) defines repository support boundaries.
 - `CODEOWNERS` is the canonical Skill ownership and review-routing source.
 

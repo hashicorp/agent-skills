@@ -8,9 +8,9 @@ template.
 Repository maintainers do not provide:
 
 - HashiCorp product support or incident response;
-- model-provider service, billing, or model-quality support;
+- Model-provider service, billing, or model-quality support;
 - Claude Code, Codex, or another coding harness's product support;
-- troubleshooting for a user's local network, credentials, operating system,
+- Troubleshooting for a user's local network, credentials, operating system,
   cloud account, or production environment.
 
 Use the applicable product or provider's established support path for those
