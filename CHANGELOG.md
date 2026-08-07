@@ -20,17 +20,11 @@ All notable changes to HashiCorp Agent Skills.
 - Consolidated all 20 Skills under `plugins/<product>/skills/<skill-name>`.
 - Moved Waza evaluation assets to the private project context repository.
 
-### Migration
+### Removed
 
-The integration removes `terraform-code-generation`,
-`terraform-module-generation`, `terraform-provider-development`,
-`terraform-policy-code`, `packer-builders`, and `packer-hcp` without aliases.
-Install `terraform@hashicorp` or `packer@hashicorp`, and replace old individual
-Skill paths with `plugins/<product>/skills/<skill-name>`.
-
-This migration guidance must remain until three calendar months after the
-product-bundle integration PR merges. Record the merge date and calculated
-removal date here when the PR merges.
+- The `terraform-code-generation`, `terraform-module-generation`,
+  `terraform-provider-development`, `terraform-policy-code`, `packer-builders`,
+  and `packer-hcp` Plugin identifiers and manifests.
 
 ## 1.0.0 - 2026-08-04
 
