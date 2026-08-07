@@ -1,5 +1,5 @@
 ---
-name: Marketplace or plugin installation issue
+name: Marketplace or Plugin Installation Issue
 about: Report a non-sensitive Claude Code or Codex packaging problem
 title: "installation: "
 labels: bug

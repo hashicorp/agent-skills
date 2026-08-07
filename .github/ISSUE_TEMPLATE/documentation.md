@@ -1,5 +1,5 @@
 ---
-name: Documentation issue
+name: Documentation Issue
 about: Report missing, stale, or incorrect repository documentation
 title: "docs: "
 labels: documentation

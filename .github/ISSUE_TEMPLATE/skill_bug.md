@@ -1,5 +1,5 @@
 ---
-name: Skill bug or incorrect guidance
+name: Skill Bug or Incorrect Guidance
 about: Report non-sensitive incorrect or incomplete Skill behavior
 title: "skill bug: "
 labels: bug

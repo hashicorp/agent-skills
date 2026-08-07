@@ -1,6 +1,6 @@
 ---
-name: New Skill request
-about: Propose a new Skill during the internal-contribution-only phase
+name: New Skill Request
+about: Propose a new Skill
 title: "skill proposal: "
 labels: enhancement
 assignees: ""
@@ -37,8 +37,14 @@ assignees: ""
 
 ## Private Waza evaluation plan
 
-<!-- Cover positive and negative routing, functional behavior, and applicable
-security, credential, and operational cases using isolated fixtures. -->
+- Positive Routing:
+- Negative Routing:
+- Paired Functional Behavior:
+- Applicable security, credential, and operational risks assessed through the `operational_safety` Functional
+  Criterion:
+
+<!-- Use isolated fixtures that cannot create real infrastructure. Add a focused risk-specific Task only when the
+Functional Behavior Task cannot adequately cover an identified risk. -->
 
 ## Deferral checks
 

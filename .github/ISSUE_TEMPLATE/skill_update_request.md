@@ -1,6 +1,6 @@
 ---
-name: Existing Skill update request
-about: Propose a substantial update to an existing Skill
+name: Existing Skill Update Request
+about: Propose an update to an existing Skill
 title: "skill update: "
 labels: enhancement
 assignees: ""
