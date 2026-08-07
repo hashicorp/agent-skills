@@ -87,8 +87,8 @@ agent-skills/
 
 ## Governance and support
 
-- [CONTRIBUTING.md](CONTRIBUTING.md) describes the internal contribution and
-  proposal process.
+- [CONTRIBUTING.md](CONTRIBUTING.md) explains the internal-contribution boundary and directs contributors to the Project
+  Context Repository for contribution guidance and repository workflow help.
 - [SECURITY.md](SECURITY.md) redirects sensitive reports away from public
   issues.
 - [SUPPORT.md](SUPPORT.md) defines repository support boundaries.
