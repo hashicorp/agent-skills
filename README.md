@@ -1,8 +1,6 @@
 # HashiCorp Agent Skills
 
-HashiCorp Agent Skills provide focused, installable guidance for Terraform and
-Packer workflows. Individual Skill installation is the primary distribution
-method. Product bundles are also available for Claude Code and Codex.
+HashiCorp Agent Skills for Terraform and Packer.
 
 | Product | Skills | Product bundle |
 | --- | ---: | --- |
@@ -10,17 +8,44 @@ method. Product bundles are also available for Claude Code and Codex.
 | [Packer](plugins/packer/README.md) | 4 | `packer` |
 
 See [SKILLS.md](SKILLS.md) for the complete catalog and lifecycle status of each
-Skill. See [SUPPORTED_MODELS.md](SUPPORTED_MODELS.md) for the governed model
-support contract.
+Skill.
 
 > **Legal note:** Your use of a third-party MCP client or LLM is subject solely
 > to that provider's terms. IBM is not responsible for the performance of those
 > third-party tools and may be unable to support issues caused by them.
 
-## Install an individual Skill
+## Table of Contents
+
+- [Recent Updates](#recent-updates)
+- [Install an Individual Skill](#install-an-individual-skill)
+- [Install a Product Plugin Bundle](#install-a-product-plugin-bundle)
+- [Repository Structure](#repository-structure)
+- [Governance and Support](#governance-and-support)
+- [License](#license)
+
+## Recent Updates
+
+This repository now organizes its 20 Skills under two product plugin roots:
+`plugins/terraform/skills/` and `plugins/packer/skills/`.
+
+### Migration from Legacy Plugin IDs and Paths
+
+The product plugin bundles replace these legacy plugin IDs:
+`terraform-code-generation`, `terraform-module-generation`,
+`terraform-provider-development`, `terraform-policy-code`, `packer-builders`,
+and `packer-hcp`.
+
+Replace any legacy plugin installation with `terraform@hashicorp` or
+`packer@hashicorp`. Replace individual paths under `terraform/<category>/skills`
+or `packer/<category>/skills` with
+`plugins/<product>/skills/<skill-name>`.
+
+## Install an Individual Skill
 
 Install Agent Skills in GitHub Copilot, Claude Code, Opencode, Cursor, IBM Bob,
-and more. List the repository's Skills:
+and more.
+
+List the repository's Skills:
 
 ```bash
 npx skills add hashicorp/agent-skills
@@ -35,7 +60,7 @@ npx skills add hashicorp/agent-skills/plugins/packer/skills/aws-ami-builder
 
 Every supported path appears in [SKILLS.md](SKILLS.md).
 
-## Install a product bundle
+## Install a Product Plugin Bundle
 
 ### Claude Code
 
@@ -51,19 +76,7 @@ Add this repository's `.agents/plugins/marketplace.json` as a repository
 marketplace, then install the `terraform` or `packer` plugin in Codex. Both
 marketplaces expose the same product bundles and Skill directories.
 
-## Migration from legacy plugin IDs and paths
-
-The product-bundle integration removes these legacy plugin IDs without aliases:
-`terraform-code-generation`, `terraform-module-generation`,
-`terraform-provider-development`, `terraform-policy-code`, `packer-builders`,
-and `packer-hcp`.
-
-Replace any legacy plugin installation with `terraform@hashicorp` or
-`packer@hashicorp`. Replace individual paths under `terraform/<category>/skills`
-or `packer/<category>/skills` with
-`plugins/<product>/skills/<skill-name>`.
-
-## Repository structure
+## Repository Structure
 
 ```text
 agent-skills/
@@ -81,14 +94,14 @@ agent-skills/
 └── SKILLS.md
 ```
 
-## Governance and support
+## Governance and Support
 
-- [CONTRIBUTING.md](CONTRIBUTING.md) explains the internal-contribution boundary and directs contributors to the Project
-  Context Repository for contribution guidance and repository workflow help.
-- [SECURITY.md](SECURITY.md) for instructions on reporting security or data sensitivity
-  issues related to this repository's Agent Skills.
+- [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidance. Contributions
+  are restricted to HashiCorp-internal contributors until further notice.
+- [SECURITY.md](SECURITY.md) for instructions on reporting security or data
+  sensitivity issues related to this repository's Agent Skills.
 - [SUPPORT.md](SUPPORT.md) defines repository support boundaries.
-- `CODEOWNERS` is the canonical Skill ownership and review-routing source.
+- `CODEOWNERS` for canonical Skill ownership and review-routing source.
 
 ## License
 
