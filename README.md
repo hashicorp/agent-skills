@@ -1,72 +1,107 @@
 # HashiCorp Agent Skills
 
-A collection of Agent skills and Claude Code plugins for HashiCorp products.
+HashiCorp Agent Skills for Terraform and Packer.
 
-| Product | Use cases |
-|:--------|:----------|
-| [Terraform](./terraform/) | Write HCL code, build modules, develop providers, run tests, and author policies |
-| [Packer](./packer/) | Build machine images on AWS, Azure, and Windows; integrate with HCP Packer registry |
+| Product | Skills | Product bundle |
+| --- | ---: | --- |
+| [Terraform](plugins/terraform/README.md) | 16 | `terraform` |
+| [Packer](plugins/packer/README.md) | 4 | `packer` |
 
-> **Legal Note:** Your use of a third party MCP Client/LLM is subject solely to the terms of use for such MCP/LLM, and IBM is not responsible for the performance of such third party tools. IBM expressly disclaims any and all warranties and liability for third party MCP Clients/LLMs, and may not be able to provide support to resolve issues which are caused by the third party tools.
+See [SKILLS.md](SKILLS.md) for the complete catalog and lifecycle status of each
+Skill.
 
-## Installation
+> **Legal note:** Your use of a third-party MCP client or LLM is subject solely
+> to that provider's terms. IBM is not responsible for the performance of those
+> third-party tools and may be unable to support issues caused by them.
 
-### Individual Skills
+## Table of Contents
 
-Install Agent Skills in GitHub Copilot, Claude Code, Opencode, Cursor, IBM Bob, and more:
+- [Recent Updates](#recent-updates)
+- [Install an Individual Skill](#install-an-individual-skill)
+- [Install a Product Plugin Bundle](#install-a-product-plugin-bundle)
+- [Repository Structure](#repository-structure)
+- [Governance and Support](#governance-and-support)
+- [License](#license)
+
+## Recent Updates
+
+This repository now organizes its 20 Skills under two product plugin roots:
+`plugins/terraform/skills/` and `plugins/packer/skills/`.
+
+### Migration from Legacy Plugin IDs and Paths
+
+The product plugin bundles replace these legacy plugin IDs:
+`terraform-code-generation`, `terraform-module-generation`,
+`terraform-provider-development`, `terraform-policy-code`, `packer-builders`,
+and `packer-hcp`.
+
+Replace any legacy plugin installation with `terraform@hashicorp` or
+`packer@hashicorp`. Replace individual paths under `terraform/<category>/skills`
+or `packer/<category>/skills` with
+`plugins/<product>/skills/<skill-name>`.
+
+## Install an Individual Skill
+
+Install Agent Skills in GitHub Copilot, Claude Code, Opencode, Cursor, IBM Bob,
+and more.
+
+List the repository's Skills:
 
 ```bash
-# List all skills
 npx skills add hashicorp/agent-skills
-
-# Install a specific skill
-npx skills add hashicorp/agent-skills/terraform/code-generation/skills/terraform-style-guide
 ```
 
-### Claude Code Plugin
-
-First, add the marketplace, then install plugins:
+Install one Skill from its path:
 
 ```bash
-# Add the HashiCorp marketplace
+npx skills add hashicorp/agent-skills/plugins/terraform/skills/terraform-style-guide
+npx skills add hashicorp/agent-skills/plugins/packer/skills/aws-ami-builder
+```
+
+Every supported path appears in [SKILLS.md](SKILLS.md).
+
+## Install a Product Plugin Bundle
+
+### Claude Code
+
+```bash
 claude plugin marketplace add hashicorp/agent-skills
-
-# Install plugins
-claude plugin install terraform-code-generation@hashicorp
-claude plugin install terraform-module-generation@hashicorp
-claude plugin install terraform-provider-development@hashicorp
-claude plugin install terraform-policy-code@hashicorp
-claude plugin install packer-builders@hashicorp
-claude plugin install packer-hcp@hashicorp
+claude plugin install terraform@hashicorp
+claude plugin install packer@hashicorp
 ```
 
-Or use the interactive interface:
-```bash
-/plugin
-```
+### Codex
 
-## Structure
+Add this repository's `.agents/plugins/marketplace.json` as a repository
+marketplace, then install the `terraform` or `packer` plugin in Codex. Both
+marketplaces expose the same product bundles and Skill directories.
 
-```
+## Repository Structure
+
+```text
 agent-skills/
-├── .claude-plugin/
-│   └── marketplace.json
-├── terraform/              # Terraform skills
-├── packer/                 # Packer skills
-├── <product>/              # Future products (Vault, Consul, etc.)
-└── README.md
+├── .agents/plugins/marketplace.json
+├── .claude-plugin/marketplace.json
+├── plugins/
+│   ├── terraform/
+│   │   ├── .claude-plugin/plugin.json
+│   │   ├── .codex-plugin/plugin.json
+│   │   └── skills/
+│   └── packer/
+│       ├── .claude-plugin/plugin.json
+│       ├── .codex-plugin/plugin.json
+│       └── skills/
+└── SKILLS.md
 ```
 
-Each product folder contains plugins, and each plugin contains skills:
+## Governance and Support
 
-```
-<product>/
-└── <plugin>/
-    ├── .claude-plugin/plugin.json
-    └── skills/
-        └── <skill>/
-            └── SKILL.md
-```
+- [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidance. Contributions
+  are restricted to HashiCorp-internal contributors until further notice.
+- [SECURITY.md](SECURITY.md) for instructions on reporting security or data
+  sensitivity issues related to this repository's Agent Skills.
+- [SUPPORT.md](SUPPORT.md) defines repository support boundaries.
+- `CODEOWNERS` for canonical Skill ownership and review-routing source.
 
 ## License
 

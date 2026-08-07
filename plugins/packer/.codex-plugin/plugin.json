@@ -1,0 +1,23 @@
+{
+  "name": "packer",
+  "version": "1.0.0",
+  "description": "Packer skills for image building and HCP Packer registry workflows.",
+  "author": {
+    "name": "HashiCorp",
+    "url": "https://github.com/hashicorp"
+  },
+  "homepage": "https://developer.hashicorp.com/packer",
+  "repository": "https://github.com/hashicorp/agent-skills",
+  "license": "MPL-2.0",
+  "keywords": ["packer", "images", "aws", "azure", "hcp-packer"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Packer",
+    "shortDescription": "Build and publish machine images.",
+    "longDescription": "HashiCorp Packer skills for AWS, Azure, and Windows image building plus HCP Packer registry workflows.",
+    "developerName": "HashiCorp",
+    "category": "Developer Tools",
+    "capabilities": ["Read", "Write"],
+    "defaultPrompt": "Help me complete this Packer task using the relevant HashiCorp skill."
+  }
+}

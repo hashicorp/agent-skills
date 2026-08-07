@@ -1,0 +1,32 @@
+{
+  "name": "hashicorp",
+  "interface": {
+    "displayName": "HashiCorp"
+  },
+  "plugins": [
+    {
+      "name": "terraform",
+      "source": {
+        "source": "local",
+        "path": "./plugins/terraform"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    },
+    {
+      "name": "packer",
+      "source": {
+        "source": "local",
+        "path": "./plugins/packer"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

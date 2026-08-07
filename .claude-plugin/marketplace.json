@@ -4,126 +4,30 @@
     "name": "HashiCorp"
   },
   "metadata": {
-    "description": "Official HashiCorp plugins and skills for Claude Code",
+    "description": "Official HashiCorp product plugins and Agent Skills for Claude Code",
     "version": "1.0.0"
   },
   "plugins": [
     {
-      "name": "terraform-code-generation",
-      "source": "./terraform/code-generation",
-      "description": "Terraform code generation skills including HCL generation, style guides, and testing.",
+      "name": "terraform",
+      "source": "./plugins/terraform",
+      "description": "Terraform skills for configuration, modules, providers, tests, imports, stacks, and policy.",
       "version": "1.0.0",
       "author": {
         "name": "HashiCorp"
       },
-      "keywords": [
-        "terraform",
-        "hcl",
-        "infrastructure",
-        "iac",
-        "testing",
-        "style-guide"
-      ],
       "category": "integration",
       "license": "MPL-2.0",
       "strict": false
     },
     {
-      "name": "terraform-module-generation",
-      "source": "./terraform/module-generation",
-      "description": "Terraform module generation and refactoring skills including module design and Terraform Stacks.",
+      "name": "packer",
+      "source": "./plugins/packer",
+      "description": "Packer skills for image building and HCP Packer registry workflows.",
       "version": "1.0.0",
       "author": {
         "name": "HashiCorp"
       },
-      "keywords": [
-        "terraform",
-        "modules",
-        "infrastructure",
-        "iac",
-        "stacks",
-        "refactoring"
-      ],
-      "category": "integration",
-      "license": "MPL-2.0",
-      "strict": false
-    },
-    {
-      "name": "terraform-provider-development",
-      "source": "./terraform/provider-development",
-      "description": "Terraform provider development skills including resources, data sources, actions, and acceptance testing.",
-      "version": "1.0.0",
-      "author": {
-        "name": "HashiCorp"
-      },
-      "keywords": [
-        "terraform",
-        "provider",
-        "plugin-framework",
-        "resources",
-        "testing"
-      ],
-      "category": "integration",
-      "license": "MPL-2.0",
-      "strict": false
-    },
-    {
-      "name": "terraform-policy-code",
-      "source": "./terraform/policy",
-      "description": "Terraform Policy skills for authoring .policy.hcl files, writing .policytest.hcl tests, and converting Sentinel policies to Terraform Policy.",
-      "version": "1.0.0",
-      "author": {
-        "name": "HashiCorp"
-      },
-      "keywords": [
-        "terraform",
-        "policy",
-        "hcp-terraform",
-        "sentinel",
-        "policy-as-code",
-        "tfpolicy",
-        "enforcement"
-      ],
-      "category": "integration",
-      "license": "MPL-2.0",
-      "strict": false
-    },
-    {
-      "name": "packer-builders",
-      "source": "./packer/builders",
-      "description": "Packer builder skills for AWS, Azure, and Windows image creation.",
-      "version": "1.0.0",
-      "author": {
-        "name": "HashiCorp"
-      },
-      "keywords": [
-        "packer",
-        "aws",
-        "azure",
-        "windows",
-        "ami",
-        "image",
-        "builder"
-      ],
-      "category": "integration",
-      "license": "MPL-2.0",
-      "strict": false
-    },
-    {
-      "name": "packer-hcp",
-      "source": "./packer/hcp",
-      "description": "HCP Packer registry integration for tracking and managing image metadata.",
-      "version": "1.0.0",
-      "author": {
-        "name": "HashiCorp"
-      },
-      "keywords": [
-        "packer",
-        "hcp-packer",
-        "registry",
-        "metadata",
-        "image-tracking"
-      ],
       "category": "integration",
       "license": "MPL-2.0",
       "strict": false
