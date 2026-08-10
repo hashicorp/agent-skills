@@ -1,2 +1,24 @@
-# Default owner
+# Repository stewardship
 * @hashicorp/team-agent-skills-ecosystem
+
+# Canonical Skill ownership and review routing
+/plugins/packer/skills/aws-ami-builder/ @hashicorp/team-agent-skills-ecosystem
+/plugins/packer/skills/azure-image-builder/ @hashicorp/team-agent-skills-ecosystem
+/plugins/packer/skills/push-to-registry/ @hashicorp/team-agent-skills-ecosystem
+/plugins/packer/skills/windows-builder/ @hashicorp/team-agent-skills-ecosystem
+/plugins/terraform/skills/azure-verified-modules/ @hashicorp/team-agent-skills-ecosystem
+/plugins/terraform/skills/new-terraform-provider/ @hashicorp/team-agent-skills-ecosystem
+/plugins/terraform/skills/provider-actions/ @hashicorp/team-agent-skills-ecosystem
+/plugins/terraform/skills/provider-configuration/ @hashicorp/team-agent-skills-ecosystem
+/plugins/terraform/skills/provider-docs/ @hashicorp/team-agent-skills-ecosystem
+/plugins/terraform/skills/provider-ephemeral-resources/ @hashicorp/team-agent-skills-ecosystem
+/plugins/terraform/skills/provider-framework-migration/ @hashicorp/team-agent-skills-ecosystem
+/plugins/terraform/skills/provider-resources/ @hashicorp/team-agent-skills-ecosystem
+/plugins/terraform/skills/provider-test-patterns/ @hashicorp/team-agent-skills-ecosystem
+/plugins/terraform/skills/refactor-module/ @hashicorp/team-agent-skills-ecosystem
+/plugins/terraform/skills/run-acceptance-tests/ @hashicorp/team-agent-skills-ecosystem
+/plugins/terraform/skills/terraform-policy/ @hashicorp/team-agent-skills-ecosystem
+/plugins/terraform/skills/terraform-search-import/ @hashicorp/team-agent-skills-ecosystem
+/plugins/terraform/skills/terraform-stacks/ @hashicorp/team-agent-skills-ecosystem
+/plugins/terraform/skills/terraform-style-guide/ @hashicorp/team-agent-skills-ecosystem
+/plugins/terraform/skills/terraform-test/ @hashicorp/team-agent-skills-ecosystem
