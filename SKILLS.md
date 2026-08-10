@@ -5,7 +5,7 @@ Each lifecycle value comes from the corresponding `SKILL.md` frontmatter.
 use. Other governed states are `deprecation-candidate`, `deprecated`, and
 `retired`.
 
-| Product | Skill | Lifecycle | Installation path |
+| Product | Skill | Lifecycle Status | Installation path |
 | --- | --- | --- | --- |
 | Packer | `aws-ami-builder` | `active` | `plugins/packer/skills/aws-ami-builder` |
 | Packer | `azure-image-builder` | `active` | `plugins/packer/skills/azure-image-builder` |
