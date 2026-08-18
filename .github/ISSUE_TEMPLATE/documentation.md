@@ -6,8 +6,14 @@ labels: documentation
 assignees: ""
 ---
 
-## Document and section
+## Document and Section
+
+<!-- Document and Section -->
 
 ## Problem
 
-## Suggested correction and authoritative source
+<!-- Documentation Problem -->
+
+## Suggested Correction
+
+<!-- Suggested Correction -->
