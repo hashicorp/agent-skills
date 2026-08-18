@@ -59,16 +59,7 @@ provider_policy "<provider_pattern>" "<policy_name>" { }
 
 Every `.policy.hcl` file must declare a top-level `policy { required_providers { ... } }` block. `tfpolicy validate` uses this block to resolve provider schemas for schema-aware validation, and validation fails when the block is omitted.
 
-```hcl
-policy {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 6.0.0, < 7.0.0"
-    }
-  }
-}
-```
+Use the same top-level `policy` scaffold shown in the Core Structure and Worked Example sections; only the provider source/version values should vary by policy.
 
 **Rules and limitations:**
 - `required_providers` is mandatory for `.policy.hcl` validation.

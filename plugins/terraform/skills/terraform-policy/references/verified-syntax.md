@@ -123,18 +123,7 @@ filter = try(attrs.encrypted, false) == true  # Missing core:: prefix
   has_exception = core::try(core::regex("exception", core::try(attrs.description, "")), null) != null
   ```
 
-**`policy.required_providers` is mandatory for validation:** Every `.policy.hcl` file must declare a top-level `policy { required_providers { ... } }` block. `tfpolicy validate` uses this block to resolve provider schemas for schema-aware validation, and validation fails when the block is omitted.
-
-```hcl
-policy {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 6.0.0, < 7.0.0"
-    }
-  }
-}
-```
+**`policy.required_providers` is mandatory for validation:** Every `.policy.hcl` file must declare a top-level `policy { required_providers { ... } }` block. `tfpolicy validate` uses this block to resolve provider schemas for schema-aware validation, and validation fails when the block is omitted. See `tfpolicy-author.md` for concrete authoring examples.
 
 **Validation limitations:**
 - Validation is **best effort** for version ranges. When a range is declared, provider schemas at the lower and upper bounds of the range are evaluated.
