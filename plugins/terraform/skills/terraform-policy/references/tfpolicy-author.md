@@ -667,8 +667,7 @@ Include the quality label, test success rate (if tests written), any limitations
 - Start every `.policy.hcl` with a top-level `policy { required_providers { ... } }` block.
 - Use provider sources and version constraints that match the resource types referenced by the policy.
 - Run `tfpolicy validate` after authoring to confirm the policy parses and the referenced provider schemas can be resolved.
-- Remember that version-range validation is best effort: provider schemas at the lower and upper bounds are evaluated.
-- Wildcard targets such as `resource_policy "*"` are not schema-validated.
+- See [Required `policy.required_providers` Block](#required-policyrequired_providers-block) for validation limitations such as version-range best-effort checks and wildcard-target behavior.
 - Wrap optional attributes in `core::try()`.
 - Keep each boolean expression on a single line.
 - Use multiple `enforce` blocks when you want independent diagnostics.
@@ -682,16 +681,9 @@ Include the quality label, test success rate (if tests written), any limitations
 
 User request: *"Ensure all S3 buckets have versioning enabled."*
 
-```hcl
-policy {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 6.0.0, < 7.0.0"
-    }
-  }
-}
+Include the top-level `policy { required_providers { ... } }` block shown in [Core Structure](#core-structure).
 
+```hcl
 # Ensure S3 Bucket Versioning is Enabled
 #
 # Enforces that all AWS S3 buckets have versioning enabled to protect
