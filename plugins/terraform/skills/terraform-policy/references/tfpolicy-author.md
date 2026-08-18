@@ -55,8 +55,38 @@ module_policy   "<module_pattern>" "<policy_name>" { }
 provider_policy "<provider_pattern>" "<policy_name>" { }
 ```
 
+### Required `policy.required_providers` Block
+
+Every `.policy.hcl` file must declare a top-level `policy { required_providers { ... } }` block. `tfpolicy validate` uses this block to resolve provider schemas for schema-aware validation, and validation fails when the block is omitted.
+
+```hcl
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.0.0, < 7.0.0"
+    }
+  }
+}
+```
+
+**Rules and limitations:**
+- `required_providers` is mandatory for `.policy.hcl` validation.
+- Validation is **best effort** for version ranges. When a range is declared, validation evaluates provider schemas at the lower and upper bounds of the range.
+- Wildcard targets such as `resource_policy "*"` are not schema-validated because they may match multiple resource types.
+- `required_providers` declares provider source and version constraints for validation. This is distinct from `meta.version` in `provider_policy`, which exposes the resolved provider version during policy evaluation.
+
 ### Core Structure
 ```hcl
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.0.0, < 7.0.0"
+    }
+  }
+}
+
 resource_policy "aws_ebs_volume" "encryption_check" {
   # Optional: pre-filter resources before evaluation
   filter = attrs.encrypted != null
@@ -643,6 +673,11 @@ Include the quality label, test success rate (if tests written), any limitations
 - Move complex predicates into `locals` for readability.
 
 ### Step 3 — Generate the policy
+- Start every `.policy.hcl` with a top-level `policy { required_providers { ... } }` block.
+- Use provider sources and version constraints that match the resource types referenced by the policy.
+- Run `tfpolicy validate` after authoring to confirm the policy parses and the referenced provider schemas can be resolved.
+- Remember that version-range validation is best effort: provider schemas at the lower and upper bounds are evaluated.
+- Wildcard targets such as `resource_policy "*"` are not schema-validated.
 - Wrap optional attributes in `core::try()`.
 - Keep each boolean expression on a single line.
 - Use multiple `enforce` blocks when you want independent diagnostics.
@@ -657,6 +692,15 @@ Include the quality label, test success rate (if tests written), any limitations
 User request: *"Ensure all S3 buckets have versioning enabled."*
 
 ```hcl
+policy {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 6.0.0, < 7.0.0"
+    }
+  }
+}
+
 # Ensure S3 Bucket Versioning is Enabled
 #
 # Enforces that all AWS S3 buckets have versioning enabled to protect
