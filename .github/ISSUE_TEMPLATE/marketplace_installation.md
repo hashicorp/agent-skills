@@ -1,21 +1,27 @@
 ---
 name: Marketplace or Plugin Installation Issue
-about: Report a non-sensitive Claude Code or Codex packaging problem
+about: Report a Claude Code or Codex plugin problem
 title: "installation: "
 labels: bug
 assignees: ""
 ---
 
-## Marketplace and product bundle
+## Marketplace and Product Bundle
 
 <!-- Claude Code or Codex; Terraform or Packer. -->
 
-## Installation command or action
+## Installation Command
 
-## Sanitized error
+<!-- Installation Command(s) Used -->
+
+## Error / Issue
+
+<!-- Error or Issue Encountered -->
 
 ## Expected Skills
 
+<!-- Skills Expected to be Installed -->
+
 ## Environment
 
-<!-- Harness version and operating system. Do not include credentials. -->
+<!-- Harness and Harness version-->

@@ -10,43 +10,36 @@ assignees: ""
 
 ## Target
 
-- Product:
-- Bundle:
-- Skill area and proposed name:
-- User workflow:
+- Product: <!-- Terraform or Packer -->
+- Bundle: <!-- Terraform or Packer -->
+- Skill Name: <!-- Name -->
 
-## Source and inclusion driver
+## Context
 
-- Authoritative product documentation or release notes:
-- Inclusion driver:
-- Supported-model impact:
+<!-- Product or feature documentation or release notes. N/A if inapplicable. -->
 
-## Ownership and distribution
+## Skill Owner
 
-- Proposed owner:
-- Applicable reviewers:
-- Bundle and marketplace impact:
-- Cross-product bundling decision, if applicable:
+<!-- HashiCorp GitHub team(s) responsible for Skill maintenance. -->
 
-## Risk review
+## Security and Risk
 
-- Security and privacy:
-- Credential handling:
-- Infrastructure or operational impact:
-- Licensing:
+- Security: <!-- Describe any security controls to modify or implement. N/A if inapplicable. -->
+- Credentials: <!-- Do you expect this Skill to explicitly handle credentials? N/A if inapplicable. -->
+- Privacy: <!-- Describe any privacy considerations or data handling practices. N/A if inapplicable. -->
 
-## Private Waza evaluation plan
+## Evaluation Plan
 
-- Positive Routing:
-- Negative Routing:
-- Paired Functional Behavior:
-- Applicable security, credential, and operational risks assessed through the `operational_safety` Functional
-  Criterion:
+- Positive Invocation Evaluation: <!-- Prompt that should trigger the Skill successfully. -->
+- Negative Invocation Evaluation: <!-- Prompt that should not trigger the Skill. -->
+- Behavioral Evaluation: <!-- Prompt that exercises this Skill. Used to measure functional quality. -->
+- Behavioral Evaluation Rubric:
+  - Technical Correctness: <!-- Criteria for assessing the technical accuracy of the Skill. -->
+  - Task Completion: <!-- Criteria for assessing whether the Skill successfully completes the intended task. -->
+  - Product Alignment: <!-- Criteria for assessing how well the Skill aligns with the specific product or feature being described. -->
+  - Operational Safety: <!-- Criteria for assessing the operational safety of the Skill. -->
 
-<!-- Use isolated fixtures that cannot create real infrastructure. Add a focused risk-specific Task only when the
-Functional Behavior Task cannot adequately cover an identified risk. -->
-
-## Deferral checks
+## Deferral Checks
 
 - [ ] The proposal is not too broad, stale, duplicative, unowned, or unsupported by an approved source.
 - [ ] Required owner and reviewer participation is confirmed.

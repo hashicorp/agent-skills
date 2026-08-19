@@ -6,15 +6,17 @@ labels: bug
 assignees: ""
 ---
 
-## Skill and product
+## Skill and Product
 
 <!-- Name the Skill, product, and canonical path. -->
 
 ## Observed behavior
 
-<!-- Describe the non-sensitive result. Do not include credentials. -->
+<!-- Describe observed behavior of the Skill when invoked. -->
 
 ## Expected behavior and source
+
+<!-- Describe the expected behavior of the Skill when invoked. -->
 
 <!-- Link authoritative HashiCorp documentation or release notes. -->
 
