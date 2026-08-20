@@ -2,7 +2,7 @@
 name: Existing Skill Update Request
 about: Propose an update to an existing Skill
 title: "skill update: "
-labels: enhancement
+labels: skill update
 assignees: ""
 ---
 
