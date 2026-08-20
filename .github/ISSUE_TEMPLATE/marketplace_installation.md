@@ -2,7 +2,7 @@
 name: Marketplace or Plugin Installation Issue
 about: Report a Claude Code or Codex plugin problem
 title: "installation: "
-labels: bug
+labels: plugin marketplace
 assignees: ""
 ---
 

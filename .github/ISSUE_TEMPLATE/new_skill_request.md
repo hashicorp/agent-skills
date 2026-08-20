@@ -2,7 +2,7 @@
 name: New Skill Request
 about: Propose a new Skill
 title: "skill proposal: "
-labels: enhancement
+labels: new skill
 assignees: ""
 ---
 

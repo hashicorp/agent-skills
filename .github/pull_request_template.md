@@ -1,35 +1,13 @@
-## What changed and why
+## Context
 
 ## Affected surfaces
 
-- Skills:
-- Product plugins:
-- Marketplace manifests:
-- Documentation or validation:
+- Skills: <!-- N/A if inapplicable. -->
+- Plugin Marketplaces: <!-- N/A if inapplicable. -->
+- Documentation: <!-- N/A if inapplicable. -->
+- Repository Metadata: <!-- N/A if inapplicable. -->
 
-## Source documentation
+## Ownership and Review
 
-<!-- Link authoritative HashiCorp product documentation or release notes. -->
-
-## Evaluation evidence
-
-<!-- Link the private redacted Waza summary or explain why evaluation is not applicable. -->
-
-## Supported-model impact
-
-## Security, privacy, credential, and operational considerations
-
-## Ownership and review
-
-- Ecosystem owner:
-- Applicable product-aligned owner or reviewers:
-
-## Verification
-
-- [ ] Structural validation passes.
-- [ ] Skill review is complete for changed Skills.
-- [ ] Private Waza evaluation is complete or has a recorded disposition.
-- [ ] CODEOWNERS review is requested.
-- [ ] Maintainer review is requested.
-- [ ] Claude Code and Codex marketplace checks pass when plugin definitions change.
-- [ ] Executable examples and links were checked where applicable.
+- [x] team-agent-skills-ecosystem
+<!-- [x] Relevant Skill-aligned reviewers if applicable. -->
