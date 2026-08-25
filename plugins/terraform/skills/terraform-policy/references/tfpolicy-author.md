@@ -71,10 +71,14 @@ Use the same top-level `policy` scaffold shown in the Core Structure and Worked 
 ```hcl
 policy {
   required_providers {
+    # Declare provider source and version constraints for validation.
+    # Use version ranges that cover the provider versions deployed in your infrastructure.
+    # Example with AWS provider (adjust based on your environment):
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 6.0.0, < 7.0.0"
+      version = ">= 5.0.0, < 7.0.0"  # Covers AWS provider 5.x and 6.x
     }
+    # Add other providers as needed (azurerm, google, etc.)
   }
 }
 
