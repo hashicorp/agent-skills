@@ -123,6 +123,12 @@ filter = try(attrs.encrypted, false) == true  # Missing core:: prefix
   has_exception = core::try(core::regex("exception", core::try(attrs.description, "")), null) != null
   ```
 
+**`policy.required_providers` is mandatory for validation:** Every `.policy.hcl` file must declare a top-level `policy { required_providers { ... } }` block. `tfpolicy validate` uses this block to resolve provider schemas for schema-aware validation, and validation fails when the block is omitted. See `tfpolicy-author.md` for concrete authoring examples.
+
+**Validation limitations:**
+- Validation is **best effort** for version ranges. When a range is declared, provider schemas at the lower and upper bounds of the range are evaluated.
+- Wildcard targets such as `resource_policy "*"` are not schema-validated because they may match multiple resource types.
+
 **Provider version constraint checks:** In `provider_policy`, `meta.version` is the **resolved provider version** (e.g. `"6.50.0"`), **not** the constraint string from `required_providers`. There is no tfpolicy surface that exposes the constraint string.
 
 > ⚠️ **`providers-require-version`-style Sentinel policies** that check `strings.has_prefix(p.version_constraint, ">")` inspect the version constraint format string, which tfpolicy does not expose. This check is **non-convertible**. The closest tfpolicy equivalent enforces that the **resolved provider version** is within an approved range:

@@ -174,8 +174,18 @@ resource "aws_security_group_rule" "should_fail_port_90" {
    - Exit 0: All tests pass (including expected failures)
    - Exit 1: Unexpected failures or errors
 
+**Important schema-verification caveat:**
+- `tfpolicy validate --policies=...` performs provider schema acquisition and validates resource types against the providers declared in `policy.required_providers`.
+- `tfpolicy test --policies=... --tests=...` can still emit:
+  `Warning: Resource types not verified against provider schemas`
+  even when `validate` succeeded separately.
+- Interpret this as a **test-runner limitation/caveat**, not necessarily a policy failure. The test runner can execute mocks structurally while warning that resource-type verification was not enforced in that execution path.
+- Do **not** rely on `tfpolicy test` alone to catch misspelled or unknown resource types. Always run `tfpolicy validate` as a separate step before or alongside tests.
+- In current behavior, this warning may still produce a non-zero process exit code from `tfpolicy test`, even when all individual test cases show `pass`.
+
 **CI/CD Usage:**
 ```bash
+tfpolicy validate --policies=./policies
 tfpolicy test --policies=./policies --tests=./tests
 if [ $? -eq 0 ]; then echo "Passed"; else echo "Failed"; exit 1; fi
 ```

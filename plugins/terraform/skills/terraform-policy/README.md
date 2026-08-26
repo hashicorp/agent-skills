@@ -32,6 +32,16 @@ terraform-policy/
 
 [`references/verified-syntax.md`](references/verified-syntax.md) is the single source of truth for verified Terraform Policy syntax, function names, and runtime limitations. All reference files link to it rather than duplicating facts — when reference content disagrees with this file, the reference wins.
 
+## Required provider declarations for `.policy.hcl`
+
+Authored `.policy.hcl` files must include a top-level `policy { required_providers { ... } }` block. `tfpolicy validate` uses these declarations for schema-aware validation, and validation fails if the block is omitted.
+
+For version ranges, validation is best effort: provider schemas at the lower and upper bounds of the declared range are evaluated. Wildcard targets such as `resource_policy "*"` are not schema-validated because they may match multiple resource types.
+
+See:
+- [`references/tfpolicy-author.md`](references/tfpolicy-author.md) for authoring guidance and examples
+- [`references/verified-syntax.md`](references/verified-syntax.md) for syntax and validation limitations
+
 ## Versioning
 
 Each reference is versioned independently via its `metadata.version` field.
