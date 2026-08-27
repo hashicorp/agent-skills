@@ -19,6 +19,7 @@ All notable changes to HashiCorp Agent Skills.
 
 - Consolidated all 20 Skills under `plugins/<product>/skills/<skill-name>`.
 - Moved Waza evaluation assets to the private project context repository.
+- Narrowed the Supported Model Matrix to OpenAI GPT-5.6 Sol.
 
 ### Removed
 

@@ -101,6 +101,7 @@ agent-skills/
 - [SECURITY.md](SECURITY.md) for instructions on reporting security or data
   sensitivity issues related to this repository's Agent Skills.
 - [SUPPORT.md](SUPPORT.md) defines repository support boundaries.
+- [SUPPORTED_MODELS.md](SUPPORTED_MODELS.md) defines the current supported model matrix.
 - `CODEOWNERS` for canonical Skill ownership and review-routing source.
 
 ## License
