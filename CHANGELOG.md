@@ -19,6 +19,8 @@ All notable changes to HashiCorp Agent Skills.
 
 - Consolidated all 20 Skills under `plugins/<product>/skills/<skill-name>`.
 - Moved Waza evaluation assets to the private project context repository.
+- Updated the Supported Model Matrix to the Bedrock-evaluable Claude Opus,
+  Claude Sonnet, and OpenAI GPT baselines.
 
 ### Removed
 
