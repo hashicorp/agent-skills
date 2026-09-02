@@ -14,18 +14,10 @@ Approving authority: `@hashicorp/team-agent-skills-ecosystem`.
 
 The normal support operating model includes `Latest` and `N-1` for each
 model family. A temporary Claude Sonnet Inference Availability Exception is
-active because the AWS Bedrock Mantle service available to the Evaluation
-account exposes no earlier Sonnet release. The missing Sonnet `N-1` row is a
-governed exception, not an Unsupported Gap; it does not create another support
-category or permit a substitute model.
+active for the Claude Sonnet N-1 model version.
 
 Supported means maintainers intentionally design, evaluate, and maintain Skills
 against the listed baseline. It does not promise identical behavior across
 models or harnesses. A model outside this matrix is unsupported or unevaluated,
 not necessarily incompatible. Training-data cutoff metadata is not required for
 supported status.
-
-Anthropic and OpenAI are the Model Providers. Private Evaluation inference uses
-AWS Bedrock as the sole Inference Provider. That execution path does not change
-model-provider identity or add other Bedrock-hosted models to the support
-contract.
