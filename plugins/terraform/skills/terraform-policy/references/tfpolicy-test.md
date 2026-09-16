@@ -1066,7 +1066,7 @@ These are behaviors where `tfpolicy test` passes silently but a real `terraform 
 
 **Impact:** A policy that uses `core::range()` with dynamic port attributes will appear to pass all tests — including `expect_failure` cases — because the range is always empty. The bug only surfaces against a real plan.
 
-> **Note:** `core::alltrue()` and `core::anytrue()` are available starting **tfpolicy 0.3.0** (see [tfpolicy-author](tfpolicy-author.md#core-functions--common-idioms)). On tfpolicy < 0.3.0 they do not exist and calling them produces `Error: Call to unknown function / There is no function named "alltrue" in namespace core::.`. Regardless of version, `core::alltrue()` does **not** fix the `core::range()` limitation below — `core::range()` still returns `[]` for dynamic `attrs.*` bounds in policytest, so the count approach remains the correct fix either way. The examples below show the **problem pattern** (❌) and the **correct alternative** (✅).
+> **Note:** `core::alltrue()` and `core::anytrue()` are available starting in tfpolicy 0.3.x (see [verified-syntax](verified-syntax.md#corealltruelist-and-coreanytruelist--tfpolicy-030-only)), but they do **not** fix the `core::range()` limitation below: `core::range()` still returns `[]` for dynamic `attrs.*` bounds in policytest, so the count approach remains the correct fix.
 
 ```hcl
 # ❌ WRONG — core::range() + core::alltrue()/core::anytrue() — still problematic even on 0.3.0+

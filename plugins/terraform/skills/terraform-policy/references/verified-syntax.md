@@ -53,8 +53,7 @@ filter = try(attrs.encrypted, false) == true  # Missing core:: prefix
 - `core::join(separator, list)` - Join list elements
 - `core::semverconstraint(version, constraint)` - Version comparison
 - `core::getresources(type, filter_map)` - Query related resources
-- `core::alltrue(list)` - **tfpolicy 0.3.0+.** Returns `true` if every element is `true` (empty list → `true`; unknown element with no `false` present → unknown). Parameter type is `list(bool)`: `null` and boolean-like strings (`"true"`, `"false"`, `"1"`, `"0"`) are accepted/coerced; numbers, nested lists, and other strings error with `all elements must be boolean values`. On tfpolicy < 0.3.0 this function **does not exist** — use `core::length([for b in list : b if !b]) == 0` instead.
-- `core::anytrue(list)` - **tfpolicy 0.3.0+.** Returns `true` if any element is `true` (empty list → `false`; `true` found → `true` even if other elements are unknown; no `true` found but an unknown element present → unknown). Same `list(bool)` coercion/error rules as `core::alltrue`. On tfpolicy < 0.3.0 this function **does not exist** — use `core::length([for b in list : b if b]) > 0` instead.
+- `core::alltrue(list)` / `core::anytrue(list)` - Boolean collection helpers, available starting in tfpolicy 0.3.0. See [`core::alltrue()` and `core::anytrue()`](#corealltruelist-and-coreanytruelist--tfpolicy-030-only) for exact empty-list, unknown, and coercion behavior.
 
 **⚠️ IMPORTANT: `core::getresources()` filter behavior with unknown attribute values.**
 - The `filter_map` argument is **required by the function signature** (omitting it → "Not enough function arguments"). Passing `{}` matches everything; passing `{ attr = value }` performs equality matching.
@@ -1019,7 +1018,7 @@ resource_policy "aws_instance" "check" {
 
 ---
 
-### `core::alltrue()` and `core::anytrue()` — tfpolicy 0.3.0+ Only
+### `core::alltrue(list)` and `core::anytrue(list)` — tfpolicy 0.3.0+ Only
 
 **`core::anytrue(list)` and `core::alltrue(list)` are available starting in tfpolicy 0.3.0.** On tfpolicy < 0.3.0 these functions **do not exist**, and using them anywhere — including in `locals`, in `for...if` filter expressions, or in `enforce` conditions — produces:
 
