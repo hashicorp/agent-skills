@@ -33,7 +33,7 @@ Generate a focused test file that exercises the passing and failing paths of a p
 Build the `resource {}` blocks needed for `core::getresources()` filters to match correctly (parent + child resources, `skip = true` on lookup-only resources, etc.).
 
 ### 3. Diagnose Runner Behavior
-Explain why a mock fails, passes, or crashes. Cover the current caveats: `operations` scope is not yet honored by the runner, `expect_failure` is rejected on `data` blocks, omitted attributes crash unless wrapped in `core::try()`.
+Explain why a mock fails, passes, or crashes. Cover the current caveats: `expect_failure` is rejected on `data` blocks, omitted attributes crash unless wrapped in `core::try()`, and replacement operations must be represented by separate create and delete policy blocks.
 
 ### 4. Recommend Test Organization
 Decide when to split into multiple `.policytest.hcl` files (per-policy targeting) versus consolidating, and how to keep mocks aligned with the policy's actual evaluation target.
@@ -178,7 +178,7 @@ resource "aws_security_group_rule" "should_fail_port_90" {
    - Exit 0: All tests pass (including expected failures)
    - Exit 1: Unexpected failures or errors
 
-**Schema preflight validation (tfpolicy 0.3.0+):** `tfpolicy test` now reuses the same provider-resolution path as `tfpolicy validate`. Before any test executes, every `attrs`/`prior_attrs` value in every test file — including mocks belonging to `skipped` cases — is preflighted against the provider schemas resolved from the target `.policy.hcl`'s top-level `policy { required_providers { ... } }` block. A mocked attribute that doesn't exist in the schema, or has the wrong type, fails preflight with a diagnostic pointing at the offending value, and **no tests in that run execute** — this is a hard stop, not a per-case warning. Fixtures that conform to the schema run unchanged, and the exact preflighted values (not a re-parsed copy) are what policies evaluate.
+**Schema preflight validation (tfpolicy 0.3.0+):** `tfpolicy test` now reuses the same provider-resolution path as `tfpolicy validate`. Before any test executes, provider, resource, and data-source policy inputs and every `attrs`/`prior_attrs` value in every test file — including mocks belonging to `skip = true` cases — are preflighted against the provider schemas resolved from the target `.policy.hcl`'s top-level `policy { required_providers { ... } }` block. The same schemas validate arguments used by `core::getdatasource()` and `core::getresources()`. A mocked attribute that doesn't exist in the schema, or has the wrong type, fails preflight with a diagnostic pointing at the offending value, and **no tests in that run execute** — this is a hard stop, not a per-case warning. Fixtures that conform to the schema run unchanged, and the exact preflighted values (not a re-parsed copy) are what policies evaluate.
 
 **Pre-0.3.0 schema-verification caveat (superseded by preflight validation above on 0.3.0+):**
 - `tfpolicy validate --policies=...` performs provider schema acquisition and validates resource types against the providers declared in `policy.required_providers`.
@@ -216,11 +216,11 @@ resource "resource_type" "test_name" {
 
 ### Every `resource {}` Mock Must Declare a Non-Empty State Block (tfpolicy 0.3.0+)
 
-**On tfpolicy 0.3.0+:** every mock `resource {}` block must declare at least one non-empty `attrs = {...}` and/or `prior_attrs = {...}` (at least one key). A meta-only fixture — both absent, or only literal `attrs = {}` / `prior_attrs = {}` — carries no inferable operation, so pre-flight rejects it with a diagnostic. Use `null` for "attribute not set", e.g. `attrs = { instance_type = null }`, not an empty block. `meta.operation` alone is not a substitute — it still requires an accompanying state block. On tfpolicy < 0.3.0, meta-only fixtures are still accepted but silently no-op (see below) — upgrade to 0.3.0 rather than relying on that behavior.
+**On tfpolicy 0.3.0+:** every mock `resource {}` block must declare `attrs` or `prior_attrs`. If both evaluate to empty for a given `resource` block, tfpolicy skips that test case because no operation can be inferred. Use `null` for "attribute not set", e.g. `attrs = { instance_type = null }`, not an empty block. `meta.operation` alone is not a substitute — it still requires an accompanying state block. On tfpolicy < 0.3.0, meta-only fixtures are still accepted but silently no-op (see below).
 
 **Scope: `resource {}` blocks only.** This requirement applies exclusively to mock `resource {}` blocks (`resource_policy` tests). `provider {}` and `module {}` mocks are unaffected — meta-only fixtures (e.g. `meta = { source = "...", version = "..." }` with no `attrs`) continue to work as before for `module_policy` and `provider_policy` tests, since those policy types don't infer a create/update/delete operation from resource state the way `resource_policy` does.
 
-Without this rule, a no-state mock is silently treated as a no-op and reported as `pass` (zero policies actually ran); with `expect_failure = true` it instead fails with a confusing `Missing expected failure`. A runtime backstop also catches state that's only empty at evaluation time (e.g. via `locals`): such cases report a new **`skipped`** status with a warning rather than `pass`, and `expect_failure = true` fails on a `skipped` case since a skip asserts nothing.
+An empty-state mock reports **`skipped`** with a warning rather than `pass`, and `expect_failure = true` fails on a skipped case because a skip asserts nothing.
 
 **Upgrading older fixtures:** find `resource {}` blocks with neither `attrs` nor `prior_attrs`, or only empty `{}` ones, and add at least one attribute (`null` where you mean "unset").
 
@@ -476,9 +476,10 @@ resource "aws_s3_bucket" "filtered_out" {
 | Meta Attribute | Mock Tests (`tfpolicy test`) | Real Plans (`terraform plan --policies=`) |
 |----------------|------------------------------|------------------------------------------|
 | `meta.provider_type` | ❌ UNDEFINED | ✅ Available (e.g., "aws", "azurerm") |
-| `meta.tfe_stack.deployment_name` | ✅ Available in tfpolicy 0.3.x+ mocks | ✅ Available in stack runs |
-| `meta.tfe_stack.stack_name` | ✅ Available in tfpolicy 0.3.x+ mocks | ✅ Available in stack runs |
-| `meta.tfe_stack.deployment_group` | ✅ Available in tfpolicy 0.3.x+ mocks | ✅ Available in stack runs |
+| `meta.tfe_stack.deployment_name` | ✅ Available in tfpolicy 0.3.x+ mocks | ✅ Always present; empty outside Stack evaluations |
+| `meta.tfe_stack.stack_name` | ✅ Available in tfpolicy 0.3.x+ mocks | ✅ Always present; empty outside Stack evaluations |
+| `meta.tfe_stack.deployment_group` | ✅ Available in tfpolicy 0.3.x+ mocks | ✅ Always present; empty outside Stack evaluations |
+| `meta.tfe_workspace.tags` | ✅ Available in tfpolicy 0.3.x+ mocks | ✅ Available for workspace evaluations; empty for Stacks or untagged workspaces |
 | `meta.type` | ❌ UNDEFINED | ❌ UNDEFINED |
 | `meta.address` | ❌ UNDEFINED | ❌ UNDEFINED |
 
@@ -499,7 +500,7 @@ resource_policy "aws_ebs_volume" "check_provider" {
 
 **Best Practice:** When using `meta.provider_type` in policies, always wrap with `core::try()` and note that mock tests cannot fully validate this behavior. Test with real terraform plans for complete validation.
 
-**Stack metadata in tests (tfpolicy 0.3.x+):** stack metadata can be mocked with `meta.tfe_stack.*` for resource policies, typically to test stack-scoped exclusion workflows:
+**Stack and workspace metadata in tests (tfpolicy 0.3.x+):** metadata can be mocked with `meta.tfe_stack.*` and `meta.tfe_workspace.tags` for resource, provider, and module policies. Stack fields remain empty outside Stack evaluations, so use them for stack-scoped exclusion workflows:
 
 ```hcl
 resource "null_resource" "excluded_deployment" {

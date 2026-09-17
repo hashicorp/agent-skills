@@ -122,9 +122,9 @@ filter = try(attrs.encrypted, false) == true  # Missing core:: prefix
   has_exception = core::try(core::regex("exception", core::try(attrs.description, "")), null) != null
   ```
 
-**`policy.required_providers` is mandatory for validation:** Every `.policy.hcl` file must declare a top-level `policy { required_providers { ... } }` block. `tfpolicy validate` uses this block to resolve provider schemas for schema-aware validation, and validation fails when the block is omitted. See `tfpolicy-author.md` for concrete authoring examples.
+**`policy.required_providers` is mandatory for resource and provider policy validation:** A `.policy.hcl` file containing resource or provider policies must declare a top-level `policy { required_providers { ... } }` block. `tfpolicy validate` uses this block to resolve provider schemas for schema-aware validation, and validation fails when the block is omitted. See `tfpolicy-author.md` for concrete authoring examples.
 
-**Starting in tfpolicy 0.3.0, `tfpolicy test` reuses this same `.policy.hcl` declaration** to preflight every mocked `attrs`/`prior_attrs` value in the corresponding `.policytest.hcl` file against resolved provider schemas. `.policytest.hcl` does **not** declare its own `required_providers` block — there is no `policytest { required_providers { ... } }` construct. See `tfpolicy-test.md` for details.
+**Starting in tfpolicy 0.3.0, `tfpolicy test` reuses this same `.policy.hcl` declaration** to validate provider, resource, and data-source policies, plus arguments used by `core::getdatasource()` and `core::getresources()`. It checks mocked values, including `skip = true` resource mocks, against the lowest and highest matching provider versions before evaluation. `.policytest.hcl` does **not** declare its own `required_providers` block — there is no `policytest { required_providers { ... } }` construct. See `tfpolicy-test.md` for details.
 
 **Validation limitations:**
 - Validation is **best effort** for version ranges. When a range is declared, provider schemas at the lower and upper bounds of the range are evaluated.
@@ -268,6 +268,7 @@ resource_policy "tfe_workspace" "deny_delete_without_tag" {
 - `operations = ["delete"]` — fires only on destroy; `prior_attrs` holds the before-state
 - `prior_attrs` is only available when `"create"` is NOT in `operations`
 - Default (no `operations`) = fires on create and update
+- A policy cannot list both `"create"` and `"delete"` in `operations`. Replacement plans are evaluated as separate delete and create operations, so split policies targeting both operations into separate `resource_policy` blocks.
 
 ---
 
@@ -1035,8 +1036,8 @@ There is no function named "alltrue" in namespace core::.
 ```
 
 **Semantics (0.3.0+):**
-- `core::alltrue(list)` — `true` if every element is `true`. Empty list → `true` (vacuous truth). `false` found → `false`; unknown with no `false` present → unknown.
-- `core::anytrue(list)` — `true` if any element is `true`. Empty list → `false`. `true` found → `true` even if other elements are unknown; no `true` found but an unknown element is present → unknown.
+- `core::alltrue(list)` — `true` if every element is `true`. Empty list → `true` (vacuous truth). `false` or `null` found → `false`; unknown with no `false` or `null` present → unknown.
+- `core::anytrue(list)` — `true` if any element is `true`. Empty list → `false`. `null` elements are ignored. `true` found → `true` even if other elements are unknown; no `true` found but an unknown element is present → unknown.
 - Parameter type is `list(bool)`: `null`, booleans, and boolean-like strings (`"true"`, `"false"`, `"1"`, `"0"`) are accepted/coerced; numbers, nested lists, and other strings error with `all elements must be boolean values`.
 
 ```hcl
@@ -1911,8 +1912,8 @@ resource_policy "aws_security_group" "comprehensive_check" {
 
 ### resource_policy
 - ✅ Full `attrs.*` access, nested attributes via dot notation
-- ✅ `meta.provider_type`, `meta.tfe_workspace`
-- ✅ `meta.tfe_stack.deployment_name`, `meta.tfe_stack.stack_name`, `meta.tfe_stack.deployment_group` for stack-scoped resource policies and `.policytest.hcl` resource mocks (tfpolicy 0.3.x+)
+- ✅ `meta.provider_type`, `meta.tfe_workspace.tags`
+- ✅ `meta.tfe_stack.deployment_name`, `meta.tfe_stack.stack_name`, `meta.tfe_stack.deployment_group`; fields are empty outside Stack evaluations
 - ❌ **`meta.address` is UNDEFINED in real plan evaluation** — do not use in `filter`, `locals`, `condition`, or `error_message`; it causes `Error: Unsupported attribute` at runtime. Note: `tfpolicy test` will NOT catch this error — only `terraform plan --policies=` will.
 - ✅ `filter`, `locals`, multiple `enforce` blocks
 
@@ -1920,12 +1921,12 @@ resource_policy "aws_security_group" "comprehensive_check" {
 - ✅ `meta.source`, `meta.version`, `meta.address`
 - ✅ `filter`, `locals`, multiple `enforce` blocks
 - ❌ `attrs.*` (inputs) - work in progress
-- ❌ `meta.tfe_workspace` - resource_policy only
+- ✅ `meta.tfe_stack.*`, `meta.tfe_workspace.tags`; Stack fields are empty outside Stack evaluations
 
 ### provider_policy
 - ✅ Full `attrs.*` (config), `meta.alias`, `meta.version`, `meta.source`
 - ✅ `filter`, `locals`, multiple `enforce` blocks
-- ❌ `meta.tfe_workspace` - resource_policy only
+- ✅ `meta.tfe_stack.*`, `meta.tfe_workspace.tags`; Stack fields are empty outside Stack evaluations
 
 **⚠️ `meta.version` is the resolved version (e.g. `"6.50.0"`), not the constraint string (e.g. `">= 4.0"`).** Use `core::semverconstraint(meta.version, "~> 5.0")` to enforce an approved range. Test mocks should use realistic resolved version numbers, not constraint strings. Verified on tfpolicy 0.0.2-beta20260513.
 

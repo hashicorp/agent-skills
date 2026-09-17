@@ -57,7 +57,7 @@ provider_policy "<provider_pattern>" "<policy_name>" { }
 
 ### Required `policy.required_providers` Block
 
-Every `.policy.hcl` file must declare a top-level `policy { required_providers { ... } }` block. `tfpolicy validate` uses this block to resolve provider schemas for schema-aware validation, and validation fails when the block is omitted.
+Every `.policy.hcl` file containing resource or provider policies must declare a top-level `policy { required_providers { ... } }` block. `tfpolicy validate` uses this block to resolve provider schemas for schema-aware validation, and validation fails when the block is omitted.
 
 Use the same top-level `policy` scaffold shown in the Core Structure and Worked Example sections; only the provider source/version values should vary by policy.
 
@@ -106,8 +106,8 @@ resource_policy "aws_ebs_volume" "encryption_check" {
 | `attrs.*` | resource / module / provider | Planned values for the current target. Wrap optional fields in `core::try()`. |
 | `prior_attrs.*` | resource_policy with `operations` ⊉ `["create"]` | Pre-change values. Use for `delete` and `update` scopes. |
 | `meta.provider_type` | resource_policy | e.g. `"aws"`. Useful for cross-provider wildcard rules. |
-| `meta.tfe_workspace.tags["<name>"]` | resource_policy only | Workspace-scoped routing (env, team, etc.). ❌ Not available in module_policy or provider_policy. |
-| `meta.tfe_stack.deployment_name` / `stack_name` / `deployment_group` | resource_policy only, tfpolicy 0.3.x+ | Stack-scoped routing/exclusion workflows. Available in `.policytest.hcl` mocks starting in 0.3.x. |
+| `meta.tfe_workspace.tags["<name>"]` | resource_policy, module_policy, provider_policy | Workspace-scoped routing (env, team, etc.). Empty when evaluating a Stack or an untagged workspace. |
+| `meta.tfe_stack.deployment_name` / `stack_name` / `deployment_group` | resource_policy, module_policy, provider_policy | Stack metadata for routing/exclusion workflows. Always present; fields are empty strings outside Stack evaluations. Available in `.policytest.hcl` mocks starting in 0.3.x. |
 | `meta.address` | ❌ | **UNDEFINED** in `resource_policy` real-plan evaluation. Never interpolate it into `error_message`. |
 | `input.<name>` | all | Values from `input {}` blocks; overridable per policy set. |
 
@@ -669,7 +669,7 @@ Include the quality label, test success rate (if tests written), any limitations
 - Move complex predicates into `locals` for readability.
 
 ### Step 3 — Generate the policy
-- Start every `.policy.hcl` with a top-level `policy { required_providers { ... } }` block.
+- Start `.policy.hcl` files containing resource or provider policies with a top-level `policy { required_providers { ... } }` block.
 - Use provider sources and version constraints that match the resource types referenced by the policy.
 - Run `tfpolicy validate` after authoring to confirm the policy parses and the referenced provider schemas can be resolved.
 - See [Required `policy.required_providers` Block](#required-policyrequired_providers-block) for validation limitations such as version-range best-effort checks and wildcard-target behavior.
@@ -1037,7 +1037,7 @@ module_policy "app.terraform.io/myorg/vpc/aws" "vpc_version" {
 
 **⚠️ Current Limitations (Private Beta):**
 - ❌ `attrs.*` (module inputs) NOT accessible yet - work in progress
-- ❌ `meta.tfe_workspace` NOT available - only in resource_policy
+- ✅ `meta.tfe_stack` and `meta.tfe_workspace.tags` are available; Stack fields are empty outside Stack evaluations.
 
 **Targeting:**
 - Use **full module source** to target specific module: `module_policy "app.terraform.io/myorg/vpc/aws"`
