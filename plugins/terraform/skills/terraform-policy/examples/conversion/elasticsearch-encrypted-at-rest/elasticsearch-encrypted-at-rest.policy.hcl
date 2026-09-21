@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2025, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 # Converted from HashiCorp PCI DSS Sentinel example: elasticsearch-encrypted-at-rest.sentinel
 # Conversion quality: Good
 

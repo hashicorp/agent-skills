@@ -1,6 +1,6 @@
 # This policy requires `aws_cloudwatch_event_bus` resources to be attached to a policy.
 
-# Copyright IBM Corp. 2025
+# Copyright IBM Corp. 2025, 2026
 # SPDX-License-Identifier: BUSL-1.1
 
 # Imports

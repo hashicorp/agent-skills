@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2025, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 # Converted from HashiCorp PCI DSS Sentinel example: dms-endpoints-should-use-ssl.sentinel
 # Conversion quality: Perfect
 
