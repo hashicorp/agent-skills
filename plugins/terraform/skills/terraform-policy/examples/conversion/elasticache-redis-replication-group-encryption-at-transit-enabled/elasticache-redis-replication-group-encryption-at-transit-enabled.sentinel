@@ -1,6 +1,6 @@
 # This policy requires that the `transit_encryption_enabled` attribute of the `aws_elasticache_replication_group` resource is true.
 
-# Copyright IBM Corp. 2025
+# Copyright IBM Corp. 2025, 2026
 # SPDX-License-Identifier: BUSL-1.1
 
 # Imports

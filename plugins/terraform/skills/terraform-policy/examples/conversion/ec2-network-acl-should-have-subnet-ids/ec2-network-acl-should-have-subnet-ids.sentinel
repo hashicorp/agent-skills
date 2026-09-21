@@ -1,6 +1,6 @@
 // This policy requires `aws_network_acl` resources to have 'subnet_ids' present.
 
-# Copyright IBM Corp. 2025
+# Copyright IBM Corp. 2025, 2026
 # SPDX-License-Identifier: BUSL-1.1
 
 // Imports
