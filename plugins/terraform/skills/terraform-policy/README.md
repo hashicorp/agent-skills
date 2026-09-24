@@ -38,6 +38,8 @@ Authored `.policy.hcl` files must include a top-level `policy { required_provide
 
 For version ranges, validation is best effort: provider schemas at the lower and upper bounds of the declared range are evaluated. Wildcard targets such as `resource_policy "*"` are not schema-validated because they may match multiple resource types.
 
+Starting in tfpolicy 0.3.0, `tfpolicy test` reuses this same `.policy.hcl` declaration to preflight the `attrs`/`prior_attrs` values mocked in the corresponding `.policytest.hcl` file against resolved provider schemas — `.policytest.hcl` does not declare its own `required_providers` block.
+
 See:
 - [`references/tfpolicy-author.md`](references/tfpolicy-author.md) for authoring guidance and examples
 - [`references/verified-syntax.md`](references/verified-syntax.md) for syntax and validation limitations

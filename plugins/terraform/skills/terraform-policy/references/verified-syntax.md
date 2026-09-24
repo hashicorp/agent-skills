@@ -53,8 +53,7 @@ filter = try(attrs.encrypted, false) == true  # Missing core:: prefix
 - `core::join(separator, list)` - Join list elements
 - `core::semverconstraint(version, constraint)` - Version comparison
 - `core::getresources(type, filter_map)` - Query related resources
-- ❌ ~~`core::anytrue(list)`~~ — **DOES NOT EXIST** in tfpolicy runtime. Use `core::length([for b in list : b if b]) > 0` instead.
-- ❌ ~~`core::alltrue(list)`~~ — **DOES NOT EXIST** in tfpolicy runtime. Use `core::length([for b in list : b if !b]) == 0` instead.
+- `core::alltrue(list)` / `core::anytrue(list)` - Boolean collection helpers, available starting in tfpolicy 0.3.0. See [`core::alltrue()` and `core::anytrue()`](#corealltruelist-and-coreanytruelist--tfpolicy-030-only) for exact empty-list, unknown, and coercion behavior.
 
 **⚠️ IMPORTANT: `core::getresources()` filter behavior with unknown attribute values.**
 - The `filter_map` argument is **required by the function signature** (omitting it → "Not enough function arguments"). Passing `{}` matches everything; passing `{ attr = value }` performs equality matching.
@@ -123,7 +122,9 @@ filter = try(attrs.encrypted, false) == true  # Missing core:: prefix
   has_exception = core::try(core::regex("exception", core::try(attrs.description, "")), null) != null
   ```
 
-**`policy.required_providers` is mandatory for validation:** Every `.policy.hcl` file must declare a top-level `policy { required_providers { ... } }` block. `tfpolicy validate` uses this block to resolve provider schemas for schema-aware validation, and validation fails when the block is omitted. See `tfpolicy-author.md` for concrete authoring examples.
+**`policy.required_providers` is mandatory for resource and provider policy validation:** A `.policy.hcl` file containing resource or provider policies must declare a top-level `policy { required_providers { ... } }` block. `tfpolicy validate` uses this block to resolve provider schemas for schema-aware validation, and validation fails when the block is omitted. See `tfpolicy-author.md` for concrete authoring examples.
+
+**Starting in tfpolicy 0.3.0, `tfpolicy test` reuses this same `.policy.hcl` declaration** to validate provider, resource, and data-source policies, plus arguments used by `core::getdatasource()` and `core::getresources()`. It checks mocked values, including `skip = true` resource mocks, against the lowest and highest matching provider versions before evaluation. `.policytest.hcl` does **not** declare its own `required_providers` block — there is no `policytest { required_providers { ... } }` construct. See `tfpolicy-test.md` for details.
 
 **Validation limitations:**
 - Validation is **best effort** for version ranges. When a range is declared, provider schemas at the lower and upper bounds of the range are evaluated.
@@ -267,6 +268,7 @@ resource_policy "tfe_workspace" "deny_delete_without_tag" {
 - `operations = ["delete"]` — fires only on destroy; `prior_attrs` holds the before-state
 - `prior_attrs` is only available when `"create"` is NOT in `operations`
 - Default (no `operations`) = fires on create and update
+- A policy cannot list both `"create"` and `"delete"` in `operations`. Replacement plans are evaluated as separate delete and create operations, so split policies targeting both operations into separate `resource_policy` blocks.
 
 ---
 
@@ -910,9 +912,9 @@ locals {
   is_compliant    = local.is_single_port && local.port_authorized
 }
 
-# ❌ ALSO WRONG — core::range() with dynamic attrs.* values silently returns
-# an empty list in the policytest framework (policytest limitation only).
-# Do not use core::range() with dynamic port attributes.
+# ❌ ALSO WRONG (tfpolicy < 0.3.0) — core::range() with dynamic attrs.* values silently returns
+# an empty list in the policytest framework (policytest limitation only), and core::alltrue()
+# does not exist before 0.3.0.
 locals {
   ports_in_range   = core::range(local.from_port, local.to_port + 1)  # empty in policytest!
   all_authorized   = core::alltrue([for p in local.ports_in_range : core::contains(local.authorized_ports, p)])
@@ -995,7 +997,8 @@ resource_policy "aws_instance" "check" {
     ebs_raw       = core::try(attrs.ebs_block_device, null)
     has_ebs       = local.ebs_raw != null ? core::length(local.ebs_raw) > 0 : false
     ebs_devices   = local.has_ebs ? [for d in local.ebs_raw : d] : []
-    # ✅ Use "no unencrypted devices" pattern — core::alltrue() does NOT exist
+    # ✅ "no unencrypted devices" pattern — works on any tfpolicy version.
+    # On 0.3.0+, core::alltrue([for d in local.ebs_devices : core::try(d.encrypted, false)]) is equivalent.
     unencrypted   = [for d in local.ebs_devices : d if core::try(d.encrypted, false) != true]
     all_encrypted = !local.has_ebs || core::length(local.unencrypted) == 0
   }
@@ -1016,9 +1019,9 @@ resource_policy "aws_instance" "check" {
 
 ---
 
-### ❌ Mistake 25: `core::anytrue()` and `core::alltrue()` Do Not Exist
+### `core::alltrue(list)` and `core::anytrue(list)` — tfpolicy 0.3.0+ Only
 
-**CRITICAL:** `core::anytrue()` and `core::alltrue()` are **not available** in the tfpolicy runtime. Using them anywhere — including in `locals`, in `for...if` filter expressions, or in `enforce` conditions — will produce:
+**`core::anytrue(list)` and `core::alltrue(list)` are available starting in tfpolicy 0.3.0.** On tfpolicy < 0.3.0 these functions **do not exist**, and using them anywhere — including in `locals`, in `for...if` filter expressions, or in `enforce` conditions — produces:
 
 ```
 Error: Call to unknown function
@@ -1032,32 +1035,30 @@ Error: Call to unknown function
 There is no function named "alltrue" in namespace core::.
 ```
 
+**Semantics (0.3.0+):**
+- `core::alltrue(list)` — `true` if every element is `true`. Empty list → `true` (vacuous truth). `false` or `null` found → `false`; unknown with no `false` or `null` present → unknown.
+- `core::anytrue(list)` — `true` if any element is `true`. Empty list → `false`. `null` elements are ignored. `true` found → `true` even if other elements are unknown; no `true` found but an unknown element is present → unknown.
+- Parameter type is `list(bool)`: `null`, booleans, and boolean-like strings (`"true"`, `"false"`, `"1"`, `"0"`) are accepted/coerced; numbers, nested lists, and other strings error with `all elements must be boolean values`.
+
 ```hcl
-# ❌ WRONG — core::alltrue() does NOT exist in tfpolicy runtime
+# ✅ tfpolicy 0.3.0+ — direct use
 locals {
   all_encrypted = core::alltrue([for d in local.devices : core::try(d.encrypted, false)])
+  any_public    = core::anytrue([for r in local.rules : r.cidr == "0.0.0.0/0"])
 }
 
-# ❌ WRONG — core::anytrue() does NOT exist in tfpolicy runtime
-locals {
-  any_public = core::anytrue([for r in local.rules : r.cidr == "0.0.0.0/0"])
-}
-
-# ✅ CORRECT — use core::length() with list comprehension instead of core::alltrue()
+# ✅ tfpolicy < 0.3.0 — use core::length() with list comprehension instead
 locals {
   # "all encrypted" = no unencrypted devices exist
   unencrypted   = [for d in local.devices : d if !core::try(d.encrypted, false)]
   all_encrypted = core::length(local.unencrypted) == 0
-}
 
-# ✅ CORRECT — use core::length() instead of core::anytrue()
-locals {
   # "any public" = at least one public rule exists
   public_rules = [for r in local.rules : r if r.cidr == "0.0.0.0/0"]
   any_public   = core::length(local.public_rules) > 0
 }
 
-# ✅ CORRECT — boolean conditions in for...if: use plain && / || operators
+# ✅ CORRECT on any version — boolean conditions in for...if: use plain && / || operators
 locals {
   bad_rules = [
     for rule in attrs.ingress : rule
@@ -1082,10 +1083,11 @@ locals {
 }
 ```
 
-**Rule:** `core::anytrue()` and `core::alltrue()` do not exist. Replace them with `core::length()` patterns:
+**Rule:** On tfpolicy 0.3.0+, prefer `core::alltrue()` / `core::anytrue()` directly for readability. On tfpolicy < 0.3.0, replace them with `core::length()` patterns:
 - Instead of `core::anytrue(list_of_bools)` → `core::length([for b in list_of_bools : b if b]) > 0`
 - Instead of `core::alltrue(list_of_bools)` → `core::length([for b in list_of_bools : b if !b]) == 0`
-- For filtering: use plain `&&` / `||` boolean operators in `for...if` clauses instead.
+- For filtering: use plain `&&` / `||` boolean operators in `for...if` clauses instead (works on any version).
+- Both functions accept `list(bool)` coercions (`null`, booleans, `"true"`, `"false"`, `"1"`, `"0"`). Numbers, nested lists, and other strings error — keep list comprehensions producing plain booleans when possible.
 
 ---
 
@@ -1910,7 +1912,8 @@ resource_policy "aws_security_group" "comprehensive_check" {
 
 ### resource_policy
 - ✅ Full `attrs.*` access, nested attributes via dot notation
-- ✅ `meta.provider_type`, `meta.tfe_workspace`
+- ✅ `meta.provider_type`, `meta.tfe_workspace.tags`
+- ✅ `meta.tfe_stack.deployment_name`, `meta.tfe_stack.stack_name`, `meta.tfe_stack.deployment_group`; fields are empty outside Stack evaluations
 - ❌ **`meta.address` is UNDEFINED in real plan evaluation** — do not use in `filter`, `locals`, `condition`, or `error_message`; it causes `Error: Unsupported attribute` at runtime. Note: `tfpolicy test` will NOT catch this error — only `terraform plan --policies=` will.
 - ✅ `filter`, `locals`, multiple `enforce` blocks
 
@@ -1918,12 +1921,12 @@ resource_policy "aws_security_group" "comprehensive_check" {
 - ✅ `meta.source`, `meta.version`, `meta.address`
 - ✅ `filter`, `locals`, multiple `enforce` blocks
 - ❌ `attrs.*` (inputs) - work in progress
-- ❌ `meta.tfe_workspace` - resource_policy only
+- ✅ `meta.tfe_stack.*`, `meta.tfe_workspace.tags`; Stack fields are empty outside Stack evaluations
 
 ### provider_policy
 - ✅ Full `attrs.*` (config), `meta.alias`, `meta.version`, `meta.source`
 - ✅ `filter`, `locals`, multiple `enforce` blocks
-- ❌ `meta.tfe_workspace` - resource_policy only
+- ✅ `meta.tfe_stack.*`, `meta.tfe_workspace.tags`; Stack fields are empty outside Stack evaluations
 
 **⚠️ `meta.version` is the resolved version (e.g. `"6.50.0"`), not the constraint string (e.g. `">= 4.0"`).** Use `core::semverconstraint(meta.version, "~> 5.0")` to enforce an approved range. Test mocks should use realistic resolved version numbers, not constraint strings. Verified on tfpolicy 0.0.2-beta20260513.
 

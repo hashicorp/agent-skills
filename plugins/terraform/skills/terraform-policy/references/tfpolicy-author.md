@@ -57,7 +57,7 @@ provider_policy "<provider_pattern>" "<policy_name>" { }
 
 ### Required `policy.required_providers` Block
 
-Every `.policy.hcl` file must declare a top-level `policy { required_providers { ... } }` block. `tfpolicy validate` uses this block to resolve provider schemas for schema-aware validation, and validation fails when the block is omitted.
+Every `.policy.hcl` file containing resource or provider policies must declare a top-level `policy { required_providers { ... } }` block. `tfpolicy validate` uses this block to resolve provider schemas for schema-aware validation, and validation fails when the block is omitted.
 
 Use the same top-level `policy` scaffold shown in the Core Structure and Worked Example sections; only the provider source/version values should vary by policy.
 
@@ -106,7 +106,8 @@ resource_policy "aws_ebs_volume" "encryption_check" {
 | `attrs.*` | resource / module / provider | Planned values for the current target. Wrap optional fields in `core::try()`. |
 | `prior_attrs.*` | resource_policy with `operations` ⊉ `["create"]` | Pre-change values. Use for `delete` and `update` scopes. |
 | `meta.provider_type` | resource_policy | e.g. `"aws"`. Useful for cross-provider wildcard rules. |
-| `meta.tfe_workspace.tags["<name>"]` | resource_policy only | Workspace-scoped routing (env, team, etc.). ❌ Not available in module_policy or provider_policy. |
+| `meta.tfe_workspace.tags["<name>"]` | resource_policy, module_policy, provider_policy | Workspace-scoped routing (env, team, etc.). Empty when evaluating a Stack or an untagged workspace. |
+| `meta.tfe_stack.deployment_name` / `stack_name` / `deployment_group` | resource_policy, module_policy, provider_policy | Stack metadata for routing/exclusion workflows. Always present; fields are empty strings outside Stack evaluations. Available in `.policytest.hcl` mocks starting in 0.3.x. |
 | `meta.address` | ❌ | **UNDEFINED** in `resource_policy` real-plan evaluation. Never interpolate it into `error_message`. |
 | `input.<name>` | all | Values from `input {}` blocks; overridable per policy set. |
 
@@ -170,7 +171,7 @@ Policy sets can override `input` defaults without editing the policy file. Use `
 - **Null safety:** `core::try(attrs.field, default)` — single layer; don't nest. **🔴 MANDATORY: always use the two-step pattern below when the attribute may be explicitly `null`.**
 - **Membership:** `core::contains(list, value)` — for lists. For string substring use `core::contains_substring`.
 - **Strings:** `core::startswith`, `core::endswith`, `core::contains_substring`, `core::regex` (throws on no match — wrap in `core::try`), `core::split(separator, string)` (use with `core::parseint()` for numeric decomposition — see `verified-syntax.md` Section 2 for full examples). ❌ **Never use `+` for string concatenation** — `+` is numeric addition only; using it with strings throws `Error: Unsuitable value for left operand: a number is required`. ✅ Use `"${local.var}"` string interpolation instead: e.g. `"table/${local.table_name}"` not `"table/" + local.table_name`.
-- **Aggregates:** `core::length(list_or_map)`.❌ `core::alltrue()` and `core::anytrue()` **DO NOT EXIST** in tfpolicy runtime — use `core::length()` with list comprehension: `core::length([for b in list : b if b]) > 0` instead of `anytrue`, `core::length([for b in list : b if !b]) == 0` instead of `alltrue`.
+- **Aggregates:** `core::length(list_or_map)`. On tfpolicy 0.3.x+, use `core::alltrue(list)` and `core::anytrue(list)` for boolean collection checks; on tfpolicy 0.2.x, use filtered-count patterns instead. See `verified-syntax.md` for exact empty-list, unknown, and coercion behavior.
 - **Ranges:** `core::range(limit)` → `[0, 1, …, limit-1]`; `core::range(lower, upper)` → `[lower, lower+1, …, upper-1]`; `core::range(lower, upper, step)` → step-incremented list from `lower` up to (but not including) `upper`. Works with hardcoded integer literals. ⚠️ With dynamic `attrs.*` integer values (e.g. `attrs.from_port`, `attrs.to_port`) `core::range()` silently returns an empty list in the policytest framework — prefer the count approach for port-range policies (see `verified-syntax.md` Mistake 23).
 - **Time:** `core::timestamp()`, `core::formatdate("EEEE", core::timestamp())` (weekday, UTC), `core::parseint(core::formatdate("HH", core::timestamp()), 10)` (hour, UTC).
 - **Semver:** `core::semverconstraint(version, "~> 4.67.0")` — supports `=`, `>=`, `<`, `~>`, range, `!=`. Always wrap in `core::try(..., false)` to handle non-semver or unparseable version strings gracefully. ⚠️ Prefer this over `core::split` + `core::parseint` for all version range checks converted from Sentinel string comparisons — manual integer parsing fails silently for non-numeric version suffixes and null/empty inputs.
@@ -509,7 +510,7 @@ Use this section when the input is an existing Sentinel `.sentinel` file. Follow
 | `strings.has_prefix(s, p)` | `core::startswith(s, p)` — arg order: **full string first, prefix second** (same as Sentinel). **Note:** `meta.version` in `provider_policy` is the **resolved version** (e.g. `"6.50.0"`), NOT the constraint string. Sentinel's `strings.has_prefix(p.version_constraint, ">")` is **non-convertible** — tfpolicy does not expose the constraint string. Use `core::semverconstraint(meta.version, ...)` instead. |
 | `strings.has_suffix(s, suffix)` | `core::endswith(s, suffix)` |
 | `rc.provider_name` | `meta.provider_type` |
-| `all/any expressions` | List comprehensions with filtered counts — **neither `core::alltrue()` nor `core::anytrue()` exist**. Use `core::length([for x in list : x if !x]) == 0` for "all true" and `core::length([for x in list : x if x]) > 0` for "any true". |
+| `all/any expressions` | `core::alltrue(list)` / `core::anytrue(list)` on tfpolicy 0.3.0+. On < 0.3.0, use list comprehensions with filtered counts instead: `core::length([for x in list : x if !x]) == 0` for "all true" and `core::length([for x in list : x if x]) > 0` for "any true". |
 | `else` clause | Multiple `enforce` blocks |
 | `maps.get(obj, key, default)` | `core::try(obj.key, default)` |
 | `collection.reject(items, predicate)` | List comprehension with `if` — `[for item in items : item if !<predicate>]` |
@@ -668,7 +669,7 @@ Include the quality label, test success rate (if tests written), any limitations
 - Move complex predicates into `locals` for readability.
 
 ### Step 3 — Generate the policy
-- Start every `.policy.hcl` with a top-level `policy { required_providers { ... } }` block.
+- Start `.policy.hcl` files containing resource or provider policies with a top-level `policy { required_providers { ... } }` block.
 - Use provider sources and version constraints that match the resource types referenced by the policy.
 - Run `tfpolicy validate` after authoring to confirm the policy parses and the referenced provider schemas can be resolved.
 - See [Required `policy.required_providers` Block](#required-policyrequired_providers-block) for validation limitations such as version-range best-effort checks and wildcard-target behavior.
@@ -805,9 +806,10 @@ message = "Allowed: ${core::join(", ", local.versions)}"
 
 # ❌ WRONG - Will fail with "Unknown function" error
 filter = try(attrs.encrypted, false) == true  # Missing core:: prefix
-# ❌ WRONG - core::anytrue does NOT EXIST in tfpolicy runtime
-# is_valid = anytrue(local.checks)     # Missing core:: prefix AND function doesn't exist
-# is_valid = core::anytrue(local.checks)  # Function does not exist — use core::length() instead
+# ❌ WRONG - missing core:: prefix (tfpolicy 0.3.0+ does have core::anytrue, but bare anytrue() is never valid)
+# is_valid = anytrue(local.checks)
+# ✅ CORRECT on tfpolicy 0.3.0+; on < 0.3.0 use core::length([for b in local.checks : b if b]) > 0 instead
+# is_valid = core::anytrue(local.checks)
 ```
 
 ### ✅ Rule 2: Use Semantic Versioning for ALL Version Comparisons
@@ -953,6 +955,7 @@ resource_policy "aws_s3_bucket" "encryption_check" {
 **Available attributes:**
 - `attrs.<attribute_name>` - Resource attributes from configuration
 - `meta.provider_type` - Provider type (e.g., `aws`)
+- `meta.tfe_stack.deployment_name`, `meta.tfe_stack.stack_name`, `meta.tfe_stack.deployment_group` - Stack metadata for stack-scoped routing/exclusion workflows (tfpolicy 0.3.x+)
 - **⚠️ `meta.address` is UNDEFINED** for `resource_policy` in real plan evaluation — do not use it
 
 **⚠️ Understanding Provider Schema (Blocks vs Attributes):**
@@ -1034,7 +1037,7 @@ module_policy "app.terraform.io/myorg/vpc/aws" "vpc_version" {
 
 **⚠️ Current Limitations (Private Beta):**
 - ❌ `attrs.*` (module inputs) NOT accessible yet - work in progress
-- ❌ `meta.tfe_workspace` NOT available - only in resource_policy
+- ✅ `meta.tfe_stack` and `meta.tfe_workspace.tags` are available; Stack fields are empty outside Stack evaluations.
 
 **Targeting:**
 - Use **full module source** to target specific module: `module_policy "app.terraform.io/myorg/vpc/aws"`
@@ -1166,11 +1169,11 @@ core::keys(map)
 # Example: core::keys(attrs.tags)
 # Example: core::contains(core::keys(attrs.tags), "Environment")
 
-# Check if any element is true — ❌ core::anytrue() does NOT exist
-# Use: core::length([for b in list_of_booleans : b if b]) > 0
+# Check if any element is true — tfpolicy 0.3.0+: core::anytrue(list_of_booleans)
+# On < 0.3.0: core::length([for b in list_of_booleans : b if b]) > 0
 
-# Check if all elements are true — ❌ core::alltrue() does NOT exist
-# Use: core::length([for b in list_of_booleans : b if !b]) == 0
+# Check if all elements are true — tfpolicy 0.3.0+: core::alltrue(list_of_booleans)
+# On < 0.3.0: core::length([for b in list_of_booleans : b if !b]) == 0
 ```
 
 ### Safe Access
@@ -1473,7 +1476,8 @@ resource_policy "aws_s3_bucket" "conditional_encryption" {
 ```hcl
 resource_policy "aws_security_group" "security_checks" {
     locals {
-        # ✅ Use core::length() instead of core::anytrue() (which does NOT exist)
+        # tfpolicy 0.3.0+: core::anytrue([for rule in core::try(attrs.ingress, []) : (rule.from_port == 22 && core::contains(core::try(rule.cidr_blocks, []), "0.0.0.0/0"))]) works too.
+        # On < 0.3.0, use core::length() instead:
         # Filter to SSH rules from internet; if list is non-empty, there's a violation
         ssh_from_internet = [
             for rule in core::try(attrs.ingress, []) :
@@ -1531,7 +1535,8 @@ provider_policy "aws" "enforce_default_tags" {
         required_tags = ["Environment", "Owner", "CostCenter"]
         tag_keys = core::keys(local.tags)
 
-        # ✅ Use core::length() instead of core::alltrue() (which does NOT exist)
+        # tfpolicy 0.3.0+: core::alltrue([for tag in local.required_tags : core::contains(local.tag_keys, tag)]) works too.
+        # On < 0.3.0, use core::length() instead:
         # Count required tags that are MISSING; if zero, all required tags are present
         missing_required_tags = [
             for tag in local.required_tags :
