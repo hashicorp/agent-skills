@@ -1,3 +1,6 @@
+# Copyright IBM Corp. 2025, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 # Approximation of HashiCorp PCI DSS Sentinel example: ec2-network-acl-should-have-subnet-ids.sentinel
 # Exact conversion quality: Limited
 

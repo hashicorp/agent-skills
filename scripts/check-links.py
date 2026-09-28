@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright IBM Corp. 2025, 2026
+# SPDX-License-Identifier: MPL-2.0
+
 """Check local Markdown targets and optionally verify external URLs."""
 
 from __future__ import annotations

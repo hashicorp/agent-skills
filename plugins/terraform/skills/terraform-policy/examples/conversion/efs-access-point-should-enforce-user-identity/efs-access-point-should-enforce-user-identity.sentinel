@@ -1,6 +1,6 @@
 # This policy requires resources of type `aws_efs_access_point` have attribute `posix_user` should be defined.
 
-# Copyright IBM Corp. 2025
+# Copyright IBM Corp. 2025, 2026
 # SPDX-License-Identifier: BUSL-1.1
 
 # Imports
