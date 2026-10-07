@@ -35,7 +35,7 @@ Turn natural-language requirements into `resource_policy`, `module_policy`, or `
 Translate Sentinel constructs into tfpolicy equivalents, flag non-convertible patterns with practical alternatives, produce idiomatic `.policy.hcl` from existing Sentinel sources, and apply a quality label to each conversion.
 
 ### 3. Apply Operation Scoping Correctly
-Use `operations = ["create", "update", "delete"]` and `prior_attrs.<name>` to scope policies to the right plan actions and read pre-change state when relevant.
+Use `operations = ["create", "update", "delete", "no-op"]` (`"no-op"` requires tfpolicy 0.4.0+) and `prior_attrs.<name>` to scope policies to the right plan actions and read pre-change state when relevant.
 
 ### 4. Parameterize with `input` Blocks
 Replace hardcoded allowlists, version constraints, and thresholds with `input` blocks so policy sets can override values per environment.
@@ -103,8 +103,8 @@ resource_policy "aws_ebs_volume" "encryption_check" {
 
 | Surface | Available in | Notes |
 | --- | --- | --- |
-| `attrs.*` | resource / module / provider | Planned values for the current target. Wrap optional fields in `core::try()`. |
-| `prior_attrs.*` | resource_policy with `operations` ⊉ `["create"]` | Pre-change values. Use for `delete` and `update` scopes. |
+| `attrs.*` | resource / module / provider | Planned values for the current target (existing values for `no-op`). Wrap optional fields in `core::try()`. |
+| `prior_attrs.*` | resource_policy with `operations` limited to `update` and/or `delete` | Pre-change values. Not available for `create` or `no-op`. |
 | `meta.provider_type` | resource_policy | e.g. `"aws"`. Useful for cross-provider wildcard rules. |
 | `meta.tfe_workspace.tags["<name>"]` | resource_policy, module_policy, provider_policy | Workspace-scoped routing (env, team, etc.). Empty when evaluating a Stack or an untagged workspace. |
 | `meta.tfe_stack.deployment_name` / `stack_name` / `deployment_group` | resource_policy, module_policy, provider_policy | Stack metadata for routing/exclusion workflows. Always present; fields are empty strings outside Stack evaluations. Available in `.policytest.hcl` mocks starting in 0.3.x. |
@@ -125,7 +125,7 @@ resource_policy "tfe_workspace" "require_tags" {
 
 # Delete-gate
 resource_policy "tfe_workspace" "deny_delete_without_tag" {
-  operations = ["delete"]   # prior_attrs available when "create" not in operations
+  operations = ["delete"]   # prior_attrs requires operations limited to update and/or delete
   locals {
     prior_tag_names = core::try(prior_attrs.tag_names, [])
   }
@@ -134,14 +134,34 @@ resource_policy "tfe_workspace" "deny_delete_without_tag" {
     error_message = "Add 'delete' tag before destroying the workspace."
   }
 }
+
+# tfpolicy 0.4.0+: evaluate every resource in state, including unchanged ones
+resource_policy "aws_cloudtrail" "logging_enabled" {
+  # operations omitted = ["create", "update", "no-op"]
+  enforce {
+    condition     = attrs.enable_logging == true
+    error_message = "CloudTrail logging must be enabled."
+  }
+}
 ```
 
 **Rules:**
 - `operations = ["create", "update"]` — fires on create/update, skips destroy.
 - `operations = ["delete"]` — fires only on destroy; `prior_attrs` holds pre-change state.
 - `operations = ["update"]` — fires only on updates; `prior_attrs` available.
-- Default (no `operations`) = create and update (never destroy).
-- `prior_attrs` is only accessible when `"create"` is NOT in `operations`.
+- `operations = ["no-op"]` — (0.4.0+) fires only on resources the run leaves unchanged; `attrs` holds the existing values and `prior_attrs` is unavailable.
+- Default (no `operations`): tfpolicy 0.4.0+ = create, update, and no-op (the entire state, never destroy) for policies that do not reference `prior_attrs`; tfpolicy 0.3.x = create and update only. Policies that reference `prior_attrs` have no default and must set `operations` explicitly on 0.4.0+. Set `operations = ["create", "update"]` on 0.4.0+ to evaluate only changed resources.
+- `operations = []` is unconstrained on 0.4.0+ (evaluates all operations including `no-op`), but is rejected for policies that reference `prior_attrs`.
+- Operations fall into two groups and one list must stay within a group: `create`, `update`, and `no-op` expose `attrs`; `update` and `delete` expose `prior_attrs`. You cannot combine `delete` with `create` or `no-op`, and you cannot use `prior_attrs` with `create` or `no-op`. Replacements are evaluated as separate delete and create operations, so split them into two `resource_policy` blocks.
+- `meta.operation` can be `"create"`, `"update"`, `"delete"`, or (0.4.0+) `"no-op"`.
+- **`core::getresources` warning (0.4.0+):** an attrs-only policy that calls `core::getresources` with `operations` omitting `no-op` loads with a warning, because it runs only for changed resources and can miss pre-existing ones. Add `no-op`, or keep the list if changes-only is intended. No warning is raised for policies that reference `prior_attrs`, for lists containing `delete`, or for `core::getresources` calls in file-level `locals`.
+
+| Goal (0.4.0+) | `operations` | Attributes |
+| --- | --- | --- |
+| Every resource meets the policy | omit, or `["create", "update", "no-op"]` | `attrs` |
+| Only resources this run touches | `["create", "update"]` | `attrs` |
+| Block certain changes | `["update"]` | `attrs` and `prior_attrs` |
+| Protect from deletion | `["delete"]` | `prior_attrs` |
 
 ### `input` Blocks — Parameterization
 
@@ -501,9 +521,9 @@ Use this section when the input is an existing Sentinel `.sentinel` file. Follow
 | `filter tfplan.resource_changes` | Resource type in the policy declaration plus optional `filter` for attribute-based preconditions |
 | `as address, rc` | `attrs.*` and `meta.provider_type` for the current resource. **⚠️ `meta.address` is UNDEFINED — do not use it.** |
 | `rc.change.after.<attr>` | `attrs.<attr>` |
-| `rc.change.before.<attr>` | `prior_attrs.<attr>` — available when `operations` does NOT include `"create"` |
+| `rc.change.before.<attr>` | `prior_attrs.<attr>` — available when `operations` is limited to `"update"` and/or `"delete"` |
 | `rc.change.actions is ["delete"]` | `operations = ["delete"]` — fires only on destroy |
-| `rc.change.actions is not ["delete"]` | `operations = ["create", "update"]` — skips destroy |
+| `rc.change.actions is not ["delete"]` | `operations = ["create", "update"]` — skips destroy (set explicitly on 0.4.0+, where the default also includes `no-op`) |
 | `param allowed_list default [...]` | `input "allowed_list" { type = list(string); default = [...] }` |
 | `time.now.weekday_name` | `core::formatdate("EEEE", core::timestamp())` — UTC weekday name |
 | `time.now.hour` | `core::parseint(core::formatdate("HH", core::timestamp()), 10)` — UTC hour as int |
@@ -524,7 +544,7 @@ Use this section when the input is an existing Sentinel `.sentinel` file. Follow
 
 1. **Time-based rules** — `core::timestamp()` + `core::formatdate()` + `core::parseint()` cover Sentinel's `time` import. All values are UTC; document that assumption in policy comments.
 2. **`param` blocks** — direct equivalent: `input` blocks with `type` and `default`.
-3. **`rc.change.before` for update/delete** — `prior_attrs` is available when `operations` does NOT include `"create"`.
+3. **`rc.change.before` for update/delete** — `prior_attrs` is available when `operations` is limited to `"update"` and/or `"delete"`.
 4. **Integer range checks** — Sentinel policies that check whether all ports within `[from_port, to_port]` are authorized CAN be converted. Use the count approach: filter `authorized_ports` to those within the range and compare the count to `to_port - from_port + 1`. Do not use `core::range()` with dynamic `attrs.*` values. See `verified-syntax.md` Mistake 23.
 5. **`tfconfig/v2` reference count** — each resource reference is stored **twice** in `.references` (once as `resource.name`, once as `resource.name.id`). When simplifying a reference-count check to a direct `core::length(attrs.attribute)` check, **halve the threshold**: `references > 2` → `core::length(attrs.attribute) >= 2`.
 
