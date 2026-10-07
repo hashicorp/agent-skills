@@ -237,7 +237,7 @@ locals {
 ---
 
 ### 6. ✅ Operations Scoping + prior_attrs (VERIFIED)
-**Rule:** Use `operations = [...]` to restrict when a policy fires. Use `prior_attrs` to read pre-change state on delete/update.
+**Rule:** Use `operations = [...]` to restrict when a policy fires. Use `prior_attrs` to read pre-change state on delete/update. (tfpolicy 0.4.0+ adds the `"no-op"` operation.)
 
 ```hcl
 # ✅ Fires only on create and update — never on destroy
@@ -251,7 +251,7 @@ resource_policy "tfe_workspace" "require_project" {
 
 # ✅ Delete-gate: check prior state before workspace is destroyed
 resource_policy "tfe_workspace" "deny_delete_without_tag" {
-  operations = ["delete"]   # prior_attrs is available when "create" is NOT in operations
+  operations = ["delete"]   # prior_attrs requires operations limited to update and/or delete
   locals {
     prior_tag_names = core::try(prior_attrs.tag_names, [])
     had_delete_tag  = core::contains(local.prior_tag_names, "delete")
@@ -266,9 +266,11 @@ resource_policy "tfe_workspace" "deny_delete_without_tag" {
 **Key rules:**
 - `operations = ["create", "update"]` — skips destroy; equivalent to Sentinel `rc.change.actions is not ["delete"]`
 - `operations = ["delete"]` — fires only on destroy; `prior_attrs` holds the before-state
-- `prior_attrs` is only available when `"create"` is NOT in `operations`
-- Default (no `operations`) = fires on create and update
-- A policy cannot list both `"create"` and `"delete"` in `operations`. Replacement plans are evaluated as separate delete and create operations, so split policies targeting both operations into separate `resource_policy` blocks.
+- `operations = ["no-op"]` (0.4.0+) — fires only on resources the run leaves unchanged; `attrs` holds the existing values and `prior_attrs` is unavailable
+- `prior_attrs` is only available when `operations` is limited to `"update"` and/or `"delete"`; it is never available for `"create"` or `"no-op"`
+- Default (no `operations`): 0.4.0+ = fires on create, update, and no-op for policies that do not reference `prior_attrs` (they must set `operations` explicitly); 0.3.x = create and update. On 0.4.0+, use `operations = ["create", "update"]` to skip unchanged resources
+- A policy cannot list `"delete"` together with `"create"` or `"no-op"` in `operations`. Replacement plans are evaluated as separate delete and create operations, so split policies targeting both operations into separate `resource_policy` blocks.
+- On 0.4.0+, an attrs-only policy that calls `core::getresources` and omits `no-op` from `operations` loads with a warning; add `no-op` unless changes-only is intended
 
 ---
 

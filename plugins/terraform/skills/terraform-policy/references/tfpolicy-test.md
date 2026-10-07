@@ -273,7 +273,7 @@ resource "aws_ebs_volume" "test" {
 
 ### Testing Operation-Aware Policies
 
-Policies can scope themselves to specific plan operations via `operations = ["create", "update", "delete"]`. Test mocks support a matching `prior_attrs = { ... }` block alongside `attrs = { ... }`, so create, update, and delete-gate policies are all fully testable.
+Policies can scope themselves to specific plan operations via `operations = ["create", "update", "delete", "no-op"]` (`"no-op"` requires tfpolicy 0.4.0+). Test mocks support a matching `prior_attrs = { ... }` block alongside `attrs = { ... }`, so create, update, no-op, and delete-gate policies are all fully testable.
 
 **Mock shape per operation:**
 
@@ -282,6 +282,9 @@ Policies can scope themselves to specific plan operations via `operations = ["cr
 | `create` | ✅ planned values | — |
 | `update` | ✅ planned values | ✅ pre-change values |
 | `delete` | — | ✅ pre-change values |
+| `no-op` (0.4.0+) | ✅ existing values | — |
+
+Set `meta = { operation = "no-op" }` explicitly for no-op mocks. Terraform policy never infers `no-op`; a mock with only `attrs` is evaluated as a create operation. If `meta.operation` is omitted, tfpolicy infers the operation from `attrs` and `prior_attrs`.
 
 **Create / update policy (planned values only):**
 
@@ -367,6 +370,32 @@ resource "tfe_workspace" "has_delete_tag" {
 resource "tfe_workspace" "missing_delete_tag" {
   expect_failure = true
   prior_attrs    = { tag_names = ["prod"] }
+}
+```
+
+**No-op policy (tfpolicy 0.4.0+, evaluates unchanged resources in state):**
+
+```hcl
+# Policy (operations omitted = ["create", "update", "no-op"])
+resource_policy "aws_cloudtrail" "logging_enabled" {
+  enforce {
+    condition     = attrs.enable_logging == true
+    error_message = "CloudTrail logging must be enabled."
+  }
+}
+```
+
+```hcl
+# Test
+resource "aws_cloudtrail" "existing_trail" {
+  meta  = { operation = "no-op" }
+  attrs = { name = "existing-trail", s3_bucket_name = "my-bucket", enable_logging = true }
+}
+
+resource "aws_cloudtrail" "existing_trail_no_logging" {
+  expect_failure = true
+  meta           = { operation = "no-op" }
+  attrs          = { name = "trail-without-logging", s3_bucket_name = "my-bucket", enable_logging = false }
 }
 ```
 
