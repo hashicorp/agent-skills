@@ -284,7 +284,7 @@ Policies can scope themselves to specific plan operations via `operations = ["cr
 | `delete` | — | ✅ pre-change values |
 | `no-op` (0.4.0+) | ✅ existing values | — |
 
-Set `meta = { operation = "no-op" }` explicitly for no-op mocks. Terraform policy never infers `no-op`; a mock with only `attrs` is evaluated as a create operation. If `meta.operation` is omitted, tfpolicy infers the operation from `attrs` and `prior_attrs`.
+If `meta.operation` is omitted, tfpolicy infers the operation from the state blocks: `attrs` only → `create`, `attrs` + `prior_attrs` → `update`, `prior_attrs` only → `delete`. It never infers `no-op`, so set `meta = { operation = "no-op" }` explicitly on no-op mocks. Otherwise a policy scoped to `["no-op"]` skips them: passing mocks pass without being evaluated, and `expect_failure` mocks fail with "Missing expected failure".
 
 **Create / update policy (planned values only):**
 
@@ -398,8 +398,6 @@ resource "aws_cloudtrail" "existing_trail_no_logging" {
   attrs          = { name = "trail-without-logging", s3_bucket_name = "my-bucket", enable_logging = false }
 }
 ```
-
-> **Note:** The runner currently evaluates each mock against every policy listed in `targets` regardless of the policy's `operations` scope. Keep your `.policytest.hcl` file targeted at a single policy (or a set of policies that share the same operation scope), and only supply the `attrs` / `prior_attrs` fields that policy actually reads.
 
 ### Provider Schema Awareness
 

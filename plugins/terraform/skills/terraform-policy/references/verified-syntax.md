@@ -268,7 +268,7 @@ resource_policy "tfe_workspace" "deny_delete_without_tag" {
 - `operations = ["delete"]` — fires only on destroy; `prior_attrs` holds the before-state
 - `operations = ["no-op"]` (0.4.0+) — fires only on resources the run leaves unchanged; `attrs` holds the existing values and `prior_attrs` is unavailable
 - `prior_attrs` is only available when `operations` is limited to `"update"` and/or `"delete"`; it is never available for `"create"` or `"no-op"`
-- Default (no `operations`): 0.4.0+ = fires on create, update, and no-op for policies that do not reference `prior_attrs` (they must set `operations` explicitly); 0.3.x = create and update. On 0.4.0+, use `operations = ["create", "update"]` to skip unchanged resources
+- Default (no `operations`): 0.4.0+ = fires on create, update, and no-op for policies that do not reference `prior_attrs` (policies that reference `prior_attrs` must set `operations` explicitly); 0.3.x = create and update. On 0.4.0+, use `operations = ["create", "update"]` to skip unchanged resources
 - A policy cannot list `"delete"` together with `"create"` or `"no-op"` in `operations`. Replacement plans are evaluated as separate delete and create operations, so split policies targeting both operations into separate `resource_policy` blocks.
 - On 0.4.0+, an attrs-only policy that calls `core::getresources` and omits `no-op` from `operations` loads with a warning; add `no-op` unless changes-only is intended
 

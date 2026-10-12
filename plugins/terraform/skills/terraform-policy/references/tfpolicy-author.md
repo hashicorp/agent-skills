@@ -150,11 +150,12 @@ resource_policy "aws_cloudtrail" "logging_enabled" {
 - `operations = ["delete"]` — fires only on destroy; `prior_attrs` holds pre-change state.
 - `operations = ["update"]` — fires only on updates; `prior_attrs` available.
 - `operations = ["no-op"]` — (0.4.0+) fires only on resources the run leaves unchanged; `attrs` holds the existing values and `prior_attrs` is unavailable.
-- Default (no `operations`): tfpolicy 0.4.0+ = create, update, and no-op (the entire state, never destroy) for policies that do not reference `prior_attrs`; tfpolicy 0.3.x = create and update only. Policies that reference `prior_attrs` have no default and must set `operations` explicitly on 0.4.0+. Set `operations = ["create", "update"]` on 0.4.0+ to evaluate only changed resources.
-- `operations = []` is unconstrained on 0.4.0+ (evaluates all operations including `no-op`), but is rejected for policies that reference `prior_attrs`.
-- Operations fall into two groups and one list must stay within a group: `create`, `update`, and `no-op` expose `attrs`; `update` and `delete` expose `prior_attrs`. You cannot combine `delete` with `create` or `no-op`, and you cannot use `prior_attrs` with `create` or `no-op`. Replacements are evaluated as separate delete and create operations, so split them into two `resource_policy` blocks.
+- Default (no `operations`): tfpolicy 0.4.0+ = create, update, and no-op (the entire state, never destroy) for policies that do not reference `prior_attrs`; tfpolicy 0.3.x = create and update only. Policies that reference `prior_attrs` have no default and must set `operations` explicitly (omitting it is a hard error). Set `operations = ["create", "update"]` on 0.4.0+ to evaluate only changed resources.
+- `operations = []` is unconstrained on 0.4.0+: it evaluates every operation, including `no-op` and `delete` (where `attrs` is null), so attrs checks also fire on destroys. Prefer omitting `operations`. `[]` is rejected for policies that reference `prior_attrs`.
+- `create`, `update`, and `no-op` expose `attrs`; `update` and `delete` expose `prior_attrs`. `delete` cannot be combined with `create` or `no-op` (`["update", "delete"]` is valid), and `prior_attrs` cannot be used with `create` or `no-op`. Replacements are evaluated as separate delete and create operations, so split them into two `resource_policy` blocks.
 - `meta.operation` can be `"create"`, `"update"`, `"delete"`, or (0.4.0+) `"no-op"`.
-- **`core::getresources` warning (0.4.0+):** an attrs-only policy that calls `core::getresources` with `operations` omitting `no-op` loads with a warning, because it runs only for changed resources and can miss pre-existing ones. Add `no-op`, or keep the list if changes-only is intended. No warning is raised for policies that reference `prior_attrs`, for lists containing `delete`, or for `core::getresources` calls in file-level `locals`.
+- **`core::getresources` warning (0.4.0+):** an attrs-only policy that calls `core::getresources` with `operations` omitting `no-op` loads with a warning, because it runs only for changed resources and can miss pre-existing ones. Add `no-op`, or keep the list if changes-only is intended. No warning is raised for policies that reference `prior_attrs` (never add `no-op` to those; it fails validation), for lists containing `delete`, or for `core::getresources` calls in file-level `locals`. Because the recommended top-level `locals` caching pattern never triggers the warning, choose `operations` deliberately in that case (usually including `no-op`).
+- **Upgrade note (0.4.0+):** policies that omit `operations`, including all bundled conversion examples, start evaluating unchanged resources after moving from 0.3.x. A mandatory policy can begin blocking runs because of resources that already existed.
 
 | Goal (0.4.0+) | `operations` | Attributes |
 | --- | --- | --- |
@@ -523,7 +524,8 @@ Use this section when the input is an existing Sentinel `.sentinel` file. Follow
 | `rc.change.after.<attr>` | `attrs.<attr>` |
 | `rc.change.before.<attr>` | `prior_attrs.<attr>` — available when `operations` is limited to `"update"` and/or `"delete"` |
 | `rc.change.actions is ["delete"]` | `operations = ["delete"]` — fires only on destroy |
-| `rc.change.actions is not ["delete"]` | `operations = ["create", "update"]` — skips destroy (set explicitly on 0.4.0+, where the default also includes `no-op`) |
+| `rc.change.actions is not ["delete"]` | 0.4.0+: omit `operations` (default `["create", "update", "no-op"]`), since Sentinel's `resource_changes` also includes unchanged resources. 0.3.x: `operations = ["create", "update"]` plus a `# LIMITATION:` noting unchanged resources aren't evaluated |
+| `contains "create" or is ["update"]` | `operations = ["create", "update"]` |
 | `param allowed_list default [...]` | `input "allowed_list" { type = list(string); default = [...] }` |
 | `time.now.weekday_name` | `core::formatdate("EEEE", core::timestamp())` — UTC weekday name |
 | `time.now.hour` | `core::parseint(core::formatdate("HH", core::timestamp()), 10)` — UTC hour as int |
