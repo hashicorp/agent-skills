@@ -216,7 +216,7 @@ resource "resource_type" "test_name" {
 
 ### Every `resource {}` Mock Must Declare a Non-Empty State Block (tfpolicy 0.3.0+)
 
-**On tfpolicy 0.3.0+:** every mock `resource {}` block must declare `attrs` or `prior_attrs`. If both evaluate to empty for a given `resource` block, tfpolicy skips that test case because no operation can be inferred. Use `null` for "attribute not set", e.g. `attrs = { instance_type = null }`, not an empty block. `meta.operation` alone is not a substitute — it still requires an accompanying state block. On tfpolicy < 0.3.0, meta-only fixtures are still accepted but silently no-op (see below).
+**On tfpolicy 0.3.0+:** every mock `resource {}` block must declare `attrs` or `prior_attrs`. If both evaluate to empty for a given `resource` block, tfpolicy skips that test case because no operation can be inferred. Use `null` for "attribute not set", e.g. `attrs = { instance_type = null }`, not an empty block. `meta.operation` alone is not a substitute — it still requires an accompanying state block. On tfpolicy < 0.3.0, meta-only fixtures are still accepted but silently do nothing (see below).
 
 **Scope: `resource {}` blocks only.** This requirement applies exclusively to mock `resource {}` blocks (`resource_policy` tests). `provider {}` and `module {}` mocks are unaffected — meta-only fixtures (e.g. `meta = { source = "...", version = "..." }` with no `attrs`) continue to work as before for `module_policy` and `provider_policy` tests, since those policy types don't infer a create/update/delete operation from resource state the way `resource_policy` does.
 
