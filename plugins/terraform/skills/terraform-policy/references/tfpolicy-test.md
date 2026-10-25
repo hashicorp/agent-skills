@@ -503,9 +503,9 @@ resource "aws_s3_bucket" "filtered_out" {
 | Meta Attribute | Mock Tests (`tfpolicy test`) | Real Plans (`terraform plan --policies=`) |
 |----------------|------------------------------|------------------------------------------|
 | `meta.provider_type` | ❌ UNDEFINED | ✅ Available (e.g., "aws", "azurerm") |
-| `meta.tfe_stack.deployment_name` | ✅ Available in tfpolicy 0.3.x+ mocks | ✅ Always present; empty outside Stack evaluations |
-| `meta.tfe_stack.stack_name` | ✅ Available in tfpolicy 0.3.x+ mocks | ✅ Always present; empty outside Stack evaluations |
-| `meta.tfe_stack.deployment_group` | ✅ Available in tfpolicy 0.3.x+ mocks | ✅ Always present; empty outside Stack evaluations |
+| `meta.tfe_stack.deployment_name` | ✅ Available in tfpolicy 0.3.x+ mocks | ✅ Always present; empty outside Stack evaluations (`null` on 0.5.0+) |
+| `meta.tfe_stack.stack_name` | ✅ Available in tfpolicy 0.3.x+ mocks | ✅ Always present; empty outside Stack evaluations (`null` on 0.5.0+) |
+| `meta.tfe_stack.deployment_group` | ✅ Available in tfpolicy 0.3.x+ mocks | ✅ Always present; empty outside Stack evaluations (`null` on 0.5.0+) |
 | `meta.tfe_workspace.tags` | ✅ Available in tfpolicy 0.3.x+ mocks | ✅ Available for workspace evaluations; empty for Stacks or untagged workspaces |
 | `meta.type` | ❌ UNDEFINED | ❌ UNDEFINED |
 | `meta.address` | ❌ UNDEFINED | ❌ UNDEFINED |
@@ -527,7 +527,7 @@ resource_policy "aws_ebs_volume" "check_provider" {
 
 **Best Practice:** When using `meta.provider_type` in policies, always wrap with `core::try()` and note that mock tests cannot fully validate this behavior. Test with real terraform plans for complete validation.
 
-**Stack and workspace metadata in tests (tfpolicy 0.3.x+):** metadata can be mocked with `meta.tfe_stack.*` and `meta.tfe_workspace.tags` for resource, provider, and module policies. Stack fields remain empty outside Stack evaluations, so use them for stack-scoped exclusion workflows:
+**Stack and workspace metadata in tests (tfpolicy 0.3.x+):** metadata can be mocked with `meta.tfe_stack.*` and `meta.tfe_workspace.tags` for resource, provider, and module policies. Stack fields are empty strings outside Stack evaluations on 0.3.x/0.4.x and `null` on 0.5.0+ (guard with `!= null`, and omit them or set `null` in mocks to simulate a workspace), so use them for stack-scoped exclusion workflows:
 
 ```hcl
 resource "null_resource" "excluded_deployment" {
@@ -617,7 +617,7 @@ module "registry.terraform.io/acme-corp/database" "unauthorized" {
 module_policy "registry.terraform.io/hashicorp/aws" "version_check" {
   filter = meta.source == "registry.terraform.io/hashicorp/aws"
   enforce {
-    condition = core::semverconstraint(meta.version, ">= 4.0.0")
+    condition = meta.version != null && core::semverconstraint(meta.version, ">= 4.0.0")
     error_message = "Module must use version >= 4.0.0, found ${meta.version}"
   }
 }
@@ -683,7 +683,7 @@ provider "aws" "unofficial" {
 ### Common Provider Patterns
 
 1. **Official providers only**: Check `meta.source == "registry.terraform.io/hashicorp/aws"`
-2. **Version constraints**: Use `core::semverconstraint(meta.version, ">= 4.0.0, < 6.0.0")`
+2. **Version constraints**: Use `core::semverconstraint(meta.version, ">= 4.0.0, < 6.0.0")` (on 0.5.0+ guard with `meta.version != null &&`, since an unspecified version is `null`)
 3. **Allowlist by type**: Create separate provider_policy for each allowed type
 
 ---

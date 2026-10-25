@@ -1915,20 +1915,22 @@ resource_policy "aws_security_group" "comprehensive_check" {
 ### resource_policy
 - ✅ Full `attrs.*` access, nested attributes via dot notation
 - ✅ `meta.provider_type`, `meta.tfe_workspace.tags`
-- ✅ `meta.tfe_stack.deployment_name`, `meta.tfe_stack.stack_name`, `meta.tfe_stack.deployment_group`; fields are empty outside Stack evaluations
+- ✅ `meta.tfe_stack.deployment_name`, `meta.tfe_stack.stack_name`, `meta.tfe_stack.deployment_group`; fields are empty strings outside Stack evaluations on 0.3.x/0.4.x and `null` on 0.5.0+
 - ❌ **`meta.address` is UNDEFINED in real plan evaluation** — do not use in `filter`, `locals`, `condition`, or `error_message`; it causes `Error: Unsupported attribute` at runtime. Note: `tfpolicy test` will NOT catch this error — only `terraform plan --policies=` will.
 - ✅ `filter`, `locals`, multiple `enforce` blocks
 
 ### module_policy
-- ✅ `meta.source`, `meta.version`, `meta.address`
+- ✅ `meta.source`, `meta.version` (nullable on 0.5.0+), `meta.address`
+- ❌ `prior_attrs` is a parse error (0.5.0+); use `attrs`
 - ✅ `filter`, `locals`, multiple `enforce` blocks
 - ❌ `attrs.*` (inputs) - work in progress
-- ✅ `meta.tfe_stack.*`, `meta.tfe_workspace.tags`; Stack fields are empty outside Stack evaluations
+- ✅ `meta.tfe_stack.*`, `meta.tfe_workspace.tags`; Stack fields are empty strings outside Stack evaluations on 0.3.x/0.4.x and `null` on 0.5.0+
 
 ### provider_policy
-- ✅ Full `attrs.*` (config), `meta.alias`, `meta.version`, `meta.source`
+- ✅ Full `attrs.*` (config), `meta.alias` and `meta.version` (both `null` when absent on 0.5.0+; guard with `!= null`), `meta.source`
+- ❌ `prior_attrs` is a parse error (0.5.0+); use `attrs`
 - ✅ `filter`, `locals`, multiple `enforce` blocks
-- ✅ `meta.tfe_stack.*`, `meta.tfe_workspace.tags`; Stack fields are empty outside Stack evaluations
+- ✅ `meta.tfe_stack.*`, `meta.tfe_workspace.tags`; Stack fields are empty strings outside Stack evaluations on 0.3.x/0.4.x and `null` on 0.5.0+
 
 **⚠️ `meta.version` is the resolved version (e.g. `"6.50.0"`), not the constraint string (e.g. `">= 4.0"`).** Use `core::semverconstraint(meta.version, "~> 5.0")` to enforce an approved range. Test mocks should use realistic resolved version numbers, not constraint strings. Verified on tfpolicy 0.0.2-beta20260513.
 

@@ -104,12 +104,21 @@ resource_policy "aws_ebs_volume" "encryption_check" {
 | Surface | Available in | Notes |
 | --- | --- | --- |
 | `attrs.*` | resource / module / provider | Planned values for the current target (existing values for `no-op`). Wrap optional fields in `core::try()`. |
-| `prior_attrs.*` | resource_policy with `operations` limited to `update` and/or `delete` | Pre-change values. Not available for `create` or `no-op`. |
+| `prior_attrs.*` | resource_policy with `operations` limited to `update` and/or `delete` | Pre-change values. Not available for `create` or `no-op`. Rejected at parse time in `provider_policy` and `module_policy` (0.5.0+). |
 | `meta.provider_type` | resource_policy | e.g. `"aws"`. Useful for cross-provider wildcard rules. |
 | `meta.tfe_workspace.tags["<name>"]` | resource_policy, module_policy, provider_policy | Workspace-scoped routing (env, team, etc.). Empty when evaluating a Stack or an untagged workspace. |
-| `meta.tfe_stack.deployment_name` / `stack_name` / `deployment_group` | resource_policy, module_policy, provider_policy | Stack metadata for routing/exclusion workflows. Always present; fields are empty strings outside Stack evaluations. Available in `.policytest.hcl` mocks starting in 0.3.x. |
+| `meta.tfe_stack.deployment_name` / `stack_name` / `deployment_group` | resource_policy, module_policy, provider_policy | Stack metadata for routing/exclusion workflows. Always present; fields are empty strings outside Stack evaluations on 0.3.x/0.4.x, and `null` on 0.5.0+ (guard with `!= null`). Available in `.policytest.hcl` mocks starting in 0.3.x. |
 | `meta.address` | ❌ | **UNDEFINED** in `resource_policy` real-plan evaluation. Never interpolate it into `error_message`. |
 | `input.<name>` | all | Values from `input {}` blocks; overridable per policy set. |
+
+### Meta attributes nullable on 0.5.0+
+
+Starting in tfpolicy 0.5.0, absent `meta` attributes evaluate to `null` rather than an empty string. Nullable: `meta.alias` (provider_policy), `meta.version` (provider_policy, module_policy), and `meta.tfe_stack.deployment_group` / `deployment_name` / `stack_name` (all policy types; `null` in workspace evaluations or when not set). Not nullable: `meta.address`, `meta.source`, `meta.name`, `meta.namespace`, `meta.type`, `meta.provider_type`, `meta.module_path`, `meta.operation`, and `meta.tfe_workspace.tags` (empty map). Always guard before use:
+
+```hcl
+condition = meta.version != null && core::semverconstraint(meta.version, ">= 2.0.0")
+filter    = meta.alias != null && meta.alias == "secondary"
+```
 
 ### Operation Scoping and `prior_attrs`
 
@@ -1042,7 +1051,7 @@ module_policy "*" "module_source_check" {
 module_policy "app.terraform.io/myorg/vpc/aws" "vpc_version" {
     locals {
         has_version = meta.version != null
-        meets_minimum = core::semverconstraint(meta.version, ">= 1.0.0")
+        meets_minimum = meta.version != null && core::semverconstraint(meta.version, ">= 1.0.0")
     }
 
     enforce {
@@ -1054,12 +1063,13 @@ module_policy "app.terraform.io/myorg/vpc/aws" "vpc_version" {
 
 **Available attributes:**
 - `meta.source` - Module source (e.g., `app.terraform.io/org/module/provider`)
-- `meta.version` - Module version (works with `core::semverconstraint()`)
+- `meta.version` - Module version (works with `core::semverconstraint()`). Nullable on 0.5.0+: `null` when no version is specified, so guard with `meta.version != null`.
 - `meta.address` - Module address (e.g., `module.vpc`)
 
 **⚠️ Current Limitations (Private Beta):**
 - ❌ `attrs.*` (module inputs) NOT accessible yet - work in progress
-- ✅ `meta.tfe_stack` and `meta.tfe_workspace.tags` are available; Stack fields are empty outside Stack evaluations.
+- ✅ `meta.tfe_stack` and `meta.tfe_workspace.tags` are available; Stack fields are empty strings outside Stack evaluations on 0.3.x/0.4.x and `null` on 0.5.0+.
+- ❌ `prior_attrs` is a parse error in `module_policy` (0.5.0+); use `attrs`.
 
 **Targeting:**
 - Use **full module source** to target specific module: `module_policy "app.terraform.io/myorg/vpc/aws"`
@@ -1077,7 +1087,7 @@ provider_policy "aws" "version_check" {
     }
 
     enforce {
-        condition = core::semverconstraint(meta.version, ">= ${local.minimum_version}")
+        condition = meta.version != null && core::semverconstraint(meta.version, ">= ${local.minimum_version}")
         error_message = "AWS provider must be >= ${local.minimum_version}, got ${meta.version}"
     }
 }
@@ -1086,7 +1096,8 @@ provider_policy "aws" "version_check" {
 **Available attributes:**
 - `meta.source` - Full provider source (e.g., `registry.terraform.io/hashicorp/aws`)
 - `meta.version` - Provider version (e.g., `4.67.0`)
-- `meta.alias` - Provider alias (if configured)
+- `meta.alias` - Provider alias. `null` when no alias is configured on 0.5.0+ (empty string earlier); guard with `meta.alias != null`.
+- `prior_attrs` is a parse error in `provider_policy` (0.5.0+); use `attrs`.
 - `attrs.*` - Provider configuration attributes (region, profile, etc.)
 
 > **Note:** `meta.name` and `meta.type` are NOT confirmed available in `reference/verified-syntax.md`. Do not rely on them — use `meta.source` to identify a provider and `meta.version` for version checks.
