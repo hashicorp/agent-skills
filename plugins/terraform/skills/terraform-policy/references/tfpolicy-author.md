@@ -113,11 +113,11 @@ resource_policy "aws_ebs_volume" "encryption_check" {
 
 ### Meta attributes nullable on 0.5.0+
 
-Starting in tfpolicy 0.5.0, absent `meta` attributes evaluate to `null` rather than an empty string. Nullable: `meta.alias` (provider_policy), `meta.version` (provider_policy, module_policy), and `meta.tfe_stack.deployment_group` / `deployment_name` / `stack_name` (all policy types; `null` in workspace evaluations or when not set). Not nullable: `meta.address`, `meta.source`, `meta.name`, `meta.namespace`, `meta.type`, `meta.provider_type`, `meta.module_path`, `meta.operation`, and `meta.tfe_workspace.tags` (empty map). Always guard before use:
+Starting in tfpolicy 0.5.0, absent `meta` attributes evaluate to `null` rather than an empty string. Nullable: `meta.alias` (provider_policy), `meta.version` (provider_policy, module_policy), and `meta.tfe_stack.deployment_group` / `deployment_name` / `stack_name` (all policy types; `null` in workspace evaluations or when not set). `meta.tfe_workspace.tags` stays an empty map. Guard nullable attributes with a conditional before passing them to a function or string template, because `&&` does not short-circuit:
 
 ```hcl
-condition = meta.version != null && core::semverconstraint(meta.version, ">= 2.0.0")
-filter    = meta.alias != null && meta.alias == "secondary"
+condition = meta.version != null ? core::semverconstraint(meta.version, ">= 2.0.0") : false
+filter    = meta.alias == "secondary"  # == is null-safe
 ```
 
 ### Operation Scoping and `prior_attrs`
@@ -1051,25 +1051,25 @@ module_policy "*" "module_source_check" {
 module_policy "app.terraform.io/myorg/vpc/aws" "vpc_version" {
     locals {
         has_version = meta.version != null
-        meets_minimum = meta.version != null && core::semverconstraint(meta.version, ">= 1.0.0")
+        meets_minimum = meta.version != null ? core::semverconstraint(meta.version, ">= 1.0.0") : false
     }
 
     enforce {
         condition = local.meets_minimum
-        error_message = "VPC module must be >= 1.0.0, got ${meta.version}"
+        error_message = "VPC module must be >= 1.0.0, got ${meta.version != null ? meta.version : "no version"}"
     }
 }
 ```
 
 **Available attributes:**
 - `meta.source` - Module source (e.g., `app.terraform.io/org/module/provider`)
-- `meta.version` - Module version (works with `core::semverconstraint()`). Nullable on 0.5.0+: `null` when no version is specified, so guard with `meta.version != null`.
+- `meta.version` - Module version (works with `core::semverconstraint()`). Nullable on 0.5.0+: `null` when no version is specified, so guard with a conditional (`meta.version != null ? ... : false`) and avoid interpolating it directly.
 - `meta.address` - Module address (e.g., `module.vpc`)
 
 **⚠️ Current Limitations (Private Beta):**
 - ❌ `attrs.*` (module inputs) NOT accessible yet - work in progress
 - ✅ `meta.tfe_stack` and `meta.tfe_workspace.tags` are available; Stack fields are empty strings outside Stack evaluations on 0.3.x/0.4.x and `null` on 0.5.0+.
-- ❌ `prior_attrs` is a parse error in `module_policy` (0.5.0+); use `attrs`.
+- ❌ `prior_attrs` is a parse error in `module_policy` (0.5.0+); remove the reference.
 
 **Targeting:**
 - Use **full module source** to target specific module: `module_policy "app.terraform.io/myorg/vpc/aws"`
@@ -1087,8 +1087,8 @@ provider_policy "aws" "version_check" {
     }
 
     enforce {
-        condition = meta.version != null && core::semverconstraint(meta.version, ">= ${local.minimum_version}")
-        error_message = "AWS provider must be >= ${local.minimum_version}, got ${meta.version}"
+        condition = meta.version != null ? core::semverconstraint(meta.version, ">= ${local.minimum_version}") : false
+        error_message = "AWS provider must be >= ${local.minimum_version}, got ${meta.version != null ? meta.version : "no version"}"
     }
 }
 ```
@@ -1096,7 +1096,7 @@ provider_policy "aws" "version_check" {
 **Available attributes:**
 - `meta.source` - Full provider source (e.g., `registry.terraform.io/hashicorp/aws`)
 - `meta.version` - Provider version (e.g., `4.67.0`)
-- `meta.alias` - Provider alias. `null` when no alias is configured on 0.5.0+ (empty string earlier); guard with `meta.alias != null`.
+- `meta.alias` - Provider alias. `null` when no alias is configured on 0.5.0+ (empty string earlier); `meta.alias == "x"` comparisons are null-safe, but guard before passing it to functions or string templates.
 - `prior_attrs` is a parse error in `provider_policy` (0.5.0+); use `attrs`.
 - `attrs.*` - Provider configuration attributes (region, profile, etc.)
 

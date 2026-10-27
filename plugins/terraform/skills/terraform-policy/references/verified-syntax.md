@@ -1921,13 +1921,13 @@ resource_policy "aws_security_group" "comprehensive_check" {
 
 ### module_policy
 - ✅ `meta.source`, `meta.version` (nullable on 0.5.0+), `meta.address`
-- ❌ `prior_attrs` is a parse error (0.5.0+); use `attrs`
+- ❌ `prior_attrs` is a parse error (0.5.0+); remove the reference
 - ✅ `filter`, `locals`, multiple `enforce` blocks
 - ❌ `attrs.*` (inputs) - work in progress
 - ✅ `meta.tfe_stack.*`, `meta.tfe_workspace.tags`; Stack fields are empty strings outside Stack evaluations on 0.3.x/0.4.x and `null` on 0.5.0+
 
 ### provider_policy
-- ✅ Full `attrs.*` (config), `meta.alias` and `meta.version` (both `null` when absent on 0.5.0+; guard with `!= null`), `meta.source`
+- ✅ Full `attrs.*` (config), `meta.alias` and `meta.version` (both `null` when absent on 0.5.0+; guard function and string-template uses with a conditional), `meta.source`
 - ❌ `prior_attrs` is a parse error (0.5.0+); use `attrs`
 - ✅ `filter`, `locals`, multiple `enforce` blocks
 - ✅ `meta.tfe_stack.*`, `meta.tfe_workspace.tags`; Stack fields are empty strings outside Stack evaluations on 0.3.x/0.4.x and `null` on 0.5.0+
