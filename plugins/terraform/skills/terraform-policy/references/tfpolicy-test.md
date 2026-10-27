@@ -18,7 +18,7 @@ Expert agent for testing Terraform policies. Helps write `.policytest.hcl` files
 - The user is writing `.policytest.hcl` files, `policytest { targets = [...] }` blocks, `resource {}` / `module {}` mocks, or using `expect_failure` / `skip`.
 - The user is testing operation-aware policies and needs to mock `attrs` and/or `prior_attrs` for create/update/delete scenarios.
 - The user is asking how to mock cross-resource lookups (e.g. `aws_s3_bucket_versioning` for `core::getresources` patterns).
-- The user is investigating a runner caveat (mocks evaluated regardless of `operations` scope, `expect_failure` not supported on `data` blocks, etc.).
+- The user is investigating a runner caveat (`expect_failure` not supported on `data` blocks, etc.).
 
 **Do not use this skill when:**
 - The user is writing the policy itself rather than its test — use [`tfpolicy-author`](tfpolicy-author.md).

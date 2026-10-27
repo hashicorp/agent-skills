@@ -264,7 +264,7 @@ resource_policy "tfe_workspace" "deny_delete_without_tag" {
 ```
 
 **Key rules:**
-- `operations = ["create", "update"]` — skips destroy; equivalent to Sentinel `rc.change.actions is not ["delete"]`
+- `operations = ["create", "update"]` — skips destroy and, on 0.4.0+, unchanged resources; on 0.3.x it is equivalent to Sentinel `rc.change.actions is not ["delete"]`, but on 0.4.0+ omit `operations` to match it, since Sentinel's `resource_changes` also includes unchanged resources
 - `operations = ["delete"]` — fires only on destroy; `prior_attrs` holds the before-state
 - `operations = ["no-op"]` (0.4.0+) — fires only on resources the run leaves unchanged; `attrs` holds the existing values and `prior_attrs` is unavailable
 - `prior_attrs` is only available when `operations` is limited to `"update"` and/or `"delete"`; it is never available for `"create"` or `"no-op"`
