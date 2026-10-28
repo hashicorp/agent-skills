@@ -35,7 +35,7 @@ Turn natural-language requirements into `resource_policy`, `module_policy`, or `
 Translate Sentinel constructs into tfpolicy equivalents, flag non-convertible patterns with practical alternatives, produce idiomatic `.policy.hcl` from existing Sentinel sources, and apply a quality label to each conversion.
 
 ### 3. Apply Operation Scoping Correctly
-Use `operations = ["create", "update", "delete"]` and `prior_attrs.<name>` to scope policies to the right plan actions and read pre-change state when relevant.
+Use `operations = ["create", "update", "delete", "no-op"]` (`"no-op"` requires tfpolicy 0.4.0+) and `prior_attrs.<name>` to scope policies to the right plan actions and read pre-change state when relevant.
 
 ### 4. Parameterize with `input` Blocks
 Replace hardcoded allowlists, version constraints, and thresholds with `input` blocks so policy sets can override values per environment.
@@ -103,13 +103,22 @@ resource_policy "aws_ebs_volume" "encryption_check" {
 
 | Surface | Available in | Notes |
 | --- | --- | --- |
-| `attrs.*` | resource / module / provider | Planned values for the current target. Wrap optional fields in `core::try()`. |
-| `prior_attrs.*` | resource_policy with `operations` ⊉ `["create"]` | Pre-change values. Use for `delete` and `update` scopes. |
+| `attrs.*` | resource / module / provider | Planned values for the current target (existing values for `no-op`). Wrap optional fields in `core::try()`. |
+| `prior_attrs.*` | resource_policy with `operations` limited to `update` and/or `delete` | Pre-change values. Not available for `create` or `no-op`. Rejected at parse time in `provider_policy` and `module_policy` (0.5.0+). |
 | `meta.provider_type` | resource_policy | e.g. `"aws"`. Useful for cross-provider wildcard rules. |
 | `meta.tfe_workspace.tags["<name>"]` | resource_policy, module_policy, provider_policy | Workspace-scoped routing (env, team, etc.). Empty when evaluating a Stack or an untagged workspace. |
-| `meta.tfe_stack.deployment_name` / `stack_name` / `deployment_group` | resource_policy, module_policy, provider_policy | Stack metadata for routing/exclusion workflows. Always present; fields are empty strings outside Stack evaluations. Available in `.policytest.hcl` mocks starting in 0.3.x. |
+| `meta.tfe_stack.deployment_name` / `stack_name` / `deployment_group` | resource_policy, module_policy, provider_policy | Stack metadata for routing/exclusion workflows. Always present; fields are empty strings outside Stack evaluations on 0.3.x/0.4.x, and `null` on 0.5.0+ (guard with `!= null`). Available in `.policytest.hcl` mocks starting in 0.3.x. |
 | `meta.address` | ❌ | **UNDEFINED** in `resource_policy` real-plan evaluation. Never interpolate it into `error_message`. |
 | `input.<name>` | all | Values from `input {}` blocks; overridable per policy set. |
+
+### Meta attributes nullable on 0.5.0+
+
+Starting in tfpolicy 0.5.0, absent `meta` attributes evaluate to `null` rather than an empty string. Nullable: `meta.alias` (provider_policy), `meta.version` (provider_policy, module_policy), and `meta.tfe_stack.deployment_group` / `deployment_name` / `stack_name` (all policy types; `null` in workspace evaluations or when not set). `meta.tfe_workspace.tags` stays an empty map. Guard nullable attributes with a conditional before passing them to a function or string template, because `&&` does not short-circuit:
+
+```hcl
+condition = meta.version != null ? core::semverconstraint(meta.version, ">= 2.0.0") : false
+filter    = meta.alias == "secondary"  # == is null-safe
+```
 
 ### Operation Scoping and `prior_attrs`
 
@@ -125,7 +134,7 @@ resource_policy "tfe_workspace" "require_tags" {
 
 # Delete-gate
 resource_policy "tfe_workspace" "deny_delete_without_tag" {
-  operations = ["delete"]   # prior_attrs available when "create" not in operations
+  operations = ["delete"]   # prior_attrs requires operations limited to update and/or delete
   locals {
     prior_tag_names = core::try(prior_attrs.tag_names, [])
   }
@@ -134,14 +143,35 @@ resource_policy "tfe_workspace" "deny_delete_without_tag" {
     error_message = "Add 'delete' tag before destroying the workspace."
   }
 }
+
+# tfpolicy 0.4.0+: evaluate every resource in state, including unchanged ones
+resource_policy "aws_cloudtrail" "logging_enabled" {
+  # operations omitted = ["create", "update", "no-op"]
+  enforce {
+    condition     = attrs.enable_logging == true
+    error_message = "CloudTrail logging must be enabled."
+  }
+}
 ```
 
 **Rules:**
 - `operations = ["create", "update"]` — fires on create/update, skips destroy.
 - `operations = ["delete"]` — fires only on destroy; `prior_attrs` holds pre-change state.
 - `operations = ["update"]` — fires only on updates; `prior_attrs` available.
-- Default (no `operations`) = create and update (never destroy).
-- `prior_attrs` is only accessible when `"create"` is NOT in `operations`.
+- `operations = ["no-op"]` — (0.4.0+) fires only on resources the run leaves unchanged; `attrs` holds the existing values and `prior_attrs` is unavailable.
+- Default (no `operations`): tfpolicy 0.4.0+ = create, update, and no-op (the entire state, never destroy) for policies that do not reference `prior_attrs`; tfpolicy 0.3.x = create and update only. Policies that reference `prior_attrs` have no default and must set `operations` explicitly (omitting it is a hard error). Set `operations = ["create", "update"]` on 0.4.0+ to evaluate only changed resources.
+- `operations = []` is unconstrained on 0.4.0+: it evaluates every operation, including `no-op` and `delete` (where `attrs` is null), so attrs checks also fire on destroys. Prefer omitting `operations`. `[]` is rejected for policies that reference `prior_attrs`.
+- `create`, `update`, and `no-op` expose `attrs`; `update` and `delete` expose `prior_attrs`. `delete` cannot be combined with `create` or `no-op` (`["update", "delete"]` is valid), and `prior_attrs` cannot be used with `create` or `no-op`. Replacements are evaluated as separate delete and create operations, so split them into two `resource_policy` blocks.
+- `meta.operation` can be `"create"`, `"update"`, `"delete"`, or (0.4.0+) `"no-op"`.
+- **`core::getresources` warning (0.4.0+):** an attrs-only policy that calls `core::getresources` with `operations` omitting `no-op` loads with a warning, because it runs only for changed resources and can miss pre-existing ones. Add `no-op`, or keep the list if changes-only is intended. No warning is raised for policies that reference `prior_attrs` (never add `no-op` to those; it fails validation), for lists containing `delete`, or for `core::getresources` calls in file-level `locals`. Because the recommended top-level `locals` caching pattern never triggers the warning, choose `operations` deliberately in that case (usually including `no-op`).
+- **Upgrade note (0.4.0+):** policies that omit `operations`, including all bundled conversion examples, start evaluating unchanged resources after moving from 0.3.x. A mandatory policy can begin blocking runs because of resources that already existed.
+
+| Goal (0.4.0+) | `operations` | Attributes |
+| --- | --- | --- |
+| Every resource meets the policy | omit, or `["create", "update", "no-op"]` | `attrs` |
+| Only resources this run touches | `["create", "update"]` | `attrs` |
+| Block certain changes | `["update"]` | `attrs` and `prior_attrs` |
+| Protect from deletion | `["delete"]` | `prior_attrs` |
 
 ### `input` Blocks — Parameterization
 
@@ -501,9 +531,10 @@ Use this section when the input is an existing Sentinel `.sentinel` file. Follow
 | `filter tfplan.resource_changes` | Resource type in the policy declaration plus optional `filter` for attribute-based preconditions |
 | `as address, rc` | `attrs.*` and `meta.provider_type` for the current resource. **⚠️ `meta.address` is UNDEFINED — do not use it.** |
 | `rc.change.after.<attr>` | `attrs.<attr>` |
-| `rc.change.before.<attr>` | `prior_attrs.<attr>` — available when `operations` does NOT include `"create"` |
+| `rc.change.before.<attr>` | `prior_attrs.<attr>` — available when `operations` is limited to `"update"` and/or `"delete"` |
 | `rc.change.actions is ["delete"]` | `operations = ["delete"]` — fires only on destroy |
-| `rc.change.actions is not ["delete"]` | `operations = ["create", "update"]` — skips destroy |
+| `rc.change.actions is not ["delete"]` | 0.4.0+: omit `operations` (default `["create", "update", "no-op"]`), since Sentinel's `resource_changes` also includes unchanged resources. 0.3.x: `operations = ["create", "update"]` plus a `# LIMITATION:` noting unchanged resources aren't evaluated |
+| `contains "create" or is ["update"]` | `operations = ["create", "update"]` |
 | `param allowed_list default [...]` | `input "allowed_list" { type = list(string); default = [...] }` |
 | `time.now.weekday_name` | `core::formatdate("EEEE", core::timestamp())` — UTC weekday name |
 | `time.now.hour` | `core::parseint(core::formatdate("HH", core::timestamp()), 10)` — UTC hour as int |
@@ -524,7 +555,7 @@ Use this section when the input is an existing Sentinel `.sentinel` file. Follow
 
 1. **Time-based rules** — `core::timestamp()` + `core::formatdate()` + `core::parseint()` cover Sentinel's `time` import. All values are UTC; document that assumption in policy comments.
 2. **`param` blocks** — direct equivalent: `input` blocks with `type` and `default`.
-3. **`rc.change.before` for update/delete** — `prior_attrs` is available when `operations` does NOT include `"create"`.
+3. **`rc.change.before` for update/delete** — `prior_attrs` is available when `operations` is limited to `"update"` and/or `"delete"`.
 4. **Integer range checks** — Sentinel policies that check whether all ports within `[from_port, to_port]` are authorized CAN be converted. Use the count approach: filter `authorized_ports` to those within the range and compare the count to `to_port - from_port + 1`. Do not use `core::range()` with dynamic `attrs.*` values. See `verified-syntax.md` Mistake 23.
 5. **`tfconfig/v2` reference count** — each resource reference is stored **twice** in `.references` (once as `resource.name`, once as `resource.name.id`). When simplifying a reference-count check to a direct `core::length(attrs.attribute)` check, **halve the threshold**: `references > 2` → `core::length(attrs.attribute) >= 2`.
 
@@ -1020,24 +1051,25 @@ module_policy "*" "module_source_check" {
 module_policy "app.terraform.io/myorg/vpc/aws" "vpc_version" {
     locals {
         has_version = meta.version != null
-        meets_minimum = core::semverconstraint(meta.version, ">= 1.0.0")
+        meets_minimum = meta.version != null ? core::semverconstraint(meta.version, ">= 1.0.0") : false
     }
 
     enforce {
         condition = local.meets_minimum
-        error_message = "VPC module must be >= 1.0.0, got ${meta.version}"
+        error_message = "VPC module must be >= 1.0.0, got ${meta.version != null ? meta.version : "no version"}"
     }
 }
 ```
 
 **Available attributes:**
 - `meta.source` - Module source (e.g., `app.terraform.io/org/module/provider`)
-- `meta.version` - Module version (works with `core::semverconstraint()`)
+- `meta.version` - Module version (works with `core::semverconstraint()`). Nullable on 0.5.0+: `null` when no version is specified, so guard with a conditional (`meta.version != null ? ... : false`) and avoid interpolating it directly.
 - `meta.address` - Module address (e.g., `module.vpc`)
 
 **⚠️ Current Limitations (Private Beta):**
 - ❌ `attrs.*` (module inputs) NOT accessible yet - work in progress
-- ✅ `meta.tfe_stack` and `meta.tfe_workspace.tags` are available; Stack fields are empty outside Stack evaluations.
+- ✅ `meta.tfe_stack` and `meta.tfe_workspace.tags` are available; Stack fields are empty strings outside Stack evaluations on 0.3.x/0.4.x and `null` on 0.5.0+.
+- ❌ `prior_attrs` is a parse error in `module_policy` (0.5.0+); remove the reference.
 
 **Targeting:**
 - Use **full module source** to target specific module: `module_policy "app.terraform.io/myorg/vpc/aws"`
@@ -1055,8 +1087,8 @@ provider_policy "aws" "version_check" {
     }
 
     enforce {
-        condition = core::semverconstraint(meta.version, ">= ${local.minimum_version}")
-        error_message = "AWS provider must be >= ${local.minimum_version}, got ${meta.version}"
+        condition = meta.version != null ? core::semverconstraint(meta.version, ">= ${local.minimum_version}") : false
+        error_message = "AWS provider must be >= ${local.minimum_version}, got ${meta.version != null ? meta.version : "no version"}"
     }
 }
 ```
@@ -1064,7 +1096,8 @@ provider_policy "aws" "version_check" {
 **Available attributes:**
 - `meta.source` - Full provider source (e.g., `registry.terraform.io/hashicorp/aws`)
 - `meta.version` - Provider version (e.g., `4.67.0`)
-- `meta.alias` - Provider alias (if configured)
+- `meta.alias` - Provider alias. `null` when no alias is configured on 0.5.0+ (empty string earlier); `meta.alias == "x"` comparisons are null-safe, but guard before passing it to functions or string templates.
+- `prior_attrs` is a parse error in `provider_policy` (0.5.0+); use `attrs`.
 - `attrs.*` - Provider configuration attributes (region, profile, etc.)
 
 > **Note:** `meta.name` and `meta.type` are NOT confirmed available in `reference/verified-syntax.md`. Do not rely on them — use `meta.source` to identify a provider and `meta.version` for version checks.

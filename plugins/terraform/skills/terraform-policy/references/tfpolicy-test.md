@@ -18,7 +18,7 @@ Expert agent for testing Terraform policies. Helps write `.policytest.hcl` files
 - The user is writing `.policytest.hcl` files, `policytest { targets = [...] }` blocks, `resource {}` / `module {}` mocks, or using `expect_failure` / `skip`.
 - The user is testing operation-aware policies and needs to mock `attrs` and/or `prior_attrs` for create/update/delete scenarios.
 - The user is asking how to mock cross-resource lookups (e.g. `aws_s3_bucket_versioning` for `core::getresources` patterns).
-- The user is investigating a runner caveat (mocks evaluated regardless of `operations` scope, `expect_failure` not supported on `data` blocks, etc.).
+- The user is investigating a runner caveat (`expect_failure` not supported on `data` blocks, etc.).
 
 **Do not use this skill when:**
 - The user is writing the policy itself rather than its test — use [`tfpolicy-author`](tfpolicy-author.md).
@@ -216,7 +216,7 @@ resource "resource_type" "test_name" {
 
 ### Every `resource {}` Mock Must Declare a Non-Empty State Block (tfpolicy 0.3.0+)
 
-**On tfpolicy 0.3.0+:** every mock `resource {}` block must declare `attrs` or `prior_attrs`. If both evaluate to empty for a given `resource` block, tfpolicy skips that test case because no operation can be inferred. Use `null` for "attribute not set", e.g. `attrs = { instance_type = null }`, not an empty block. `meta.operation` alone is not a substitute — it still requires an accompanying state block. On tfpolicy < 0.3.0, meta-only fixtures are still accepted but silently no-op (see below).
+**On tfpolicy 0.3.0+:** every mock `resource {}` block must declare `attrs` or `prior_attrs`. If both evaluate to empty for a given `resource` block, tfpolicy skips that test case because no operation can be inferred. Use `null` for "attribute not set", e.g. `attrs = { instance_type = null }`, not an empty block. `meta.operation` alone is not a substitute — it still requires an accompanying state block. On tfpolicy < 0.3.0, meta-only fixtures are still accepted but silently do nothing (see below).
 
 **Scope: `resource {}` blocks only.** This requirement applies exclusively to mock `resource {}` blocks (`resource_policy` tests). `provider {}` and `module {}` mocks are unaffected — meta-only fixtures (e.g. `meta = { source = "...", version = "..." }` with no `attrs`) continue to work as before for `module_policy` and `provider_policy` tests, since those policy types don't infer a create/update/delete operation from resource state the way `resource_policy` does.
 
@@ -273,7 +273,7 @@ resource "aws_ebs_volume" "test" {
 
 ### Testing Operation-Aware Policies
 
-Policies can scope themselves to specific plan operations via `operations = ["create", "update", "delete"]`. Test mocks support a matching `prior_attrs = { ... }` block alongside `attrs = { ... }`, so create, update, and delete-gate policies are all fully testable.
+Policies can scope themselves to specific plan operations via `operations = ["create", "update", "delete", "no-op"]` (`"no-op"` requires tfpolicy 0.4.0+). Test mocks support a matching `prior_attrs = { ... }` block alongside `attrs = { ... }`, so create, update, no-op, and delete-gate policies are all fully testable.
 
 **Mock shape per operation:**
 
@@ -282,6 +282,9 @@ Policies can scope themselves to specific plan operations via `operations = ["cr
 | `create` | ✅ planned values | — |
 | `update` | ✅ planned values | ✅ pre-change values |
 | `delete` | — | ✅ pre-change values |
+| `no-op` (0.4.0+) | ✅ existing values | — |
+
+If `meta.operation` is omitted, tfpolicy infers the operation from the state blocks: `attrs` only → `create`, `attrs` + `prior_attrs` → `update`, `prior_attrs` only → `delete`. It never infers `no-op`, so set `meta = { operation = "no-op" }` explicitly on no-op mocks. Otherwise a policy scoped to `["no-op"]` skips them: passing mocks pass without being evaluated, and `expect_failure` mocks fail with "Missing expected failure".
 
 **Create / update policy (planned values only):**
 
@@ -370,7 +373,31 @@ resource "tfe_workspace" "missing_delete_tag" {
 }
 ```
 
-> **Note:** The runner currently evaluates each mock against every policy listed in `targets` regardless of the policy's `operations` scope. Keep your `.policytest.hcl` file targeted at a single policy (or a set of policies that share the same operation scope), and only supply the `attrs` / `prior_attrs` fields that policy actually reads.
+**No-op policy (tfpolicy 0.4.0+, evaluates unchanged resources in state):**
+
+```hcl
+# Policy (operations omitted = ["create", "update", "no-op"])
+resource_policy "aws_cloudtrail" "logging_enabled" {
+  enforce {
+    condition     = attrs.enable_logging == true
+    error_message = "CloudTrail logging must be enabled."
+  }
+}
+```
+
+```hcl
+# Test
+resource "aws_cloudtrail" "existing_trail" {
+  meta  = { operation = "no-op" }
+  attrs = { name = "existing-trail", s3_bucket_name = "my-bucket", enable_logging = true }
+}
+
+resource "aws_cloudtrail" "existing_trail_no_logging" {
+  expect_failure = true
+  meta           = { operation = "no-op" }
+  attrs          = { name = "trail-without-logging", s3_bucket_name = "my-bucket", enable_logging = false }
+}
+```
 
 ### Provider Schema Awareness
 
@@ -476,9 +503,9 @@ resource "aws_s3_bucket" "filtered_out" {
 | Meta Attribute | Mock Tests (`tfpolicy test`) | Real Plans (`terraform plan --policies=`) |
 |----------------|------------------------------|------------------------------------------|
 | `meta.provider_type` | ❌ UNDEFINED | ✅ Available (e.g., "aws", "azurerm") |
-| `meta.tfe_stack.deployment_name` | ✅ Available in tfpolicy 0.3.x+ mocks | ✅ Always present; empty outside Stack evaluations |
-| `meta.tfe_stack.stack_name` | ✅ Available in tfpolicy 0.3.x+ mocks | ✅ Always present; empty outside Stack evaluations |
-| `meta.tfe_stack.deployment_group` | ✅ Available in tfpolicy 0.3.x+ mocks | ✅ Always present; empty outside Stack evaluations |
+| `meta.tfe_stack.deployment_name` | ✅ Available in tfpolicy 0.3.x+ mocks | ✅ Always present; empty outside Stack evaluations (`null` on 0.5.0+) |
+| `meta.tfe_stack.stack_name` | ✅ Available in tfpolicy 0.3.x+ mocks | ✅ Always present; empty outside Stack evaluations (`null` on 0.5.0+) |
+| `meta.tfe_stack.deployment_group` | ✅ Available in tfpolicy 0.3.x+ mocks | ✅ Always present; empty outside Stack evaluations (`null` on 0.5.0+) |
 | `meta.tfe_workspace.tags` | ✅ Available in tfpolicy 0.3.x+ mocks | ✅ Available for workspace evaluations; empty for Stacks or untagged workspaces |
 | `meta.type` | ❌ UNDEFINED | ❌ UNDEFINED |
 | `meta.address` | ❌ UNDEFINED | ❌ UNDEFINED |
@@ -500,7 +527,7 @@ resource_policy "aws_ebs_volume" "check_provider" {
 
 **Best Practice:** When using `meta.provider_type` in policies, always wrap with `core::try()` and note that mock tests cannot fully validate this behavior. Test with real terraform plans for complete validation.
 
-**Stack and workspace metadata in tests (tfpolicy 0.3.x+):** metadata can be mocked with `meta.tfe_stack.*` and `meta.tfe_workspace.tags` for resource, provider, and module policies. Stack fields remain empty outside Stack evaluations, so use them for stack-scoped exclusion workflows:
+**Stack and workspace metadata in tests (tfpolicy 0.3.x+):** metadata can be mocked with `meta.tfe_stack.*` and `meta.tfe_workspace.tags` for resource, provider, and module policies. Stack fields are empty strings outside Stack evaluations on 0.3.x/0.4.x and `null` on 0.5.0+ (guard with `!= null`; in mocks, set them to `null` explicitly to simulate a workspace, because an omitted key is missing rather than `null` and reading it fails), so use them for stack-scoped exclusion workflows:
 
 ```hcl
 resource "null_resource" "excluded_deployment" {
@@ -590,8 +617,8 @@ module "registry.terraform.io/acme-corp/database" "unauthorized" {
 module_policy "registry.terraform.io/hashicorp/aws" "version_check" {
   filter = meta.source == "registry.terraform.io/hashicorp/aws"
   enforce {
-    condition = core::semverconstraint(meta.version, ">= 4.0.0")
-    error_message = "Module must use version >= 4.0.0, found ${meta.version}"
+    condition = meta.version != null ? core::semverconstraint(meta.version, ">= 4.0.0") : false
+    error_message = "Module must use version >= 4.0.0, found ${meta.version != null ? meta.version : "no version"}"
   }
 }
 ```
@@ -656,7 +683,7 @@ provider "aws" "unofficial" {
 ### Common Provider Patterns
 
 1. **Official providers only**: Check `meta.source == "registry.terraform.io/hashicorp/aws"`
-2. **Version constraints**: Use `core::semverconstraint(meta.version, ">= 4.0.0, < 6.0.0")`
+2. **Version constraints**: Use `core::semverconstraint(meta.version, ">= 4.0.0, < 6.0.0")` (on 0.5.0+ wrap it as `meta.version != null ? core::semverconstraint(...) : false`, since an unspecified version is `null` and `&&` does not short-circuit)
 3. **Allowlist by type**: Create separate provider_policy for each allowed type
 
 ---
