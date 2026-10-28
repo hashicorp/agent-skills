@@ -105,8 +105,8 @@ CODEX_MANIFEST_COUNT="$(find plugins -path '*/.codex-plugin/plugin.json' -type f
 [[ "$CODEX_MANIFEST_COUNT" -eq 2 ]] || error "expected exactly two Codex plugin manifests"
 
 SKILL_COUNT="$(find plugins -path '*/skills/*/SKILL.md' -type f | wc -l | tr -d ' ')"
-[[ "$SKILL_COUNT" -eq 20 ]] ||
-  error "expected exactly 20 canonical Skills; found $SKILL_COUNT"
+[[ "$SKILL_COUNT" -eq 21 ]] ||
+  error "expected exactly 21 canonical Skills; found $SKILL_COUNT"
 
 while IFS= read -r skill_file; do
   skill_dir="$(dirname "$skill_file")"
@@ -139,7 +139,7 @@ while IFS= read -r skill_file; do
 done < <(find plugins -path '*/skills/*/SKILL.md' -type f | sort)
 
 CATALOG_ROWS="$(grep -Ec '^\| (Packer|Terraform) \|' SKILLS.md || true)"
-[[ "$CATALOG_ROWS" -eq 20 ]] || error "SKILLS.md must contain exactly 20 Skill rows"
+[[ "$CATALOG_ROWS" -eq 21 ]] || error "SKILLS.md must contain exactly 21 Skill rows"
 
 if find plugins -type d -name evals -print -quit | grep -q .; then
   error "public Skill evaluation assets are forbidden; keep them in proj-agent-skills/evals"
@@ -168,4 +168,4 @@ if [[ "$ERRORS" -gt 0 ]]; then
   exit 1
 fi
 
-printf 'Validation passed for two marketplaces, two bundles, and 20 Skills.\n'
+printf 'Validation passed for two marketplaces, two bundles, and 21 Skills.\n'

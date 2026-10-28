@@ -23,6 +23,7 @@ use. Other governed states are `deprecation-candidate`, `deprecated`, and
 | Terraform | `refactor-module` | `active` | `plugins/terraform/skills/refactor-module` |
 | Terraform | `run-acceptance-tests` | `active` | `plugins/terraform/skills/run-acceptance-tests` |
 | Terraform | `terraform-policy` | `active` | `plugins/terraform/skills/terraform-policy` |
+| Terraform | `terraform-configuration-upload` | `active` | `plugins/terraform/skills/terraform-configuration-upload` |
 | Terraform | `terraform-search-import` | `active` | `plugins/terraform/skills/terraform-search-import` |
 | Terraform | `terraform-stacks` | `active` | `plugins/terraform/skills/terraform-stacks` |
 | Terraform | `terraform-style-guide` | `active` | `plugins/terraform/skills/terraform-style-guide` |
