@@ -12,6 +12,8 @@ All notable changes to HashiCorp Agent Skills.
   provider action, and provider resource improvements.
 - Claude Code and Codex marketplace support for the `terraform` and `packer`
   product bundles.
+- Agent Plugins root manifests for the `terraform` and `packer` product
+  bundles, so Kiro can install them as Powers.
 - Lifecycle metadata, the Skill catalog, explicit Skill ownership, supported
   model documentation, governance artifacts, and expanded validation.
 
