@@ -11,32 +11,33 @@ metadata:
   lifecycle-status: active
   copyright: Copyright IBM Corp. 2026
   version: "0.1.0"
-  compatibility: Requires Bash, jq, and standard macOS/Linux filesystem and archive utilities; staging also requires cp; upload mode also requires curl and sleep
+  compatibility: Requires Bash, jq, and standard macOS/Linux utilities; upload mode additionally requires curl
 ---
 
 # Terraform Configuration Upload
 
-This Skill supports offline file-list inspection and an explicit HCP Terraform
-upload mode. It does not create Runs, inspect Plans, Apply changes, or retrieve
-logs or state.
+This Skill supports offline file-list inspection and explicit HCP Terraform
+configuration uploads. It does not create runs, inspect plans, apply changes, or
+retrieve logs or state.
 
-## Responsibility boundary
+## Responsibilities
 
-```text
-Skill / agent: select reviewed Terraform paths, invoke the staging helper, review included files, and approve the target/upload
-Staging helper: copy only explicit source paths into the staging directory
-Upload helper: validate the staging directory, report the included file list, package, and upload internally
-Downstream tool: receives only the returned configuration-version ID
-```
+| Owner | Responsibility |
+| --- | --- |
+| Skill / agent | Select reviewed paths, invoke staging, review the file list, and approve the target and upload |
+| Staging helper | Copy only explicitly selected source paths into staging |
+| Upload helper | Validate staging, create the archive, and perform the upload |
+| Downstream tool | Receive only the configuration-version ID |
 
 The selected directory must be a private staging directory containing only the
 reviewed Terraform configuration files. Do not copy an entire repository into
 staging. Preserve the relative paths required by local modules.
 
 The upload helper does not copy or filter the source repository. It validates
-the caller-prepared staging directory and creates one private temporary archive
-after upload approval. Approval of the file list is not cryptographic proof
-that file contents cannot change before packaging.
+the caller-prepared staging directory and creates one private temporary `tar.gz`
+archive with validated files at the archive root after upload approval. Approval
+of the file list is not cryptographic proof that file contents cannot change
+before packaging.
 
 ## Included files and safety rules
 
@@ -56,9 +57,10 @@ including:
 The helper also enforces fixed file-count and byte limits so inspection and
 upload remain bounded.
 
-`.terraformignore` is not interpreted in this iteration and must not be copied
-into staging. If it is present in staging, validation fails. Do not treat the
-file list as full Terraform/go-slug packaging parity.
+`.terraformignore` is not interpreted in this version and must not be copied
+into staging. If it is present in staging, validation fails. The file list is
+not equivalent to Terraform CLI or HCP Terraform's native configuration
+packaging rules.
 
 ## Workflow
 
@@ -101,11 +103,12 @@ file list as full Terraform/go-slug packaging parity.
    `TFE_TOKEN` must already be supplied by the protected environment; never
    pass it as a command argument.
 6. Treat nonzero exit as no usable handoff. The helper revalidates the staging
-   directory, creates a private root-level gzip tar archive, verifies its
-   regular members, creates a speculative non-auto-queued configuration
-   version, uploads the archive through the signed URL, waits for `uploaded`,
-   and removes only its internal temporary files. The caller must remove the
-   exact caller-owned `STAGING_DIR` after success, failure, or cancellation.
+   directory, creates a private `tar.gz` archive whose members are at the
+   archive root, verifies its regular members, creates a speculative
+   non-auto-queued configuration version, uploads the archive through the signed
+   URL, waits for `uploaded`, and removes only its internal temporary files. The
+   caller must remove the exact caller-owned `STAGING_DIR` after success,
+   failure, or cancellation.
 
 ## Output
 
@@ -148,19 +151,19 @@ scripts/test_upload_configuration.sh
 scripts/test_upload_configuration_mock.sh
 ```
 
-The tests cover inspection output, included-file ordering, unsafe-file and
-symlink rejection, archive-member validation, the mocked upload lifecycle, and
-credential/signed-URL containment.
+The upload tests cover inspection output, archive-member validation, unsafe-path
+rejection, private staging validation, size limits, the mocked API lifecycle,
+and credential/signed-URL containment.
 
 The staging tests cover explicit file and directory selection, local-module path
-preservation, unselected-file exclusion, non-empty staging rejection, and
-symlink/secret rejection.
+preservation, unselected-file exclusion, empty selections, overlapping roots,
+private permissions, size limits, nested sensitive paths, and symlink rejection.
 
 ## Known limitations
 
-- The first version uses staging-directory/file-list approval rather than
+- This version uses staging-directory and file-list approval rather than
   digest-bound approval. Canonical manifest and exact archive digest approval
-  are sidelined future options.
+  are future options.
 - `.terraformignore` is not supported.
 - `.terraform/modules` is rejected with `.terraform`.
 - No HCL dependency discovery occurs outside the selected root.
