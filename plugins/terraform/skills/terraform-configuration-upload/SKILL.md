@@ -156,10 +156,6 @@ The staging tests cover explicit file and directory selection, local-module path
 preservation, unselected-file exclusion, non-empty staging rejection, and
 symlink/secret rejection.
 
-## References
-
-- [Security model](references/security-model.md)
-
 ## Known limitations
 
 - The first version uses staging-directory/file-list approval rather than
