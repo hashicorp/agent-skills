@@ -99,8 +99,8 @@ require_private_path() {
 
 require_private_path "$staging_root"
 
-source_real=$(CDPATH= cd -- "$source_root" && pwd -P) || fail "could not resolve source root"
-staging_real=$(CDPATH= cd -- "$staging_root" && pwd -P) || fail "could not resolve staging root"
+source_real=$(CDPATH='' cd -- "$source_root" && pwd -P) || fail "could not resolve source root"
+staging_real=$(CDPATH='' cd -- "$staging_root" && pwd -P) || fail "could not resolve staging root"
 case "$staging_real/" in
   "$source_real/"*) fail "source and staging roots must not overlap" ;;
 esac

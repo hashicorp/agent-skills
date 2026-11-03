@@ -4,7 +4,7 @@
 set -Eeuo pipefail
 IFS=$'\n\t'
 
-script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 helper="$script_dir/stage_configuration.sh"
 test_root=$(mktemp -d "${TMPDIR:-/tmp}/terraform-stage-test.XXXXXX")
 trap 'rm -rf "$test_root"' EXIT HUP INT TERM
