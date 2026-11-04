@@ -76,6 +76,21 @@ Add this repository's `.agents/plugins/marketplace.json` as a repository
 marketplace, then install the `terraform` or `packer` plugin in Codex. Both
 marketplaces expose the same product bundles and Skill directories.
 
+### Kiro
+
+Each product root has an [Agent Plugins](https://agent-plugins.org/specification)
+`plugin.json`, so Kiro installs it as a Power. In the Kiro Powers panel, choose
+**Add Custom Power**, then **Import power from GitHub**, and enter the product
+root URL:
+
+```text
+https://github.com/hashicorp/agent-skills/tree/main/plugins/terraform
+https://github.com/hashicorp/agent-skills/tree/main/plugins/packer
+```
+
+To install from a local clone, choose **Import power from a folder** and select
+`plugins/terraform` or `plugins/packer`.
+
 ## Repository Structure
 
 ```text
@@ -86,10 +101,12 @@ agent-skills/
 │   ├── terraform/
 │   │   ├── .claude-plugin/plugin.json
 │   │   ├── .codex-plugin/plugin.json
+│   │   ├── plugin.json
 │   │   └── skills/
 │   └── packer/
 │       ├── .claude-plugin/plugin.json
 │       ├── .codex-plugin/plugin.json
+│       ├── plugin.json
 │       └── skills/
 └── SKILLS.md
 ```

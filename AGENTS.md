@@ -8,6 +8,9 @@ Packer product plugins that distribute them.
 - Put Terraform Skills in `plugins/terraform/skills/<skill-name>/`.
 - Put Packer Skills in `plugins/packer/skills/<skill-name>/`.
 - Keep Claude Code and Codex plugin manifests at each product root.
+- Keep an Agent Plugins `plugin.json` at each product root for Kiro. Keep its
+  `name`, `version`, `description`, and other shared fields aligned with the
+  Claude Code and Codex manifests.
 - Keep the Claude Code and Codex marketplaces aligned to exactly the
   `terraform` and `packer` bundles.
 - Keep individual Skill installation paths in `SKILLS.md` aligned with disk.
