@@ -18,6 +18,7 @@
 /plugins/terraform/skills/refactor-module/ @hashicorp/team-agent-skills-ecosystem
 /plugins/terraform/skills/run-acceptance-tests/ @hashicorp/team-agent-skills-ecosystem
 /plugins/terraform/skills/terraform-policy/ @hashicorp/team-agent-skills-ecosystem
+/plugins/terraform/skills/terraform-configuration-upload/ @hashicorp/team-agent-skills-ecosystem
 /plugins/terraform/skills/terraform-search-import/ @hashicorp/team-agent-skills-ecosystem
 /plugins/terraform/skills/terraform-stacks/ @hashicorp/team-agent-skills-ecosystem
 /plugins/terraform/skills/terraform-style-guide/ @hashicorp/team-agent-skills-ecosystem
