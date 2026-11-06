@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Offline API lifecycle and secret-containment test.
+# Offline API transport, lifecycle, and secret-containment test.
 
 set -Eeuo pipefail
 IFS=$'\n\t'
@@ -21,6 +21,7 @@ mkdir -p "$fake_bin"
 fake_argv="$test_root/curl-argv"
 fake_configs="$test_root/curl-configs"
 fake_upload_config="$test_root/upload-config"
+fake_tfctl_log="$test_root/tfctl-log"
 
 cat >"$fake_bin/curl" <<'EOF'
 #!/usr/bin/env bash
@@ -72,6 +73,48 @@ printf '200'
 EOF
 chmod 700 "$fake_bin/curl"
 
+cat >"$fake_bin/tfctl" <<'EOF'
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+if [ "${1:-}" = '--version' ]; then
+  printf 'v0.4.0\n'
+  exit 0
+fi
+
+printf 'config=%s host=%s organization=%s token=%s args=%s\n' \
+  "${TFCTL_CONFIG_DIR:-}" "${TFCTL_HOSTNAME:-}" "${TFCTL_ORGANIZATION:-}" \
+  "${TFCTL_TOKEN:+present}" "$*" >>"$FAKE_TFCTL_LOG"
+
+path=''
+while [ "$#" -gt 0 ]; do
+  if [ "$1" = 'api' ]; then
+    shift
+    path=${1:-}
+    break
+  fi
+  shift
+done
+path=${path#https://app.terraform.io/api/v2}
+
+case "$path" in
+  /organizations/*/workspaces/*)
+    printf '%s\n' '{"data":{"id":"ws-tfctl-123"}}'
+    ;;
+  /workspaces/ws-tfctl-123/configuration-versions)
+    printf '%s\n' '{"data":{"id":"cv-tfctl-123","attributes":{"status":"pending","upload-url":"https://upload.example.test/tfctl?signature=fixture-tfctl-signed-url"}}}'
+    ;;
+  /configuration-versions/cv-tfctl-123)
+    printf '%s\n' '{"data":{"id":"cv-tfctl-123","attributes":{"status":"uploaded"}}}'
+    ;;
+  *)
+    printf 'unexpected tfctl API path: %s\n' "$path" >&2
+    exit 1
+    ;;
+esac
+EOF
+chmod 700 "$fake_bin/tfctl"
+
 mkdir -p "$test_root/config"
 printf 'terraform {}\n' >"$test_root/config/main.tf"
 chmod 700 "$test_root/config" && chmod 600 "$test_root/config/main.tf"
@@ -87,11 +130,45 @@ if TFE_TOKEN="$token" "$helper" \
 fi
 
 signed_url='fixture-signed-url'
+tfctl_signed_url='fixture-tfctl-signed-url'
 if ! result=$(
   PATH="$fake_bin:$PATH" \
   FAKE_CURL_ARGV="$fake_argv" \
   FAKE_CURL_CONFIGS="$fake_configs" \
   FAKE_UPLOAD_CONFIG="$fake_upload_config" \
+  FAKE_TFCTL_LOG="$fake_tfctl_log" \
+  TFE_TOKEN="$token" \
+    "$helper" \
+      --configuration-root "$test_root/config" \
+      --organization example-org \
+      --workspace example-workspace \
+      --upload
+) 2>"$test_root/tfctl.err"; then
+  fail "tfctl-preferred mock upload did not succeed"
+fi
+
+[ "$(printf '%s' "$result" | jq -r '.configuration_version_id')" = 'cv-tfctl-123' ] \
+  || fail "tfctl-preferred upload returned the wrong configuration version"
+grep -Fq 'token=present' "$fake_tfctl_log" \
+  || fail "tfctl did not receive the token through its environment"
+grep -Fq 'host=app.terraform.io' "$fake_tfctl_log" \
+  || fail "tfctl did not receive the validated API host"
+grep -Fq "$tfctl_signed_url" "$fake_upload_config" \
+  || fail "curl did not upload the tfctl-issued signed URL"
+if [ -s "$fake_configs" ]; then
+  fail "curl was used for API requests when tfctl was available"
+fi
+
+# An installed but too-old tfctl must select the curl API fallback.
+sed -i.bak 's/v0\.4\.0/v0.3.0/' "$fake_bin/tfctl"
+rm -f "$fake_bin/tfctl.bak" "$fake_configs" "$fake_upload_config" "$fake_argv"
+
+if ! result=$(
+  PATH="$fake_bin:$PATH" \
+  FAKE_CURL_ARGV="$fake_argv" \
+  FAKE_CURL_CONFIGS="$fake_configs" \
+  FAKE_UPLOAD_CONFIG="$fake_upload_config" \
+  FAKE_TFCTL_LOG="$fake_tfctl_log" \
   TFE_TOKEN="$token" \
     "$helper" \
       --configuration-root "$test_root/config" \
@@ -105,6 +182,9 @@ fi
 [ "$(printf '%s' "$result" | jq -r '.configuration_version_id')" = 'cv-123' ] \
   || fail "mock upload returned the wrong configuration version"
 
+grep -Fq 'Authorization: Bearer fixture-api-token' "$fake_configs" \
+  || fail "curl fallback did not handle API requests"
+
 if grep -Fq "$token" "$fake_argv" || grep -Fq "$signed_url" "$fake_argv"; then
   fail "token or signed URL appeared in curl argv"
 fi
@@ -115,8 +195,6 @@ if grep -Fq "$token" "$test_root/upload.err" || grep -Fq "$signed_url" "$test_ro
   fail "token or signed URL appeared in stderr"
 fi
 
-grep -Fq 'Authorization: Bearer fixture-api-token' "$fake_configs" \
-  || fail "API request did not contain authorization in its private config"
 grep -Fq 'Content-Type: application/octet-stream' "$fake_upload_config" \
   || fail "upload request did not use octet-stream"
 if grep -Fq 'Authorization: Bearer' "$fake_upload_config"; then

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Terraform configuration preparation and upload helper.
-# Requires: Bash, find, sort, tar, mktemp, wc, jq, stat, sed, grep, diff, tr,
-# and env. Upload mode also requires curl and sleep.
+# Requires: Bash, find, sort, tar, mktemp, wc, jq, stat, sed, grep, head, diff, tr,
+# and env. Upload mode also requires curl and sleep. An installed tfctl 0.4.0+
+# is preferred for API interactions but is not required.
 
 set -Eeuo pipefail
 IFS=$'\n\t'
@@ -140,6 +141,7 @@ require_command stat
 require_command tr
 require_command sed
 require_command grep
+require_command head
 require_command diff
 require_command env
 require_command id
@@ -169,6 +171,41 @@ archive="$tmp_dir/configuration.tar.gz"
 api_response="$tmp_dir/api-response"
 api_error="$tmp_dir/api-error"
 curl_config="$tmp_dir/curl-config"
+tfctl_config_dir="$tmp_dir/tfctl-config"
+api_transport=curl
+tfctl_bin=''
+
+version_at_least() {
+  local actual=$1 required=$2
+  local actual_major actual_minor actual_patch
+  local required_major required_minor required_patch
+  IFS=. read -r actual_major actual_minor actual_patch <<<"${actual#v}"
+  IFS=. read -r required_major required_minor required_patch <<<"${required#v}"
+  actual_major=${actual_major:-0}
+  actual_minor=${actual_minor:-0}
+  actual_patch=${actual_patch:-0}
+  required_major=${required_major:-0}
+  required_minor=${required_minor:-0}
+  required_patch=${required_patch:-0}
+  [ "$actual_major" -gt "$required_major" ] || {
+    [ "$actual_major" -eq "$required_major" ] || return 1
+    [ "$actual_minor" -gt "$required_minor" ] || {
+      [ "$actual_minor" -eq "$required_minor" ] || return 1
+      [ "$actual_patch" -ge "$required_patch" ]
+    }
+  }
+}
+
+select_api_transport() {
+  local candidate version
+  candidate=$(command -v tfctl 2>/dev/null || true)
+  [ -n "$candidate" ] || return 0
+  version=$("$candidate" --version 2>/dev/null | sed -n 's/^v\([0-9][0-9.]*\).*/\1/p' | head -n 1) || return 0
+  version_at_least "$version" 0.4.0 || return 0
+  tfctl_bin=$candidate
+  api_transport=tfctl
+  mkdir -m 700 "$tfctl_config_dir" || fail "could not create private tfctl configuration directory"
+}
 
 curl_config_value() {
   jq -rn --arg value "$1" '$value | @json'
@@ -214,6 +251,32 @@ url_encode() {
 
 api_call() {
   local method=$1 url=$2 body=${3:-} response_code body_file=''
+  if [ "$api_transport" = tfctl ]; then
+    : >"$api_response"
+    if [ -n "$body" ]; then
+      env \
+        TFCTL_CONFIG_DIR="$tfctl_config_dir" \
+        TFCTL_HOSTNAME="$address_authority" \
+        TFCTL_ORGANIZATION="$organization" \
+        TFCTL_TOKEN="$TFE_TOKEN" \
+        TFCTL_TELEMETRY=disabled \
+        "$tfctl_bin" api "$url" --json --no-redact -X "$method" -i "$body" \
+        >"$api_response" 2>"$api_error" \
+        || fail "HCP Terraform API request failed"
+    else
+      env \
+        TFCTL_CONFIG_DIR="$tfctl_config_dir" \
+        TFCTL_HOSTNAME="$address_authority" \
+        TFCTL_ORGANIZATION="$organization" \
+        TFCTL_TOKEN="$TFE_TOKEN" \
+        TFCTL_TELEMETRY=disabled \
+        "$tfctl_bin" api "$url" --json \
+        >"$api_response" 2>"$api_error" \
+        || fail "HCP Terraform API request failed"
+    fi
+    return 0
+  fi
+
   if [ -n "$body" ]; then
     body_file="$tmp_dir/request-body"
     printf '%s' "$body" >"$body_file"
@@ -318,6 +381,7 @@ if ! diff -u "$file_list" "$archive_files" >/dev/null 2>&1; then
 fi
 
 if [ "$upload" -eq 1 ]; then
+  select_api_transport
   encoded_organization=$(url_encode "$organization") || fail "could not encode organization"
   encoded_workspace=$(url_encode "$workspace") || fail "could not encode workspace"
 

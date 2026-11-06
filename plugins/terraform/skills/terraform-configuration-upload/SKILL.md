@@ -11,7 +11,7 @@ metadata:
   lifecycle-status: active
   copyright: Copyright IBM Corp. 2026
   version: "0.1.0"
-  compatibility: Requires Bash, jq, and standard macOS/Linux utilities; upload mode additionally requires curl
+  compatibility: Requires Bash, jq, curl, and standard macOS/Linux utilities; tfctl 0.4.0 or newer is recommended for API interactions
 ---
 
 # Terraform Configuration Upload
@@ -101,12 +101,18 @@ packaging rules.
    ```
 
    `TFE_TOKEN` must already be supplied by the protected environment; never
-   pass it as a command argument.
+   pass it as a command argument. If `tfctl` 0.4.0 or newer is installed and
+   executable for the current platform, the helper prefers it for authenticated
+   API interactions. Otherwise, it uses curl for those API requests. The
+   configuration archive is always uploaded with curl through the signed upload
+   URL; `tfctl` does not perform that file upload. The helper does not download
+   or install `tfctl`.
 6. Treat nonzero exit as no usable handoff. The helper revalidates the staging
    directory, creates a private `tar.gz` archive whose members are at the
    archive root, verifies its regular members, creates a speculative
    non-auto-queued configuration version, uploads the archive through the signed
-   URL, waits for `uploaded`, and removes only its internal temporary files. The
+   URL with curl, waits for `uploaded`, and removes only its internal temporary
+   files. The
    caller must remove the exact caller-owned `STAGING_DIR` after success,
    failure, or cancellation.
 
